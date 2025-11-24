@@ -223,7 +223,7 @@ export default function DashboardPage() {
         }
         return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
-
+    
     const fatMassKg = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
         const fatPercentage = formState.bodyComposition?.bodyFatPercentage;
@@ -233,19 +233,37 @@ export default function DashboardPage() {
         return 0;
     }, [formState.bodyMeasurements?.weight, formState.bodyComposition?.bodyFatPercentage]);
     
-    const muscleMass = useMemo(() => {
-        const rawMuscleMass = formState.bodyComposition?.muscleMass || 0;
-        return rawMuscleMass > boneMass ? rawMuscleMass - boneMass : rawMuscleMass;
-    }, [formState.bodyComposition?.muscleMass, boneMass]);
+    const leanMassKg = useMemo(() => (formState.bodyMeasurements?.weight || 0) - fatMassKg, [formState.bodyMeasurements?.weight, fatMassKg]);
     
+    const muscleMass = useMemo(() => {
+        if (leanMassKg > 0 && boneMass > 0) {
+            const residualMass = leanMassKg - boneMass;
+            const weight = formState.bodyMeasurements?.weight;
+            if (weight) {
+                // Assuming residual is a fixed % of weight (e.g. 21% for female, 24% for male)
+                const residualFactor = formState.gender === 'Feminino' ? 0.21 : 0.24;
+                const residual = weight * residualFactor;
+                return leanMassKg - boneMass - residual;
+            }
+        }
+        return formState.bodyComposition?.muscleMass || 0;
+    }, [leanMassKg, boneMass, formState.bodyMeasurements?.weight, formState.gender, formState.bodyComposition?.muscleMass]);
+
     const residualMass = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
     
-        if (weight && fatMassKg && muscleMass && boneMass) {
-            return weight - (fatMassKg + muscleMass + boneMass);
+        if (weight && fatMassKg > 0 && muscleMass > 0 && boneMass > 0) {
+            const calculatedResidual = weight - (fatMassKg + muscleMass + boneMass);
+            return calculatedResidual > 0 ? calculatedResidual : 0;
         }
+        
+        if(weight) {
+            const residualFactor = formState.gender === 'Feminino' ? 0.21 : 0.24;
+            return weight * residualFactor;
+        }
+
         return 0;
-    }, [formState.bodyMeasurements?.weight, fatMassKg, muscleMass, boneMass]);
+    }, [formState.bodyMeasurements?.weight, fatMassKg, muscleMass, boneMass, formState.gender]);
     
     const residualMassPercentage = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
@@ -271,8 +289,11 @@ export default function DashboardPage() {
     };
     
     const fatClassification = useMemo(() => getFatClassification(formState.bodyComposition?.bodyFatPercentage, formState.gender), [formState.bodyComposition?.bodyFatPercentage, formState.gender]);
-    const leanMassKg = useMemo(() => (formState.bodyMeasurements?.weight || 0) - fatMassKg, [formState.bodyMeasurements?.weight, fatMassKg]);
-    const leanMassPercentage = useMemo(() => (leanMassKg / (formState.bodyMeasurements?.weight || 1)) * 100, [leanMassKg, formState.bodyMeasurements?.weight]);
+    const leanMassPercentage = useMemo(() => {
+        const weight = formState.bodyMeasurements?.weight;
+        if (!weight || weight === 0) return 0;
+        return (leanMassKg / weight) * 100;
+    }, [leanMassKg, formState.bodyMeasurements?.weight]);
     const idealWeight = useMemo(() => leanMassKg / (formState.gender === 'Masculino' ? 0.85 : 0.75), [leanMassKg, formState.gender]);
     const fatLossNeeded = useMemo(() => (formState.bodyMeasurements?.weight || 0) - idealWeight, [formState.bodyMeasurements?.weight, idealWeight]);
 
@@ -728,7 +749,7 @@ export default function DashboardPage() {
                                 <span>{new Date(comparedEvaluations[1].date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
                             </div>
                             <p className="text-2xl font-bold">{comparedEvaluations[1].bodyComposition.bodyFatPercentage.toFixed(1)}%</p>
-                            <p className="text-xs text-muted-foreground">{((comparedEvaluations[1].bodyMeasurements.weight || 0) * (comparedEvaluations[1].bodyComposition.bodyFatPercentage || 0) / 100).toFixed(1)} kg</p>
+                            <p className="text-xs text-muted-foreground">{(((comparedEvaluations[1].bodyMeasurements.weight || 0) * (comparedEvaluations[1].bodyComposition.bodyFatPercentage || 0)) / 100).toFixed(1)} kg</p>
                          </CardContent>
                      )}
                 </Card>
@@ -787,6 +808,10 @@ export default function DashboardPage() {
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa óssea (kg):</span>
                             <span className="font-medium">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">Massa muscular (kg):</span>
+                            <span className="font-medium">{muscleMass > 0 ? muscleMass.toFixed(1) : '-'} kg</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Peso desejável:</span>
