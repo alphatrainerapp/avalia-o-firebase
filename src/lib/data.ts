@@ -18,6 +18,31 @@ export type Evaluation = {
         muscleMass: number;
         boneDensity: number;
     };
+    perimetry?: {
+        shoulder?: number;
+        chest?: number;
+        waist?: number;
+        abdomen?: number;
+        hip?: number;
+        rightArmRelaxed?: number;
+        rightArmContracted?: number;
+        leftArmRelaxed?: number;
+        leftArmContracted?: number;
+        rightForearm?: number;
+        leftForearm?: number;
+        rightThighProximal?: number;
+        leftThighProximal?: number;
+        rightThighMedial?: number;
+        leftThighMedial?: number;
+        rightCalf?: number;
+        leftCalf?: number;
+    };
+    skinFolds?: {
+        // Adicione os campos de dobras cutâneas aqui
+    };
+    boneDiameters?: {
+        // Adicione os campos de diâmetros ósseos aqui
+    }
 };
 
 export type Client = {
@@ -144,5 +169,3 @@ export const protocols = [
     'YMCA',
     'Public Service Exam',
 ];
-
-    

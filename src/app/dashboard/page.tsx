@@ -19,6 +19,7 @@ import { clients, evaluations as allEvaluations, type Evaluation, type Client } 
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 export default function DashboardPage() {
@@ -38,7 +39,7 @@ export default function DashboardPage() {
         return clientEvaluations[0];
     }, [clientEvaluations, selectedEvaluationId]);
 
-    const [formState, setFormState] = useState<Partial<Evaluation & Client>>({});
+    const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
     useEffect(() => {
         if (client && evaluation) {
@@ -255,6 +256,54 @@ export default function DashboardPage() {
                         ))}
                     </CardContent>
                 </Card>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Registros de Dados</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs defaultValue="perimetria">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
+                                <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
+                                <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="perimetria" className="pt-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                    <div><Label>Ombro (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.ombro" value={formState.perimetria?.ombro || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Tórax (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.torax" value={formState.perimetria?.torax || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Cintura (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.cintura" value={formState.perimetria?.cintura || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Abdômen (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.abdomen" value={formState.perimetria?.abdomen || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Quadril (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.quadril" value={formState.perimetria?.quadril || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Braço D (relaxado) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoDRelaxado" value={formState.perimetria?.bracoDRelaxado || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Braço D (contraído) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoDContraido" value={formState.perimetria?.bracoDContraido || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Braço E (relaxado) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoERelaxado" value={formState.perimetria?.bracoERelaxado || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Braço E (contraído) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoEContraido" value={formState.perimetria?.bracoEContraido || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Antebraço D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.antebracoD" value={formState.perimetria?.antebracoD || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Antebraço E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.antebracoE" value={formState.perimetria?.antebracoE || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Coxa Proximal D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaProximalD" value={formState.perimetria?.coxaProximalD || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Coxa Proximal E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaProximalE" value={formState.perimetria?.coxaProximalE || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Coxa Medial D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaMedialD" value={formState.perimetria?.coxaMedialD || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Coxa Medial E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaMedialE" value={formState.perimetria?.coxaMedialE || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Panturrilha D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaD" value={formState.perimetria?.panturrilhaD || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Panturrilha E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaE" value={formState.perimetria?.panturrilhaE || ''} onChange={handleInputChange} /></div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="dobras" className="pt-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                    {/* Adicione os campos para Dobras Cutâneas aqui */}
+                                    <p className="text-muted-foreground">Campos para dobras cutâneas serão adicionados aqui.</p>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="diametros" className="pt-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                     {/* Adicione os campos para Diâmetros Ósseos aqui */}
+                                    <p className="text-muted-foreground">Campos para diâmetros ósseos serão adicionados aqui.</p>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Right Column */}
@@ -317,5 +366,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
