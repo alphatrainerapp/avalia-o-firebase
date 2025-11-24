@@ -62,7 +62,21 @@ export default function DashboardPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormState(prev => ({ ...prev, [name]: value }));
+        const keys = name.split('.');
+        if (keys.length > 1) {
+            setFormState(prev => {
+                const newState = {...prev};
+                let current: any = newState;
+                for (let i = 0; i < keys.length - 1; i++) {
+                    current[keys[i]] = current[keys[i]] || {};
+                    current = current[keys[i]];
+                }
+                current[keys[keys.length - 1]] = value;
+                return newState;
+            });
+        } else {
+            setFormState(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -94,8 +108,31 @@ export default function DashboardPage() {
         return 'Obesidade Grau III';
     };
 
+    const calculateRCQ = (waist?: number, hip?: number) => {
+        if (waist && hip && hip > 0) {
+            return (waist / hip).toFixed(2);
+        }
+        return '-';
+    }
+
+    const getRcqClassification = (rcq?: string, gender?: 'Masculino' | 'Feminino') => {
+        if (!rcq || rcq === '-' || !gender) return '-';
+        const rcqValue = parseFloat(rcq);
+        if (gender === 'Feminino') {
+            if (rcqValue < 0.80) return 'Baixo Risco';
+            if (rcqValue <= 0.85) return 'Risco Moderado';
+            return 'Alto Risco';
+        } else { // Masculino
+            if (rcqValue < 0.95) return 'Baixo Risco';
+            if (rcqValue <= 1.0) return 'Risco Moderado';
+            return 'Alto Risco';
+        }
+    };
+
     const bmi = useMemo(() => calculateBMI(formState.bodyMeasurements?.weight, formState.bodyMeasurements?.height), [formState.bodyMeasurements]);
     const bmiClassification = useMemo(() => getBmiClassification(bmi), [bmi]);
+    const rcq = useMemo(() => calculateRCQ(formState.perimetria?.cintura, formState.perimetria?.quadril), [formState.perimetria]);
+    const rcqClassification = useMemo(() => getRcqClassification(rcq, formState.gender), [rcq, formState.gender]);
 
     const handleNewEvaluation = () => {
         setSelectedEvaluationId(null);
@@ -287,6 +324,16 @@ export default function DashboardPage() {
                                     <div><Label>Coxa Medial E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaMedialE" value={formState.perimetria?.coxaMedialE || ''} onChange={handleInputChange} /></div>
                                     <div><Label>Panturrilha D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaD" value={formState.perimetria?.panturrilhaD || ''} onChange={handleInputChange} /></div>
                                     <div><Label>Panturrilha E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaE" value={formState.perimetria?.panturrilhaE || ''} onChange={handleInputChange} /></div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                                    <div>
+                                        <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                        <div className="font-bold text-lg">{rcq}</div>
+                                    </div>
+                                    <div>
+                                        <Label>Classificação de Risco</Label>
+                                        <div className="font-bold text-lg">{rcqClassification}</div>
+                                    </div>
                                 </div>
                             </TabsContent>
                             <TabsContent value="dobras" className="pt-4">
