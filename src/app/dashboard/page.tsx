@@ -129,10 +129,25 @@ export default function DashboardPage() {
         }
     };
 
+    const getAsymmetryClassification = (val1?: number, val2?: number) => {
+        if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '-';
+        const difference = Math.abs(val1 - val2);
+        const maxVal = Math.max(val1, val2);
+        const percentage = (difference / maxVal) * 100;
+        
+        if (percentage < 1.5) return 'Sem diferença';
+        if (percentage <= 5) return 'Diferença';
+        if (percentage <= 10) return 'Diferença grande';
+        return 'Diferença severa';
+    };
+
     const bmi = useMemo(() => calculateBMI(formState.bodyMeasurements?.weight, formState.bodyMeasurements?.height), [formState.bodyMeasurements]);
     const bmiClassification = useMemo(() => getBmiClassification(bmi), [bmi]);
     const rcq = useMemo(() => calculateRCQ(formState.perimetria?.cintura, formState.perimetria?.quadril), [formState.perimetria]);
     const rcqClassification = useMemo(() => getRcqClassification(rcq, formState.gender), [rcq, formState.gender]);
+    const armAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.bracoDRelaxado, formState.perimetria?.bracoERelaxado), [formState.perimetria]);
+    const thighAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.coxaMedialD, formState.perimetria?.coxaMedialE), [formState.perimetria]);
+
 
     const handleNewEvaluation = () => {
         setSelectedEvaluationId(null);
@@ -325,14 +340,26 @@ export default function DashboardPage() {
                                     <div><Label>Panturrilha D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaD" value={formState.perimetria?.panturrilhaD || ''} onChange={handleInputChange} /></div>
                                     <div><Label>Panturrilha E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaE" value={formState.perimetria?.panturrilhaE || ''} onChange={handleInputChange} /></div>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                                    <div>
-                                        <Label>RCQ (Relação Cintura-Quadril)</Label>
-                                        <div className="font-bold text-lg">{rcq}</div>
+                                <div className="mt-6 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                            <div className="font-bold text-lg">{rcq}</div>
+                                        </div>
+                                        <div>
+                                            <Label>Classificação de Risco</Label>
+                                            <div className="font-bold text-lg">{rcqClassification}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <Label>Classificação de Risco</Label>
-                                        <div className="font-bold text-lg">{rcqClassification}</div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Assimetria de Braço (Relaxado)</Label>
+                                            <div className="font-bold text-lg">{armAsymmetry}</div>
+                                        </div>
+                                        <div>
+                                            <Label>Assimetria de Coxa (Medial)</Label>
+                                            <div className="font-bold text-lg">{thighAsymmetry}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </TabsContent>
