@@ -1,0 +1,56 @@
+diff --git a/node_modules/embla-carousel-react/embla-carousel-react.esm.js b/node_modules/embla-carousel-react/embla-carousel-react.esm.js
+index 9235e16..8440026 100644
+--- a/node_modules/embla-carousel-react/embla-carousel-react.esm.js
++++ b/node_modules/embla-carousel-react/embla-carousel-react.esm.js
+@@ -1,6 +1,6 @@
+-import React, { useCallback, useState, useEffect, useRef } from 'react';
++import React__default, { useCallback, useState, useEffect, useRef } from 'react';
+ 
+-class EmblaCarouselReact extends React.Component {
++class EmblaCarouselReact extends React__default.Component {
+   constructor(props) {
+     super(props);
+     this.embla = undefined;
+diff --git a/node_modules/embla-carousel-react/embla-carousel-react.cjs.js b/node_modules/embla-carousel-react/embla-carousel-react.cjs.js
+index 451a37c..360bb8c 100644
+--- a/node_modules/embla-carousel-react/embla-carousel-react.cjs.js
++++ b/node_modules/embla-carousel-react/embla-carousel-react.cjs.js
+@@ -2,7 +2,7 @@
+ 
+ Object.defineProperty(exports, '__esModule', { value: true });
+ 
+-var React = require('react');
++var React__default = require('react');
+ 
+ function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+ 
+@@ -10,8 +10,8 @@
+ 
+ var AUTOPLAY_DEFAULT_OPTIONS = {
+   active: true,
+-  delay: 4000,
+-  playOnInit: true,
++  playOnInit: true,
++  delay: 4000
+ };
+ 
+ function Autoplay(userOptions) {
+@@ -53,7 +53,7 @@
+   }
+ 
+   function init(embla) {
+-    var emblaRoot = embla.rootNode();
++    var emblaRoot = embla.containerNode().parentElement;
+     var interaction = embla.interaction;
+     var eventStore = embla.eventStore;
+     var interactionType = userOptions.stopOnInteraction ? interaction.type : '';
+@@ -148,7 +148,7 @@
+   }
+ }
+ 
+-class EmblaCarouselReact extends React.Component {
++class EmblaCarouselReact extends React__default['default'].Component {
+   constructor(props) {
+     super(props);
+     this.embla = undefined;
+
