@@ -148,6 +148,10 @@ export default function DashboardPage() {
     const armAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.bracoDRelaxado, formState.perimetria?.bracoERelaxado), [formState.perimetria]);
     const thighAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.coxaMedialD, formState.perimetria?.coxaMedialE), [formState.perimetria]);
 
+    const skinfoldsSum = useMemo(() => {
+        if (!formState.skinFolds) return 0;
+        return Object.values(formState.skinFolds).reduce((sum: number, value: any) => sum + (Number(value) || 0), 0);
+    }, [formState.skinFolds]);
 
     const handleNewEvaluation = () => {
         setSelectedEvaluationId(null);
@@ -365,8 +369,19 @@ export default function DashboardPage() {
                             </TabsContent>
                             <TabsContent value="dobras" className="pt-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    {/* Adicione os campos para Dobras Cutâneas aqui */}
-                                    <p className="text-muted-foreground">Campos para dobras cutâneas serão adicionados aqui.</p>
+                                    <div><Label>Subscapular (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.subscapular" value={formState.skinFolds?.subscapular || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Tricipital (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.tricipital" value={formState.skinFolds?.tricipital || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Bicipital (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.bicipital" value={formState.skinFolds?.bicipital || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Peitoral (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.peitoral" value={formState.skinFolds?.peitoral || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Axilar-média (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.axilarMedia" value={formState.skinFolds?.axilarMedia || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Supra-ilíaca (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.supraIliaca" value={formState.skinFolds?.supraIliaca || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Abdominal (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.abdominal" value={formState.skinFolds?.abdominal || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Coxa (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.coxa" value={formState.skinFolds?.coxa || ''} onChange={handleInputChange} /></div>
+                                    <div><Label>Panturrilha (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.panturrilha" value={formState.skinFolds?.panturrilha || ''} onChange={handleInputChange} /></div>
+                                </div>
+                                <div className="mt-6">
+                                    <Label>Soma das Dobras (mm)</Label>
+                                    <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
                                 </div>
                             </TabsContent>
                             <TabsContent value="diametros" className="pt-4">

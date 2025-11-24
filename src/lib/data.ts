@@ -18,27 +18,35 @@ export type Evaluation = {
         muscleMass: number;
         boneDensity: number;
     };
-    perimetry?: {
-        shoulder?: number;
-        chest?: number;
-        waist?: number;
+    perimetria?: {
+        ombro?: number;
+        torax?: number;
+        cintura?: number;
         abdomen?: number;
-        hip?: number;
-        rightArmRelaxed?: number;
-        rightArmContracted?: number;
-        leftArmRelaxed?: number;
-        leftArmContracted?: number;
-        rightForearm?: number;
-        leftForearm?: number;
-        rightThighProximal?: number;
-        leftThighProximal?: number;
-        rightThighMedial?: number;
-        leftThighMedial?: number;
-        rightCalf?: number;
-        leftCalf?: number;
+        quadril?: number;
+        bracoDRelaxado?: number;
+        bracoDContraido?: number;
+        bracoERelaxado?: number;
+        bracoEContraido?: number;
+        antebracoD?: number;
+        antebracoE?: number;
+        coxaProximalD?: number;
+        coxaProximalE?: number;
+        coxaMedialD?: number;
+        coxaMedialE?: number;
+        panturrilhaD?: number;
+        panturrilhaE?: number;
     };
     skinFolds?: {
-        // Adicione os campos de dobras cutâneas aqui
+        subscapular?: number;
+        tricipital?: number;
+        bicipital?: number;
+        peitoral?: number;
+        axilarMedia?: number;
+        supraIliaca?: number;
+        abdominal?: number;
+        coxa?: number;
+        panturrilha?: number;
     };
     boneDiameters?: {
         // Adicione os campos de diâmetros ósseos aqui
