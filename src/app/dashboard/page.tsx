@@ -38,7 +38,7 @@ export default function DashboardPage() {
 
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
-    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [selectedClientId, allEvaluations]);
+    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [selectedClientId, allEvaluations]);
     
     const evaluation = useMemo(() => {
         if (selectedEvaluationId) {
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                 observations: '',
             };
             
-            setAllEvaluations(prevEvals => [newEvaluation, ...prevEvals]);
+            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation]);
             setSelectedEvaluationId(newEvalId);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                     <CardHeader>
                         <div className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
+                                <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.map(e => e.id).indexOf(selectedEvaluationId) + 1 : clientEvaluations.length + 1}</CardTitle>
                                 <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
                             </div>
                              <Button 
@@ -436,7 +436,7 @@ export default function DashboardPage() {
                         )}
                     </CardHeader>
                     <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.map(ev => {
+                        {clientEvaluations.map((ev, index) => {
                             const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
                             const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
                             
@@ -459,7 +459,7 @@ export default function DashboardPage() {
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
                                          {isCompareMode ? (
-                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-white" : "text-card-foreground")}>5</p>
+                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-white" : "text-card-foreground")}>{index + 1}</p>
                                          ) : (
                                             <>
                                                 <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
@@ -642,5 +642,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
