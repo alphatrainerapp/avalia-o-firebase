@@ -172,8 +172,8 @@ export type ProtocolMap = {
 };
 
 export const audienceProtocols: ProtocolMap = {
-  'Adultos Saudáveis': ['Pollock 3 dobras', 'Pollock 7 dobras', 'Durnin & Womersley'],
-  'Crianças e Adolescentes': ['Slaughter-Lohman', 'Boileau'],
-  'Idosos': ['Nagasawa', 'Durnin & Womersley'],
-  'Obesos': ['Guedes', 'YMCA'],
+  'Adultos Saudáveis': ['Pollock 3 dobras', 'Pollock 4 dobras', 'Pollock 7 dobras', 'Jackson & Pollock', 'Faulkner', 'Guedes', 'YMCA'],
+  'Crianças e Adolescentes': ['Slaughter-Lohman', 'Guedes'],
+  'Idosos': ['Pollock 4 dobras', 'Durnin & Womersley'],
+  'Obesos': ['Pollock 3 dobras', 'Faulkner', 'YMCA', 'Guedes'],
 };
