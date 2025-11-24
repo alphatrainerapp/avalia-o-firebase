@@ -581,22 +581,26 @@ export default function DashboardPage() {
                                         </div>
                                     </CardContent>
                                 </Card>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    {skinfoldFields.map(field => (
-                                        <div key={field.name}>
-                                            <Label>{field.label}</Label>
-                                            <Input 
-                                                type="number" 
-                                                placeholder="0.0" 
-                                                name={`skinFolds.${field.name}`} 
-                                                value={formState.skinFolds?.[field.name] || ''} 
-                                                onChange={handleInputChange} 
-                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
-                                            />
-                                        </div>
-                                    ))}
+                                
+                                <div className="pt-4">
+                                    <h3 className="text-lg font-medium mb-4">Medidas</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        {skinfoldFields.map(field => (
+                                            <div key={field.name}>
+                                                <Label>{field.label}</Label>
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="0.0" 
+                                                    name={`skinFolds.${field.name}`} 
+                                                    value={formState.skinFolds?.[field.name] || ''} 
+                                                    onChange={handleInputChange} 
+                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
+
                                 <div className="mt-6 rounded-lg bg-primary/10 p-4">
                                     <h3 className="font-semibold mb-2">Resultados</h3>
                                     <div className="grid grid-cols-2 gap-4">
@@ -704,5 +708,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
 
     
