@@ -216,14 +216,7 @@ export default function DashboardPage() {
         const femur = formState.boneDiameters?.bicondilarFemur; // cm
     
         if (height && wrist && femur) {
-            const heightInM = height / 100;
-            const wristInM = wrist / 100;
-            const femurInM = femur / 100;
-            
-            // Massa Óssea (kg) = 3.02 * (altura_m^2 * diâmetro_punho_m * diâmetro_joelho_m) * 10000
-            // Simplified: 3.02 * (H^2 * P * F)
-            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 10000;
-            
+            const boneMassValue = 3.02 * Math.pow(height, 2) * (wrist/100) * (femur/100) * 0.0001;
             return boneMassValue.toFixed(2);
         }
         return '-';
