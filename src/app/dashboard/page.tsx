@@ -15,11 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as allEvaluations, type Evaluation, type Client, audienceProtocols } from '@/lib/data';
+import { clients, evaluations as allEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 
 export default function DashboardPage() {
@@ -30,7 +31,7 @@ export default function DashboardPage() {
     const { toast } = useToast();
     const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
     const [availableProtocols, setAvailableProtocols] = useState<string[]>(audienceProtocols[selectedAudience]);
-
+    const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [selectedClientId]);
@@ -46,26 +47,58 @@ export default function DashboardPage() {
     
     useEffect(() => {
         if (client && evaluation) {
-            setFormState({
+            const initialFormState = {
                 ...client,
                 ...evaluation,
                 clientName: client.name,
                 gender: client.gender,
                 protocol: evaluation.protocol || availableProtocols[0],
-            });
+            };
+            setFormState(initialFormState);
+            
             const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(evaluation.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
-            setAvailableProtocols(audienceProtocols[audience]);
+            const newProtocols = audienceProtocols[audience];
+            setAvailableProtocols(newProtocols);
+
+            const protocol = initialFormState.protocol;
+            let currentRequired: SkinfoldKeys[] = [];
+            if (protocol.includes('Pollock 3 dobras')) {
+                currentRequired = client.gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
+            } else {
+                currentRequired = protocolSkinfolds[protocol as keyof typeof protocolSkinfolds] || [];
+            }
+            setRequiredSkinfolds(currentRequired);
+
         } else if (client) {
-             setFormState({
+             const newFormState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
                 date: new Date().toISOString().split('T')[0],
                 protocol: availableProtocols[0],
-             });
+             };
+             setFormState(newFormState);
+             let currentRequired: SkinfoldKeys[] = [];
+             if (newFormState.protocol.includes('Pollock 3 dobras')) {
+                currentRequired = client.gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
+            } else {
+                currentRequired = protocolSkinfolds[newFormState.protocol as keyof typeof protocolSkinfolds] || [];
+            }
+            setRequiredSkinfolds(currentRequired);
         }
     }, [client, evaluation, availableProtocols, selectedAudience]);
+
+    useEffect(() => {
+        if (!formState.protocol) return;
+        let currentRequired: SkinfoldKeys[] = [];
+        if (formState.protocol.includes('Pollock 3 dobras')) {
+            currentRequired = formState.gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
+        } else {
+            currentRequired = protocolSkinfolds[formState.protocol as keyof typeof protocolSkinfolds] || [];
+        }
+        setRequiredSkinfolds(currentRequired);
+    }, [formState.protocol, formState.gender]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -215,6 +248,18 @@ export default function DashboardPage() {
             .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         return sorted;
     }, [selectedEvalIdsForCompare]);
+
+    const skinfoldFields: { name: SkinfoldKeys; label: string }[] = [
+        { name: 'subscapular', label: 'Subscapular (mm)' },
+        { name: 'tricipital', label: 'Tricipital (mm)' },
+        { name: 'bicipital', label: 'Bicipital (mm)' },
+        { name: 'peitoral', label: 'Peitoral (mm)' },
+        { name: 'axilarMedia', label: 'Axilar-média (mm)' },
+        { name: 'supraIliaca', label: 'Supra-ilíaca (mm)' },
+        { name: 'abdominal', label: 'Abdominal (mm)' },
+        { name: 'coxa', label: 'Coxa (mm)' },
+        { name: 'panturrilha', label: 'Panturrilha (mm)' },
+    ];
 
 
   return (
@@ -414,15 +459,19 @@ export default function DashboardPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    <div><Label>Subscapular (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.subscapular" value={formState.skinFolds?.subscapular || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Tricipital (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.tricipital" value={formState.skinFolds?.tricipital || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Bicipital (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.bicipital" value={formState.skinFolds?.bicipital || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Peitoral (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.peitoral" value={formState.skinFolds?.peitoral || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Axilar-média (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.axilarMedia" value={formState.skinFolds?.axilarMedia || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Supra-ilíaca (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.supraIliaca" value={formState.skinFolds?.supraIliaca || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Abdominal (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.abdominal" value={formState.skinFolds?.abdominal || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Coxa (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.coxa" value={formState.skinFolds?.coxa || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Panturrilha (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.panturrilha" value={formState.skinFolds?.panturrilha || ''} onChange={handleInputChange} /></div>
+                                    {skinfoldFields.map(field => (
+                                        <div key={field.name}>
+                                            <Label>{field.label}</Label>
+                                            <Input 
+                                                type="number" 
+                                                placeholder="0.0" 
+                                                name={`skinFolds.${field.name}`} 
+                                                value={formState.skinFolds?.[field.name] || ''} 
+                                                onChange={handleInputChange} 
+                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-primary focus-visible:ring-primary')}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                                 <div className="mt-6">
                                     <Label>Soma das Dobras (mm)</Label>

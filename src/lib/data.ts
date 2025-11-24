@@ -1,5 +1,8 @@
 import { getPlaceholderImage } from './placeholder-images';
 
+export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitoral' | 'axilarMedia' | 'supraIliaca' | 'abdominal' | 'coxa' | 'panturrilha';
+
+
 export type Evaluation = {
     id: string;
     clientId: string;
@@ -38,15 +41,7 @@ export type Evaluation = {
         panturrilhaE?: number;
     };
     skinFolds?: {
-        subscapular?: number;
-        tricipital?: number;
-        bicipital?: number;
-        peitoral?: number;
-        axilarMedia?: number;
-        supraIliaca?: number;
-        abdominal?: number;
-        coxa?: number;
-        panturrilha?: number;
+        [key in SkinfoldKeys]?: number;
     };
     boneDiameters?: {
         // Adicione os campos de diâmetros ósseos aqui
@@ -176,4 +171,17 @@ export const audienceProtocols: ProtocolMap = {
   'Crianças e Adolescentes': ['Slaughter-Lohman', 'Guedes'],
   'Idosos': ['Pollock 4 dobras', 'Durnin & Womersley'],
   'Obesos': ['Pollock 3 dobras', 'Faulkner', 'YMCA', 'Guedes'],
+};
+
+export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
+    'Pollock 7 dobras': ['peitoral', 'axilarMedia', 'subscapular', 'tricipital', 'supraIliaca', 'abdominal', 'coxa'],
+    'Pollock 4 dobras': ['tricipital', 'supraIliaca', 'coxa', 'abdominal'],
+    'Pollock 3 dobras (M)': ['peitoral', 'abdominal', 'coxa'],
+    'Pollock 3 dobras (F)': ['tricipital', 'supraIliaca', 'coxa'],
+    'Jackson & Pollock': ['tricipital', 'supraIliaca', 'abdominal', 'coxa'],
+    'Faulkner': ['tricipital', 'subscapular', 'supraIliaca', 'abdominal'],
+    'Guedes': ['tricipital', 'supraIliaca', 'abdominal'],
+    'YMCA': ['abdominal'],
+    'Slaughter-Lohman': ['tricipital', 'panturrilha'],
+    'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
 };
