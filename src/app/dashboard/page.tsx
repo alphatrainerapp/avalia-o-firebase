@@ -219,11 +219,60 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400;
-            return boneMassValue.toFixed(2);
+            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400 * 0.712;
+            return boneMassValue;
         }
-        return '-';
+        return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
+
+    const fatMassKg = useMemo(() => {
+        const weight = formState.bodyMeasurements?.weight;
+        const fatPercentage = formState.bodyComposition?.bodyFatPercentage;
+        if (weight && fatPercentage) {
+            return (weight * fatPercentage) / 100;
+        }
+        return 0;
+    }, [formState.bodyMeasurements?.weight, formState.bodyComposition?.bodyFatPercentage]);
+    
+    const residualMass = useMemo(() => {
+        const weight = formState.bodyMeasurements?.weight;
+        const muscleMass = formState.bodyComposition?.muscleMass;
+    
+        if (weight && fatMassKg && muscleMass && boneMass) {
+            return weight - (fatMassKg + muscleMass + boneMass);
+        }
+        return 0;
+    }, [formState.bodyMeasurements?.weight, fatMassKg, formState.bodyComposition?.muscleMass, boneMass]);
+    
+    const residualMassPercentage = useMemo(() => {
+        const weight = formState.bodyMeasurements?.weight;
+        if (weight && residualMass > 0) {
+            return (residualMass / weight) * 100;
+        }
+        return 0;
+    }, [residualMass, formState.bodyMeasurements?.weight]);
+
+    const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
+        if (percentage === undefined || !gender) return '-';
+        if (gender === 'Feminino') {
+            if (percentage < 20) return 'Atleta';
+            if (percentage <= 24) return 'Bom';
+            if (percentage <= 30) return 'Aceitável';
+            return 'Obeso';
+        } else { // Masculino
+            if (percentage < 12) return 'Atleta';
+            if (percentage <= 16) return 'Bom';
+            if (percentage <= 22) return 'Aceitável';
+            return 'Obeso';
+        }
+    };
+    
+    const fatClassification = useMemo(() => getFatClassification(formState.bodyComposition?.bodyFatPercentage, formState.gender), [formState.bodyComposition?.bodyFatPercentage, formState.gender]);
+    const leanMassKg = useMemo(() => (formState.bodyMeasurements?.weight || 0) - fatMassKg, [formState.bodyMeasurements?.weight, fatMassKg]);
+    const leanMassPercentage = useMemo(() => (leanMassKg / (formState.bodyMeasurements?.weight || 1)) * 100, [leanMassKg, formState.bodyMeasurements?.weight]);
+    const idealWeight = useMemo(() => leanMassKg / (formState.gender === 'Masculino' ? 0.85 : 0.75), [leanMassKg, formState.gender]);
+    const fatLossNeeded = useMemo(() => (formState.bodyMeasurements?.weight || 0) - idealWeight, [formState.bodyMeasurements?.weight, idealWeight]);
+
 
 
     const handleNewEvaluation = () => {
@@ -635,7 +684,7 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
                                             <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                            <div className="font-bold text-lg">{boneMass} kg</div>
+                                            <div className="font-bold text-lg">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</div>
                                         </div>
                                     </div>
                                     <p className="text-xs text-primary-foreground/80 mt-2">
@@ -701,6 +750,46 @@ export default function DashboardPage() {
                             <p className="text-xs text-muted-foreground">{(((comparedEvaluations[1].bodyComposition.muscleMass || 0) / (comparedEvaluations[1].bodyMeasurements.weight || 1)) * 100).toFixed(1)}%</p>
                          </CardContent>
                      )}
+                </Card>
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold">{residualMass > 0 ? residualMass.toFixed(1) : '0.0'} kg</p>
+                        <p className="text-xs text-muted-foreground">{residualMassPercentage > 0 ? residualMassPercentage.toFixed(1) : '0.0'}%</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-base font-medium">RESULTADOS</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Classificação % Gordura:</span>
+                            <span className="font-medium">{fatClassification}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Classificação IMC:</span>
+                            <span className="font-medium">{bmiClassification}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Massa gorda (kg / %):</span>
+                            <span className="font-medium">{fatMassKg.toFixed(1)} kg / {formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '0.0'}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Massa magra (kg / %):</span>
+                            <span className="font-medium">{leanMassKg.toFixed(1)} kg / {leanMassPercentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Peso desejável:</span>
+                            <span className="font-medium">{idealWeight > 0 ? idealWeight.toFixed(1) : '-'} kg</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Perda de gordura necessária:</span>
+                            <span className="font-medium">{fatLossNeeded > 0 ? fatLossNeeded.toFixed(1) : '0.0'} kg</span>
+                        </div>
+                    </CardContent>
                 </Card>
             </div>
         </div>
