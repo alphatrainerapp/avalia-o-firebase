@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as allEvaluations, type Evaluation, type Client } from '@/lib/data';
+import { clients, evaluations as allEvaluations, type Evaluation, type Client, audienceProtocols } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -28,6 +28,9 @@ export default function DashboardPage() {
     const [isCompareMode, setCompareMode] = useState(false);
     const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
     const { toast } = useToast();
+    const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
+    const [availableProtocols, setAvailableProtocols] = useState<string[]>(audienceProtocols[selectedAudience]);
+
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [selectedClientId]);
@@ -48,16 +51,21 @@ export default function DashboardPage() {
                 ...evaluation,
                 clientName: client.name,
                 gender: client.gender,
+                protocol: evaluation.protocol || availableProtocols[0],
             });
+            const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(evaluation.protocol || '')) || selectedAudience;
+            setSelectedAudience(audience);
+            setAvailableProtocols(audienceProtocols[audience]);
         } else if (client) {
              setFormState({
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                protocol: availableProtocols[0],
              });
         }
-    }, [client, evaluation]);
+    }, [client, evaluation, availableProtocols, selectedAudience]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -89,6 +97,13 @@ export default function DashboardPage() {
              setFormState(prev => ({...prev, [name]: value}));
         }
     }
+
+    const handleAudienceChange = (audience: string) => {
+        setSelectedAudience(audience);
+        const newProtocols = audienceProtocols[audience];
+        setAvailableProtocols(newProtocols);
+        setFormState(prev => ({ ...prev, protocol: newProtocols[0] }));
+    };
     
     const calculateBMI = (weight?: number, height?: number) => {
         if (weight && height) {
@@ -165,6 +180,7 @@ export default function DashboardPage() {
                 date: newDate.toISOString().split('T')[0],
                 bodyMeasurements: { weight: 0, height: client.height || 0, waistCircumference: 0, hipCircumference: 0 },
                 bodyComposition: { bodyFatPercentage: 0, muscleMass: 0, boneDensity: 0 },
+                protocol: availableProtocols[0],
             });
         }
         toast({ title: "Novo Formulário", description: "Preencha os dados para a nova avaliação." });
@@ -367,7 +383,36 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </TabsContent>
-                            <TabsContent value="dobras" className="pt-4">
+                            <TabsContent value="dobras" className="pt-4 space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                        <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                            <SelectTrigger id="publico-alvo">
+                                                <SelectValue placeholder="Selecione o público" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Object.keys(audienceProtocols).map(audience => (
+                                                    <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                        <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
+                                            <SelectTrigger id="protocolo">
+                                                <SelectValue placeholder="Selecione o protocolo" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableProtocols.map(protocol => (
+                                                    <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                     <div><Label>Subscapular (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.subscapular" value={formState.skinFolds?.subscapular || ''} onChange={handleInputChange} /></div>
                                     <div><Label>Tricipital (mm)</Label><Input type="number" placeholder="0.0" name="skinFolds.tricipital" value={formState.skinFolds?.tricipital || ''} onChange={handleInputChange} /></div>

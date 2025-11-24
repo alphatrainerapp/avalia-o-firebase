@@ -75,7 +75,7 @@ export const evaluations: Evaluation[] = [
         clientId: 'cli_1',
         clientName: 'João da Silva',
         date: '2024-09-25',
-        protocol: 'Pollock 7',
+        protocol: 'Pollock 7 dobras',
         observations: 'Cliente focado em hipertrofia.',
         bodyMeasurements: {
             weight: 85,
@@ -94,7 +94,7 @@ export const evaluations: Evaluation[] = [
         clientId: 'cli_1',
         clientName: 'João da Silva',
         date: '2024-10-25',
-        protocol: 'Pollock 7',
+        protocol: 'Pollock 7 dobras',
         observations: 'Aumento da força notado.',
         bodyMeasurements: {
             weight: 82,
@@ -113,7 +113,7 @@ export const evaluations: Evaluation[] = [
         clientId: 'cli_1',
         clientName: 'João da Silva',
         date: '2024-11-25',
-        protocol: 'Pollock 7',
+        protocol: 'Pollock 7 dobras',
         observations: 'Melhora na resistência cardiovascular.',
         bodyMeasurements: {
             weight: 80,
@@ -167,13 +167,13 @@ export const evaluations: Evaluation[] = [
     }
 ];
 
-export const protocols = [
-    'Pollock 3',
-    'Pollock 4',
-    'Pollock 7',
-    'Guedes',
-    'Faulkner',
-    'Jackson & Pollock',
-    'YMCA',
-    'Public Service Exam',
-];
+export type ProtocolMap = {
+  [key: string]: string[];
+};
+
+export const audienceProtocols: ProtocolMap = {
+  'Adultos Saudáveis': ['Pollock 3 dobras', 'Pollock 7 dobras', 'Durnin & Womersley'],
+  'Crianças e Adolescentes': ['Slaughter-Lohman', 'Boileau'],
+  'Idosos': ['Nagasawa', 'Durnin & Womersley'],
+  'Obesos': ['Guedes', 'YMCA'],
+};
