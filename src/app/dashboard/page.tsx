@@ -51,7 +51,7 @@ export default function DashboardPage() {
     
     useEffect(() => {
         const currentEval = clientEvaluations.find(e => e.id === selectedEvaluationId);
-        if (client && currentEval && !isCompareMode) {
+        if (client && currentEval) {
             const initialFormState = {
                 ...client,
                 ...currentEval,
@@ -95,7 +95,7 @@ export default function DashboardPage() {
             }
             setRequiredSkinfolds(currentRequired);
         }
-    }, [client, selectedEvaluationId, isCompareMode, clientEvaluations, availableProtocols, selectedAudience]);
+    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
 
 
     useEffect(() => {
@@ -211,12 +211,19 @@ export default function DashboardPage() {
     }, [formState.skinFolds]);
 
     const boneMass = useMemo(() => {
-        const height = formState.bodyMeasurements?.height;
-        const wrist = formState.boneDiameters?.biestiloidal;
-        const femur = formState.boneDiameters?.bicondilarFemur;
-
+        const height = formState.bodyMeasurements?.height; // cm
+        const wrist = formState.boneDiameters?.biestiloidal; // cm
+        const femur = formState.boneDiameters?.bicondilarFemur; // cm
+    
         if (height && wrist && femur) {
-            const boneMassValue = 3.02 * (Math.pow(height / 100, 2) * (wrist / 100) * (femur / 100)) * 10000;
+            const heightInM = height / 100;
+            const wristInM = wrist / 100;
+            const femurInM = femur / 100;
+            
+            // Massa Óssea (kg) = 3.02 * (altura_m^2 * diâmetro_punho_m * diâmetro_joelho_m) * 10000
+            // Simplified: 3.02 * (H^2 * P * F)
+            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 10000;
+            
             return boneMassValue.toFixed(2);
         }
         return '-';
@@ -266,6 +273,8 @@ export default function DashboardPage() {
         setCompareMode(checked);
         if (!checked) {
             setSelectedEvalIdsForCompare([]);
+        } else {
+            setSelectedEvaluationId(null)
         }
     }
 
@@ -499,138 +508,136 @@ export default function DashboardPage() {
                     />
                 )}
                 
-                {(!isCompareMode || !client) && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Registros de Dados</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Tabs defaultValue="perimetria">
-                                <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
-                                    <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
-                                    <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="perimetria" className="pt-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {perimetriaFields.map(field => (
-                                            <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-6 space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>RCQ (Relação Cintura-Quadril)</Label>
-                                                <div className="font-bold text-lg">{rcq}</div>
-                                            </div>
-                                            <div>
-                                                <Label>Classificação de Risco</Label>
-                                                <div className="font-bold text-lg">{rcqClassification}</div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>Assimetria de Braço (Relaxado)</Label>
-                                                <div className="font-bold text-lg">{armAsymmetry}</div>
-                                            </div>
-                                            <div>
-                                                <Label>Assimetria de Coxa (Medial)</Label>
-                                                <div className="font-bold text-lg">{thighAsymmetry}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="dobras" className="pt-4 space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Registros de Dados</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Tabs defaultValue="perimetria">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
+                                <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
+                                <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="perimetria" className="pt-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                    {perimetriaFields.map(field => (
+                                        <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
+                                    ))}
+                                </div>
+                                <div className="mt-6 space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label htmlFor="publico-alvo">Público-Alvo</Label>
-                                            <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                                <SelectTrigger id="publico-alvo">
-                                                    <SelectValue placeholder="Selecione o público" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {Object.keys(audienceProtocols).map(audience => (
-                                                        <SelectItem key={audience} value={audience}>{audience}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                            <div className="font-bold text-lg">{rcq}</div>
                                         </div>
                                         <div>
-                                            <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
-                                            <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
-                                                <SelectTrigger id="protocolo">
-                                                    <SelectValue placeholder="Selecione o protocolo" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {availableProtocols.map(protocol => (
-                                                        <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <Label>Classificação de Risco</Label>
+                                            <div className="font-bold text-lg">{rcqClassification}</div>
                                         </div>
                                     </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Assimetria de Braço (Relaxado)</Label>
+                                            <div className="font-bold text-lg">{armAsymmetry}</div>
+                                        </div>
+                                        <div>
+                                            <Label>Assimetria de Coxa (Medial)</Label>
+                                            <div className="font-bold text-lg">{thighAsymmetry}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="dobras" className="pt-4 space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                        <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                            <SelectTrigger id="publico-alvo">
+                                                <SelectValue placeholder="Selecione o público" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Object.keys(audienceProtocols).map(audience => (
+                                                    <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                        <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
+                                            <SelectTrigger id="protocolo">
+                                                <SelectValue placeholder="Selecione o protocolo" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {availableProtocols.map(protocol => (
+                                                    <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {skinfoldFields.map(field => (
-                                            <div key={field.name}>
-                                                <Label>{field.label}</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    placeholder="0.0" 
-                                                    name={`skinFolds.${field.name}`} 
-                                                    value={formState.skinFolds?.[field.name] || ''} 
-                                                    onChange={handleInputChange} 
-                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold mb-2">Resultados</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>Soma das Dobras (mm)</Label>
-                                                <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
-                                            </div>
-                                            <div>
-                                                <Label>% Gordura Estimado</Label>
-                                                <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
-                                            </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                    {skinfoldFields.map(field => (
+                                        <div key={field.name}>
+                                            <Label>{field.label}</Label>
+                                            <Input 
+                                                type="number" 
+                                                placeholder="0.0" 
+                                                name={`skinFolds.${field.name}`} 
+                                                value={formState.skinFolds?.[field.name] || ''} 
+                                                onChange={handleInputChange} 
+                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                    <h3 className="font-semibold mb-2">Resultados</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Soma das Dobras (mm)</Label>
+                                            <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                        </div>
+                                        <div>
+                                            <Label>% Gordura Estimado</Label>
+                                            <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
                                         </div>
                                     </div>
-                                </TabsContent>
-                                <TabsContent value="diametros" className="pt-4 space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {diametrosFields.map(field => (
-                                            <div key={field.name}>
-                                                <Label>{field.label}</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    placeholder="0.0" 
-                                                    name={`boneDiameters.${field.name}`} 
-                                                    value={formState.boneDiameters?.[field.name] || ''} 
-                                                    onChange={handleInputChange} 
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold mb-2">Resultados</h3>
-                                        <div className="grid grid-cols-1 gap-4">
-                                            <div>
-                                                <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                                <div className="font-bold text-lg">{boneMass} kg</div>
-                                            </div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="diametros" className="pt-4 space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                    {diametrosFields.map(field => (
+                                        <div key={field.name}>
+                                            <Label>{field.label}</Label>
+                                            <Input 
+                                                type="number" 
+                                                placeholder="0.0" 
+                                                name={`boneDiameters.${field.name}`} 
+                                                value={formState.boneDiameters?.[field.name] || ''} 
+                                                onChange={handleInputChange} 
+                                            />
                                         </div>
-                                        <p className="text-xs text-primary-foreground/80 mt-2">
-                                            Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
-                                        </p>
+                                    ))}
+                                </div>
+                                <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                    <h3 className="font-semibold mb-2">Resultados</h3>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <Label>Massa Óssea (kg) - Rocha, 1975</Label>
+                                            <div className="font-bold text-lg">{boneMass} kg</div>
+                                        </div>
                                     </div>
-                                </TabsContent>
-                            </Tabs>
-                        </CardContent>
-                    </Card>
-                )}
+                                    <p className="text-xs text-primary-foreground/80 mt-2">
+                                        Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
+                                    </p>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Right Column */}
