@@ -219,8 +219,7 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400 * 0.712;
-            return boneMassValue;
+            return 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400 * 0.712;
         }
         return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
@@ -234,15 +233,19 @@ export default function DashboardPage() {
         return 0;
     }, [formState.bodyMeasurements?.weight, formState.bodyComposition?.bodyFatPercentage]);
     
+    const muscleMass = useMemo(() => {
+        const rawMuscleMass = formState.bodyComposition?.muscleMass || 0;
+        return rawMuscleMass > boneMass ? rawMuscleMass - boneMass : rawMuscleMass;
+    }, [formState.bodyComposition?.muscleMass, boneMass]);
+    
     const residualMass = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
-        const muscleMass = formState.bodyComposition?.muscleMass;
     
         if (weight && fatMassKg && muscleMass && boneMass) {
             return weight - (fatMassKg + muscleMass + boneMass);
         }
         return 0;
-    }, [formState.bodyMeasurements?.weight, fatMassKg, formState.bodyComposition?.muscleMass, boneMass]);
+    }, [formState.bodyMeasurements?.weight, fatMassKg, muscleMass, boneMass]);
     
     const residualMassPercentage = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
@@ -737,8 +740,8 @@ export default function DashboardPage() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyComposition.muscleMass.toFixed(1) : evaluation?.bodyComposition.muscleMass.toFixed(1) || '0.0'} kg</p>
-                        <p className="text-xs text-muted-foreground">{(((isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyComposition.muscleMass : evaluation?.bodyComposition.muscleMass || 0) / (isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyMeasurements.weight : evaluation?.bodyMeasurements.weight || 1)) * 100).toFixed(1)}%</p>
+                        <p className="text-2xl font-bold">{muscleMass > 0 ? muscleMass.toFixed(1) : '0.0'} kg</p>
+                        <p className="text-xs text-muted-foreground">{(((muscleMass) / (formState.bodyMeasurements?.weight || 1)) * 100).toFixed(1)}%</p>
                     </CardContent>
                       {isCompareMode && comparedEvaluations.length > 1 && (
                          <CardContent className="border-t pt-4">
@@ -780,6 +783,10 @@ export default function DashboardPage() {
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa magra (kg / %):</span>
                             <span className="font-medium">{leanMassKg.toFixed(1)} kg / {leanMassPercentage.toFixed(1)}%</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span className="text-muted-foreground">Massa óssea (kg):</span>
+                            <span className="font-medium">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Peso desejável:</span>
