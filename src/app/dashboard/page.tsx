@@ -48,7 +48,7 @@ export default function DashboardPage() {
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
     useEffect(() => {
-        if (client && evaluation && !isCompareMode) {
+        if (client && evaluation && !isCompareMode && selectedEvaluationId) {
             const initialFormState = {
                 ...client,
                 ...evaluation,
@@ -89,7 +89,7 @@ export default function DashboardPage() {
             }
             setRequiredSkinfolds(currentRequired);
         }
-    }, [client, evaluation, availableProtocols, selectedAudience, isCompareMode]);
+    }, [client, evaluation, availableProtocols, selectedAudience, isCompareMode, selectedEvaluationId]);
 
     useEffect(() => {
         if (!formState.protocol) return;
@@ -206,19 +206,21 @@ export default function DashboardPage() {
     const handleNewEvaluation = () => {
         setSelectedEvaluationId(null);
         if(client){
-            const newDate = new Date();
-            newDate.setDate(newDate.getDate() + 1);
-
             setFormState({
                 clientName: client.name,
                 gender: client.gender,
-                date: newDate.toISOString().split('T')[0],
-                bodyMeasurements: { weight: 0, height: client.height || 0, waistCircumference: 0, hipCircumference: 0 },
-                bodyComposition: { bodyFatPercentage: 0, muscleMass: 0, boneDensity: 0 },
+                height: client.height,
+                age: client.age,
+                date: new Date().toISOString().split('T')[0],
                 protocol: availableProtocols[0],
+                bodyMeasurements: {},
+                bodyComposition: {},
+                perimetria: {},
+                skinFolds: {},
+                observations: '',
             });
         }
-        toast({ title: "Novo Formulário", description: "Preencha os dados para a nova avaliação." });
+        toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação." });
     };
     
     const handleSave = () => {
@@ -318,7 +320,7 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
-                            <CardTitle>Avaliação {evaluation && !isCompareMode ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
+                            <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
                             <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
                         </div>
                         <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
@@ -418,7 +420,7 @@ export default function DashboardPage() {
                                     className={cn(
                                         "shrink-0 w-32 text-center cursor-pointer transition-colors shadow-lg",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl' : 'bg-card rounded-2xl'
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl shadow-xl' : 'bg-card rounded-2xl shadow-lg'
                                             : isSelected ? 'border-2 border-primary' : '',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
@@ -614,7 +616,5 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
 
     
