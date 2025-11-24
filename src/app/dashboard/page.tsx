@@ -323,7 +323,12 @@ export default function DashboardPage() {
                             <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
                             <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
                         </div>
-                        <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
+                        <Button 
+                            onClick={handleNewEvaluation} 
+                            className="bg-[#2596be] text-white shadow-md hover:bg-[#2596be]/90"
+                        >
+                            <Plus className="mr-2" /> Nova Avaliação
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
