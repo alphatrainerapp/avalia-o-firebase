@@ -216,7 +216,7 @@ export default function DashboardPage() {
         const femur = formState.boneDiameters?.bicondilarFemur; // cm
     
         if (height && wrist && femur) {
-            const boneMassValue = 3.02 * Math.pow(height, 2) * (wrist/100) * (femur/100) * 0.0001;
+            const boneMassValue = 3.02 * Math.pow(height, 2) * (wrist/100) * (femur/100) * 0.712;
             return boneMassValue.toFixed(2);
         }
         return '-';
