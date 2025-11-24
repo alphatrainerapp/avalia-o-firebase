@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Download, Plus, Save, Activity, User, BarChart, FileText } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, FileText, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { clients, evaluations as allEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
@@ -21,6 +20,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ComparisonTable } from '@/components/ComparisonTable';
 
 
 export default function DashboardPage() {
@@ -46,7 +48,7 @@ export default function DashboardPage() {
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
     useEffect(() => {
-        if (client && evaluation) {
+        if (client && evaluation && !isCompareMode) {
             const initialFormState = {
                 ...client,
                 ...evaluation,
@@ -87,7 +89,7 @@ export default function DashboardPage() {
             }
             setRequiredSkinfolds(currentRequired);
         }
-    }, [client, evaluation, availableProtocols, selectedAudience]);
+    }, [client, evaluation, availableProtocols, selectedAudience, isCompareMode]);
 
     useEffect(() => {
         if (!formState.protocol) return;
@@ -224,9 +226,11 @@ export default function DashboardPage() {
         toast({ title: "Salvo!", description: "Os dados da avaliação foram salvos com sucesso." });
     }
 
-    const handleCompareToggle = () => {
-        setCompareMode(!isCompareMode);
-        setSelectedEvalIdsForCompare([]);
+    const handleCompareToggle = (checked: boolean) => {
+        setCompareMode(checked);
+        if (!checked) {
+            setSelectedEvalIdsForCompare([]);
+        }
     }
 
     const handleCompareSelection = (evalId: string) => {
@@ -234,20 +238,23 @@ export default function DashboardPage() {
             if (prev.includes(evalId)) {
                 return prev.filter(id => id !== evalId);
             }
-            if (prev.length < 2) {
-                return [...prev, evalId];
+            if (prev.length < 4) {
+                return [...prev, evalId].sort((a,b) => {
+                    const evalA = clientEvaluations.find(e => e.id === a);
+                    const evalB = clientEvaluations.find(e => e.id === b);
+                    return new Date(evalA!.date).getTime() - new Date(evalB!.date).getTime();
+                });
             }
-            toast({variant: 'destructive', title: 'Aviso', description: 'Você só pode comparar duas avaliações.'})
+            toast({variant: 'destructive', title: 'Aviso', description: 'Você pode selecionar no máximo 4 avaliações.'})
             return prev;
         });
     }
 
     const comparedEvaluations = useMemo(() => {
-        const sorted = allEvaluations
+        return clientEvaluations
             .filter(e => selectedEvalIdsForCompare.includes(e.id))
             .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        return sorted;
-    }, [selectedEvalIdsForCompare]);
+    }, [selectedEvalIdsForCompare, clientEvaluations]);
 
     const skinfoldFields: { name: SkinfoldKeys; label: string }[] = [
         { name: 'subscapular', label: 'Subscapular (mm)' },
@@ -259,6 +266,30 @@ export default function DashboardPage() {
         { name: 'abdominal', label: 'Abdominal (mm)' },
         { name: 'coxa', label: 'Coxa (mm)' },
         { name: 'panturrilha', label: 'Panturrilha (mm)' },
+    ];
+    
+    const perimetriaFields = [
+        { key: 'ombro', label: 'Ombro' },
+        { key: 'torax', label: 'Tórax' },
+        { key: 'cintura', label: 'Cintura' },
+        { key: 'abdomen', label: 'Abdômen' },
+        { key: 'quadril', label: 'Quadril' },
+        { key: 'bracoDRelaxado', label: 'Braço D (relaxado)' },
+        { key: 'bracoDContraido', label: 'Braço D (contraído)' },
+        { key: 'bracoERelaxado', label: 'Braço E (relaxado)' },
+        { key: 'bracoEContraido', label: 'Braço E (contraído)' },
+        { key: 'antebracoD', label: 'Antebraço D' },
+        { key: 'antebracoE', label: 'Antebraço E' },
+        { key: 'coxaProximalD', label: 'Coxa Proximal D' },
+        { key: 'coxaProximalE', label: 'Coxa Proximal E' },
+        { key: 'coxaMedialD', label: 'Coxa Medial D' },
+        { key: 'coxaMedialE', label: 'Coxa Medial E' },
+        { key: 'panturrilhaD', label: 'Panturrilha D' },
+        { key: 'panturrilhaE', label: 'Panturrilha E' },
+    ];
+    
+    const diametrosFields = [
+        // Placeholder, add actual fields here
     ];
 
 
@@ -283,210 +314,247 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Avaliação {evaluation ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
-                            <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
-                        </div>
-                        <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="sm:col-span-2">
-                                <Label htmlFor="name">Nome</Label>
-                                <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
-                                    <SelectTrigger id="name">
-                                        <SelectValue placeholder="Selecione um cliente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                               <Label htmlFor="age">Idade</Label>
-                               <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
-                            </div>
-                        </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <Label htmlFor="gender">Sexo</Label>
-                                <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
-                                    <SelectTrigger id="gender">
-                                        <SelectValue placeholder="Selecione o sexo" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Masculino">Masculino</SelectItem>
-                                        <SelectItem value="Feminino">Feminino</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label htmlFor="height">Altura (cm)</Label>
-                                <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
-                            </div>
-                            <div>
-                                <Label htmlFor="weight">Peso (kg)</Label>
-                                <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, weight: Number(e.target.value)}}))} />
-                            </div>
-                        </div>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <Label>IMC</Label>
-                                <div className="font-bold text-lg">{bmi}</div>
-                            </div>
-                            <div>
-                                <Label>Classificação</Label>
-                                <div className="font-bold text-lg">{bmiClassification}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="observations">Observações</Label>
-                            <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
-                        </div>
-                    </CardContent>
-                </Card>
+                {!isCompareMode && (
+                    <>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>Avaliação {evaluation ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
+                                    <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
+                                </div>
+                                <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="sm:col-span-2">
+                                        <Label htmlFor="name">Nome</Label>
+                                        <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
+                                            <SelectTrigger id="name">
+                                                <SelectValue placeholder="Selecione um cliente" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                    <Label htmlFor="age">Idade</Label>
+                                    <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <Label htmlFor="gender">Sexo</Label>
+                                        <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
+                                            <SelectTrigger id="gender">
+                                                <SelectValue placeholder="Selecione o sexo" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Masculino">Masculino</SelectItem>
+                                                <SelectItem value="Feminino">Feminino</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="height">Altura (cm)</Label>
+                                        <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="weight">Peso (kg)</Label>
+                                        <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, weight: Number(e.target.value)}}))} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>IMC</Label>
+                                        <div className="font-bold text-lg">{bmi}</div>
+                                    </div>
+                                    <div>
+                                        <Label>Classificação</Label>
+                                        <div className="font-bold text-lg">{bmiClassification}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="observations">Observações</Label>
+                                    <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
 
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between">
                             <CardTitle>Avaliações {new Date().getFullYear()}</CardTitle>
                             <div className="flex items-center gap-2">
                                 <Label htmlFor="compare-switch" className="text-sm">Comparar</Label>
-                                <Checkbox id="compare-switch" checked={isCompareMode} onCheckedChange={() => handleCompareToggle()} />
+                                <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                             </div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.map(ev => (
-                             <Card key={ev.id} className={`shrink-0 w-40 text-center cursor-pointer border-2 ${selectedEvaluationId === ev.id && !isCompareMode ? 'border-primary' : 'border-transparent'} ${selectedEvalIdsForCompare.includes(ev.id) ? 'border-primary' : ''}`} onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}>
-                                <CardHeader className="p-4 relative">
-                                     {isCompareMode && <Checkbox className="absolute top-2 right-2" checked={selectedEvalIdsForCompare.includes(ev.id)} onCheckedChange={() => handleCompareSelection(ev.id)} />}
-                                    <CardTitle className="text-sm font-normal">{new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })}/{new Date(ev.date).getFullYear().toString().slice(-2)}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-4 pt-0">
-                                    <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
-                                    <p className="text-xs text-muted-foreground">Gordura</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </CardContent>
-                </Card>
-                
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Registros de Dados</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Tabs defaultValue="perimetria">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
-                                <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
-                                <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="perimetria" className="pt-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    <div><Label>Ombro (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.ombro" value={formState.perimetria?.ombro || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Tórax (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.torax" value={formState.perimetria?.torax || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Cintura (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.cintura" value={formState.perimetria?.cintura || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Abdômen (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.abdomen" value={formState.perimetria?.abdomen || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Quadril (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.quadril" value={formState.perimetria?.quadril || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Braço D (relaxado) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoDRelaxado" value={formState.perimetria?.bracoDRelaxado || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Braço D (contraído) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoDContraido" value={formState.perimetria?.bracoDContraido || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Braço E (relaxado) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoERelaxado" value={formState.perimetria?.bracoERelaxado || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Braço E (contraído) (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.bracoEContraido" value={formState.perimetria?.bracoEContraido || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Antebraço D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.antebracoD" value={formState.perimetria?.antebracoD || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Antebraço E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.antebracoE" value={formState.perimetria?.antebracoE || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Coxa Proximal D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaProximalD" value={formState.perimetria?.coxaProximalD || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Coxa Proximal E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaProximalE" value={formState.perimetria?.coxaProximalE || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Coxa Medial D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaMedialD" value={formState.perimetria?.coxaMedialD || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Coxa Medial E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.coxaMedialE" value={formState.perimetria?.coxaMedialE || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Panturrilha D (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaD" value={formState.perimetria?.panturrilhaD || ''} onChange={handleInputChange} /></div>
-                                    <div><Label>Panturrilha E (cm)</Label><Input type="number" placeholder="0.0" name="perimetria.panturrilhaE" value={formState.perimetria?.panturrilhaE || ''} onChange={handleInputChange} /></div>
-                                </div>
-                                <div className="mt-6 space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>RCQ (Relação Cintura-Quadril)</Label>
-                                            <div className="font-bold text-lg">{rcq}</div>
-                                        </div>
-                                        <div>
-                                            <Label>Classificação de Risco</Label>
-                                            <div className="font-bold text-lg">{rcqClassification}</div>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Assimetria de Braço (Relaxado)</Label>
-                                            <div className="font-bold text-lg">{armAsymmetry}</div>
-                                        </div>
-                                        <div>
-                                            <Label>Assimetria de Coxa (Medial)</Label>
-                                            <div className="font-bold text-lg">{thighAsymmetry}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="dobras" className="pt-4 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="publico-alvo">Público-Alvo</Label>
-                                        <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                            <SelectTrigger id="publico-alvo">
-                                                <SelectValue placeholder="Selecione o público" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Object.keys(audienceProtocols).map(audience => (
-                                                    <SelectItem key={audience} value={audience}>{audience}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
-                                        <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
-                                            <SelectTrigger id="protocolo">
-                                                <SelectValue placeholder="Selecione o protocolo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableProtocols.map(protocol => (
-                                                    <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    {skinfoldFields.map(field => (
-                                        <div key={field.name}>
-                                            <Label>{field.label}</Label>
-                                            <Input 
-                                                type="number" 
-                                                placeholder="0.0" 
-                                                name={`skinFolds.${field.name}`} 
-                                                value={formState.skinFolds?.[field.name] || ''} 
-                                                onChange={handleInputChange} 
-                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-primary focus-visible:ring-primary')}
-                                            />
+                         {isCompareMode && (
+                            <div className="pt-4 space-y-2">
+                                <p className="text-sm text-muted-foreground">
+                                    Selecione até 4 datas para comparar ({selectedEvalIdsForCompare.length}/4 selecionadas)
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    {comparedEvaluations.map(ev => (
+                                        <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
+                                            <span>{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</span>
+                                            <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
+                                                <X className="size-4" />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-6">
-                                    <Label>Soma das Dobras (mm)</Label>
-                                    <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="diametros" className="pt-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                     {/* Adicione os campos para Diâmetros Ósseos aqui */}
-                                    <p className="text-muted-foreground">Campos para diâmetros ósseos serão adicionados aqui.</p>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
+                            </div>
+                        )}
+                    </CardHeader>
+                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                        {clientEvaluations.map(ev => {
+                            const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
+                            const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
+                            
+                            return (
+                                <Card 
+                                    key={ev.id} 
+                                    className={cn(
+                                        "shrink-0 w-40 text-center cursor-pointer transition-colors",
+                                        isCompareMode 
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground' : 'bg-card'
+                                            : isSelected ? 'border-2 border-primary' : '',
+                                        !isCompareMode && 'hover:bg-accent'
+                                    )}
+                                    onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
+                                >
+                                    <CardHeader className="p-4 relative">
+                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare && "text-primary-foreground/80")}>
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })}/{new Date(ev.date).getFullYear().toString().slice(-2)}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                         {isCompareMode ? (
+                                            <p className="text-4xl font-bold">5</p>
+                                         ) : (
+                                            <>
+                                                <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
+                                                <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
+                                            </>
+                                         )}
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
                     </CardContent>
                 </Card>
+                
+                {isCompareMode ? (
+                    <ComparisonTable
+                        evaluations={comparedEvaluations}
+                        perimetriaFields={perimetriaFields}
+                        skinfoldFields={skinfoldFields}
+                        diametrosFields={diametrosFields}
+                    />
+                ) : (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Registros de Dados</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs defaultValue="perimetria">
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
+                                    <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
+                                    <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="perimetria" className="pt-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        {perimetriaFields.map(field => (
+                                            <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-6 space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                                <div className="font-bold text-lg">{rcq}</div>
+                                            </div>
+                                            <div>
+                                                <Label>Classificação de Risco</Label>
+                                                <div className="font-bold text-lg">{rcqClassification}</div>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>Assimetria de Braço (Relaxado)</Label>
+                                                <div className="font-bold text-lg">{armAsymmetry}</div>
+                                            </div>
+                                            <div>
+                                                <Label>Assimetria de Coxa (Medial)</Label>
+                                                <div className="font-bold text-lg">{thighAsymmetry}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="dobras" className="pt-4 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                            <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                                <SelectTrigger id="publico-alvo">
+                                                    <SelectValue placeholder="Selecione o público" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.keys(audienceProtocols).map(audience => (
+                                                        <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                            <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
+                                                <SelectTrigger id="protocolo">
+                                                    <SelectValue placeholder="Selecione o protocolo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableProtocols.map(protocol => (
+                                                        <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        {skinfoldFields.map(field => (
+                                            <div key={field.name}>
+                                                <Label>{field.label}</Label>
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="0.0" 
+                                                    name={`skinFolds.${field.name}`} 
+                                                    value={formState.skinFolds?.[field.name] || ''} 
+                                                    onChange={handleInputChange} 
+                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-primary ring-primary')}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-6">
+                                        <Label>Soma das Dobras (mm)</Label>
+                                        <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="diametros" className="pt-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        <p className="text-muted-foreground">Campos para diâmetros ósseos serão adicionados aqui.</p>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             {/* Right Column */}
