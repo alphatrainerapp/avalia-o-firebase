@@ -314,74 +314,71 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
-                {!isCompareMode && (
-                    <>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <div>
-                                    <CardTitle>Avaliação {evaluation ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
-                                    <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
-                                </div>
-                                <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div className="sm:col-span-2">
-                                        <Label htmlFor="name">Nome</Label>
-                                        <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
-                                            <SelectTrigger id="name">
-                                                <SelectValue placeholder="Selecione um cliente" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                    <Label htmlFor="age">Idade</Label>
-                                    <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div>
-                                        <Label htmlFor="gender">Sexo</Label>
-                                        <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
-                                            <SelectTrigger id="gender">
-                                                <SelectValue placeholder="Selecione o sexo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Masculino">Masculino</SelectItem>
-                                                <SelectItem value="Feminino">Feminino</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="height">Altura (cm)</Label>
-                                        <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="weight">Peso (kg)</Label>
-                                        <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, weight: Number(e.target.value)}}))} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>IMC</Label>
-                                        <div className="font-bold text-lg">{bmi}</div>
-                                    </div>
-                                    <div>
-                                        <Label>Classificação</Label>
-                                        <div className="font-bold text-lg">{bmiClassification}</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label htmlFor="observations">Observações</Label>
-                                    <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </>
-                )}
+                
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Avaliação {evaluation && !isCompareMode ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
+                            <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
+                        </div>
+                        <Button variant="outline" onClick={handleNewEvaluation}><Plus className="mr-2" /> Nova Avaliação</Button>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="sm:col-span-2">
+                                <Label htmlFor="name">Nome</Label>
+                                <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
+                                    <SelectTrigger id="name">
+                                        <SelectValue placeholder="Selecione um cliente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                            <Label htmlFor="age">Idade</Label>
+                            <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <Label htmlFor="gender">Sexo</Label>
+                                <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
+                                    <SelectTrigger id="gender">
+                                        <SelectValue placeholder="Selecione o sexo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Masculino">Masculino</SelectItem>
+                                        <SelectItem value="Feminino">Feminino</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label htmlFor="height">Altura (cm)</Label>
+                                <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
+                            </div>
+                            <div>
+                                <Label htmlFor="weight">Peso (kg)</Label>
+                                <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, weight: Number(e.target.value)}}))} />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <Label>IMC</Label>
+                                <div className="font-bold text-lg">{bmi}</div>
+                            </div>
+                            <div>
+                                <Label>Classificação</Label>
+                                <div className="font-bold text-lg">{bmiClassification}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="observations">Observações</Label>
+                            <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>
@@ -545,8 +542,8 @@ export default function DashboardPage() {
                                 <div className="mt-6">
                                     <Label>Soma das Dobras (mm)</Label>
                                     <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
-                                d_</div>
-_                            </TabsContent>
+                                </div>
+                            </TabsContent>
                             <TabsContent value="diametros" className="pt-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                     <p className="text-muted-foreground">Campos para diâmetros ósseos serão adicionados aqui.</p>
@@ -617,5 +614,7 @@ _                            </TabsContent>
     </div>
   );
 }
+
+    
 
     
