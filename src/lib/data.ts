@@ -2,6 +2,8 @@ import { getPlaceholderImage } from './placeholder-images';
 
 export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitoral' | 'axilarMedia' | 'supraIliaca' | 'abdominal' | 'coxa' | 'panturrilha';
 
+export type BoneDiameterKeys = 'biestiloidal' | 'bicondilarFemur' | 'bicondilarUmero';
+
 
 export type Evaluation = {
     id: string;
@@ -45,7 +47,7 @@ export type Evaluation = {
         [key in SkinfoldKeys]?: number;
     };
     boneDiameters?: {
-        // Adicione os campos de diâmetros ósseos aqui
+        [key in BoneDiameterKeys]?: number;
     }
 };
 
@@ -84,6 +86,7 @@ export const evaluations: Evaluation[] = [
             muscleMass: 65,
             boneDensity: 1.2,
         },
+        boneDiameters: {}
     },
     {
         id: 'eval_2',
@@ -103,6 +106,7 @@ export const evaluations: Evaluation[] = [
             muscleMass: 68,
             boneDensity: 1.21,
         },
+        boneDiameters: {}
     },
     {
         id: 'eval_3',
@@ -122,6 +126,7 @@ export const evaluations: Evaluation[] = [
             muscleMass: 70,
             boneDensity: 1.22,
         },
+        boneDiameters: {}
     },
     {
         id: 'eval_4',
@@ -141,6 +146,7 @@ export const evaluations: Evaluation[] = [
             muscleMass: 48,
             boneDensity: 1.1,
         },
+        boneDiameters: {}
     },
     {
         id: 'eval_5',
@@ -160,6 +166,7 @@ export const evaluations: Evaluation[] = [
             muscleMass: 37.8,
             boneDensity: 1.3,
         },
+        boneDiameters: {}
     }
 ];
 

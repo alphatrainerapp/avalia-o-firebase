@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import type { Evaluation, SkinfoldKeys } from '@/lib/data';
+import type { Evaluation, SkinfoldKeys, BoneDiameterKeys } from '@/lib/data';
 
 type FieldDef = {
     key: string;
@@ -17,16 +17,21 @@ type SkinfoldFieldDef = {
     label: string;
 }
 
+type BoneDiameterFieldDef = {
+    name: BoneDiameterKeys;
+    label: string;
+}
+
 type ComparisonTableProps = {
     evaluations: Evaluation[];
     perimetriaFields: FieldDef[];
     skinfoldFields: SkinfoldFieldDef[];
-    diametrosFields: FieldDef[];
+    diametrosFields: BoneDiameterFieldDef[];
 };
 
 export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields, diametrosFields }: ComparisonTableProps) {
     
-    const renderComparisonRows = (fields: (FieldDef | SkinfoldFieldDef)[], dataKey: 'perimetria' | 'skinFolds' | 'boneDiameters') => {
+    const renderComparisonRows = (fields: (FieldDef | SkinfoldFieldDef | BoneDiameterFieldDef)[], dataKey: 'perimetria' | 'skinFolds' | 'boneDiameters') => {
         return fields.map((field, index) => {
             const fieldKey = 'key' in field ? field.key : field.name;
             return (
@@ -108,9 +113,22 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                         </Table>
                     </TabsContent>
                     <TabsContent value="diametros">
-                        <div className="p-8 text-center text-muted-foreground">
-                            <p>Dados de diâmetros ósseos aparecerão aqui.</p>
-                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Medida</TableHead>
+                                    {evaluations.map(ev => (
+                                        <TableHead key={ev.id} className="text-center">
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                            <p className="text-xs font-normal text-muted-foreground">(cm)</p>
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {renderComparisonRows(diametrosFields, 'boneDiameters')}
+                            </TableBody>
+                        </Table>
                     </TabsContent>
                 </Tabs>
             </CardContent>
