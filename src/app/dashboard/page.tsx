@@ -206,19 +206,34 @@ export default function DashboardPage() {
     const handleNewEvaluation = () => {
         setSelectedEvaluationId(null);
         if(client){
-            setFormState({
+            const newEvalId = `eval_${allEvaluations.length + 1}`;
+            const newEvaluation: Evaluation = {
+                id: newEvalId,
+                clientId: client.id,
                 clientName: client.name,
-                gender: client.gender,
-                height: client.height,
-                age: client.age,
                 date: new Date().toISOString().split('T')[0],
                 protocol: availableProtocols[0],
-                bodyMeasurements: {},
-                bodyComposition: {},
+                bodyMeasurements: {
+                    weight: client.height, // copy from client
+                    height: client.height,
+                    waistCircumference: 0,
+                    hipCircumference: 0,
+                },
+                bodyComposition: {
+                    bodyFatPercentage: 0,
+                    muscleMass: 0,
+                    boneDensity: 0
+                },
                 perimetria: {},
                 skinFolds: {},
                 observations: '',
-            });
+            };
+            
+            allEvaluations.push(newEvaluation); // This would be a state update in a real app
+            clientEvaluations.unshift(newEvaluation);
+
+            setFormState(newEvaluation);
+            setSelectedEvaluationId(newEvalId);
         }
         toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação." });
     };
@@ -318,17 +333,19 @@ export default function DashboardPage() {
             <div className="lg:col-span-2 space-y-6">
                 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
-                            <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
+                    <CardHeader>
+                        <div className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.length - clientEvaluations.indexOf(evaluation) : clientEvaluations.length + 1}</CardTitle>
+                                <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
+                            </div>
+                             <Button 
+                                onClick={handleNewEvaluation} 
+                                className="bg-[#2596be] text-white shadow-md hover:bg-[#2596be]/90"
+                            >
+                                <Plus className="mr-2" /> Nova Avaliação
+                            </Button>
                         </div>
-                        <Button 
-                            onClick={handleNewEvaluation} 
-                            className="bg-[#2596be] text-white shadow-md hover:bg-[#2596be]/90"
-                        >
-                            <Plus className="mr-2" /> Nova Avaliação
-                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -423,9 +440,9 @@ export default function DashboardPage() {
                                 <Card 
                                     key={ev.id} 
                                     className={cn(
-                                        "shrink-0 w-32 text-center cursor-pointer transition-colors shadow-lg",
+                                        "shrink-0 w-32 text-center cursor-pointer transition-colors shadow-xl",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl shadow-xl' : 'bg-card rounded-2xl shadow-lg'
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl' : 'bg-card rounded-2xl'
                                             : isSelected ? 'border-2 border-primary' : '',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
@@ -621,5 +638,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
