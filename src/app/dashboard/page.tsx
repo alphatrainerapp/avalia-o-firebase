@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 observations: '',
             };
             
-            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation]);
+            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
             setSelectedEvaluationId(newEvalId);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
@@ -474,16 +474,14 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
                 
-                {isCompareMode && (
+                {isCompareMode ? (
                     <ComparisonTable
                         evaluations={comparedEvaluations}
                         perimetriaFields={perimetriaFields}
                         skinfoldFields={skinfoldFields}
                         diametrosFields={diametrosFields}
                     />
-                )}
-                
-                {!isCompareMode && (
+                ) : (
                 <Card>
                     <CardHeader>
                         <CardTitle>Registros de Dados</CardTitle>
@@ -569,9 +567,18 @@ export default function DashboardPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-6">
-                                    <Label>Soma das Dobras (mm)</Label>
-                                    <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                    <h3 className="font-semibold mb-2">Resultados</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Soma das Dobras (mm)</Label>
+                                            <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                        </div>
+                                        <div>
+                                            <Label>% Gordura Estimado</Label>
+                                            <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </TabsContent>
                             <TabsContent value="diametros" className="pt-4">
@@ -649,3 +656,4 @@ export default function DashboardPage() {
     
 
     
+
