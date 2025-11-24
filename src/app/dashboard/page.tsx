@@ -50,17 +50,18 @@ export default function DashboardPage() {
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
     useEffect(() => {
-        if (client && evaluation && !isCompareMode && selectedEvaluationId) {
+        const currentEval = clientEvaluations.find(e => e.id === selectedEvaluationId);
+        if (client && currentEval && !isCompareMode) {
             const initialFormState = {
                 ...client,
-                ...evaluation,
+                ...currentEval,
                 clientName: client.name,
                 gender: client.gender,
-                protocol: evaluation.protocol || availableProtocols[0],
+                protocol: currentEval.protocol || availableProtocols[0],
             };
             setFormState(initialFormState);
             
-            const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(evaluation.protocol || '')) || selectedAudience;
+            const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(currentEval.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
             const newProtocols = audienceProtocols[audience];
             setAvailableProtocols(newProtocols);
@@ -81,6 +82,9 @@ export default function DashboardPage() {
                 gender: client.gender,
                 date: new Date().toISOString().split('T')[0],
                 protocol: availableProtocols[0],
+                bodyMeasurements: { height: client.height },
+                perimetria: {},
+                skinFolds: {},
              };
              setFormState(newFormState);
              let currentRequired: SkinfoldKeys[] = [];
@@ -91,7 +95,8 @@ export default function DashboardPage() {
             }
             setRequiredSkinfolds(currentRequired);
         }
-    }, [client, evaluation, availableProtocols, selectedAudience, isCompareMode, selectedEvaluationId]);
+    }, [client, selectedEvaluationId, isCompareMode, clientEvaluations, availableProtocols, selectedAudience]);
+
 
     useEffect(() => {
         if (!formState.protocol) return;
@@ -215,7 +220,7 @@ export default function DashboardPage() {
                 date: new Date().toISOString().split('T')[0],
                 protocol: availableProtocols[0],
                 bodyMeasurements: {
-                    weight: client.height, // copy from client
+                    weight: 0,
                     height: client.height,
                     waistCircumference: 0,
                     hipCircumference: 0,
@@ -234,10 +239,6 @@ export default function DashboardPage() {
             setSelectedEvaluationId(newEvalId);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
-            setFormState({
-                 ...client,
-                ...newEvaluation
-            });
         }
         toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação." });
     };
@@ -446,7 +447,7 @@ export default function DashboardPage() {
                                     className={cn(
                                         "shrink-0 w-32 text-center cursor-pointer transition-colors shadow-xl",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl' : 'bg-card rounded-2xl'
+                                            ? isSelectedForCompare ? 'bg-[#01baba] text-white border-transparent shadow-lg rounded-2xl' : 'bg-card rounded-2xl'
                                             : isSelected ? 'border-2 border-primary' : '',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
@@ -482,6 +483,7 @@ export default function DashboardPage() {
                     />
                 )}
                 
+                {!isCompareMode && (
                 <Card>
                     <CardHeader>
                         <CardTitle>Registros de Dados</CardTitle>
@@ -562,7 +564,7 @@ export default function DashboardPage() {
                                                 name={`skinFolds.${field.name}`} 
                                                 value={formState.skinFolds?.[field.name] || ''} 
                                                 onChange={handleInputChange} 
-                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-primary ring-primary')}
+                                                className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
                                             />
                                         </div>
                                     ))}
@@ -580,6 +582,7 @@ export default function DashboardPage() {
                         </Tabs>
                     </CardContent>
                 </Card>
+                )}
             </div>
 
             {/* Right Column */}
