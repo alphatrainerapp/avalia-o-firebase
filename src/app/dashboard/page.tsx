@@ -219,7 +219,7 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400 * 0.712;
+            const boneMassValue = 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400;
             return boneMassValue.toFixed(2);
         }
         return '-';
@@ -545,34 +545,42 @@ export default function DashboardPage() {
                                 </div>
                             </TabsContent>
                             <TabsContent value="dobras" className="pt-4 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="publico-alvo">Público-Alvo</Label>
-                                        <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                            <SelectTrigger id="publico-alvo">
-                                                <SelectValue placeholder="Selecione o público" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Object.keys(audienceProtocols).map(audience => (
-                                                    <SelectItem key={audience} value={audience}>{audience}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
-                                        <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
-                                            <SelectTrigger id="protocolo">
-                                                <SelectValue placeholder="Selecione o protocolo" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableProtocols.map(protocol => (
-                                                    <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">Seleção de Protocolo</CardTitle>
+                                        <CardDescription className="text-sm">Escolha o público-alvo e o protocolo para destacar as medidas necessárias.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                                <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                                    <SelectTrigger id="publico-alvo">
+                                                        <SelectValue placeholder="Selecione o público" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {Object.keys(audienceProtocols).map(audience => (
+                                                            <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                                <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
+                                                    <SelectTrigger id="protocolo">
+                                                        <SelectValue placeholder="Selecione o protocolo" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableProtocols.map(protocol => (
+                                                            <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                     {skinfoldFields.map(field => (
