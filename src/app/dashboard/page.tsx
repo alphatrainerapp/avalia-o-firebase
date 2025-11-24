@@ -210,6 +210,19 @@ export default function DashboardPage() {
         return Object.values(formState.skinFolds).reduce((sum: number, value: any) => sum + (Number(value) || 0), 0);
     }, [formState.skinFolds]);
 
+    const boneMass = useMemo(() => {
+        const height = formState.bodyMeasurements?.height;
+        const wrist = formState.boneDiameters?.biestiloidal;
+        const femur = formState.boneDiameters?.bicondilarFemur;
+
+        if (height && wrist && femur) {
+            const boneMassValue = 3.02 * (Math.pow(height / 100, 2) * (wrist / 100) * (femur / 100)) * 10000;
+            return boneMassValue.toFixed(2);
+        }
+        return '-';
+    }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
+
+
     const handleNewEvaluation = () => {
         if(client){
             const newEvalId = `eval_${allEvaluations.length + 1}`;
@@ -601,8 +614,17 @@ export default function DashboardPage() {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="mt-6 rounded-lg bg-muted p-4 text-muted-foreground text-sm">
-                                        <p>Os diâmetros ósseos são utilizados para ajustar os cálculos de densidade óssea e estimar a massa magra de forma mais precisa.</p>
+                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                        <h3 className="font-semibold mb-2">Resultados</h3>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <Label>Massa Óssea (kg) - Rocha, 1975</Label>
+                                                <div className="font-bold text-lg">{boneMass} kg</div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-primary-foreground/80 mt-2">
+                                            Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
+                                        </p>
                                     </div>
                                 </TabsContent>
                             </Tabs>
@@ -671,9 +693,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-
-    
-
-
