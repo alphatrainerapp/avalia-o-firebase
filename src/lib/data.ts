@@ -22,6 +22,7 @@ export type Evaluation = {
         boneDensity: number;
     };
     perimetria?: {
+        [key: string]: number | undefined;
         ombro?: number;
         torax?: number;
         cintura?: number;
@@ -185,3 +186,5 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     'Slaughter-Lohman': ['tricipital', 'panturrilha'],
     'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
 };
+
+    

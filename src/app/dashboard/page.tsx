@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as allEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys } from '@/lib/data';
+import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -34,9 +34,11 @@ export default function DashboardPage() {
     const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
     const [availableProtocols, setAvailableProtocols] = useState<string[]>(audienceProtocols[selectedAudience]);
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
+    const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
+
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
-    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [selectedClientId]);
+    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [selectedClientId, allEvaluations]);
     
     const evaluation = useMemo(() => {
         if (selectedEvaluationId) {
@@ -204,7 +206,6 @@ export default function DashboardPage() {
     }, [formState.skinFolds]);
 
     const handleNewEvaluation = () => {
-        setSelectedEvaluationId(null);
         if(client){
             const newEvalId = `eval_${allEvaluations.length + 1}`;
             const newEvaluation: Evaluation = {
@@ -229,11 +230,14 @@ export default function DashboardPage() {
                 observations: '',
             };
             
-            allEvaluations.push(newEvaluation); // This would be a state update in a real app
-            clientEvaluations.unshift(newEvaluation);
-
-            setFormState(newEvaluation);
+            setAllEvaluations(prevEvals => [newEvaluation, ...prevEvals]);
             setSelectedEvaluationId(newEvalId);
+            setCompareMode(false);
+            setSelectedEvalIdsForCompare([]);
+            setFormState({
+                 ...client,
+                ...newEvaluation
+            });
         }
         toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação." });
     };
@@ -638,3 +642,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
