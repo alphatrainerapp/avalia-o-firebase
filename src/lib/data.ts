@@ -6,6 +6,7 @@ export type Evaluation = {
     clientName: string;
     date: string; // YYYY-MM-DD
     protocol: string;
+    observations?: string;
     bodyMeasurements: {
         weight: number;
         height: number;
@@ -24,21 +25,25 @@ export type Client = {
     name: string;
     email: string;
     avatarUrl: string;
+    age: number;
+    gender: 'Masculino' | 'Feminino';
+    height: number;
 };
 
 export const clients: Client[] = [
-    { id: 'cli_1', name: 'John Doe', email: 'john.doe@example.com', avatarUrl: getPlaceholderImage('client-john-doe-avatar')?.imageUrl || '' },
-    { id: 'cli_2', name: 'Jane Smith', email: 'jane.smith@example.com', avatarUrl: getPlaceholderImage('client-jane-smith-avatar')?.imageUrl || '' },
-    { id: 'cli_3', name: 'Peter Jones', email: 'peter.jones@example.com', avatarUrl: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl || '' },
+    { id: 'cli_1', name: 'João da Silva', email: 'joao.silva@example.com', avatarUrl: getPlaceholderImage('client-john-doe-avatar')?.imageUrl || '', age: 34, gender: 'Masculino', height: 180 },
+    { id: 'cli_2', name: 'Maria Oliveira', email: 'maria.oliveira@example.com', avatarUrl: getPlaceholderImage('client-jane-smith-avatar')?.imageUrl || '', age: 28, gender: 'Feminino', height: 165 },
+    { id: 'cli_3', name: 'Pedro Santos', email: 'pedro.santos@example.com', avatarUrl: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl || '', age: 45, gender: 'Masculino', height: 190 },
 ];
 
 export const evaluations: Evaluation[] = [
     {
         id: 'eval_1',
         clientId: 'cli_1',
-        clientName: 'John Doe',
-        date: '2024-03-15',
+        clientName: 'João da Silva',
+        date: '2024-09-25',
         protocol: 'Pollock 7',
+        observations: 'Cliente focado em hipertrofia.',
         bodyMeasurements: {
             weight: 85,
             height: 180,
@@ -46,7 +51,7 @@ export const evaluations: Evaluation[] = [
             hipCircumference: 100,
         },
         bodyComposition: {
-            bodyFatPercentage: 18.5,
+            bodyFatPercentage: 22,
             muscleMass: 65,
             boneDensity: 1.2,
         },
@@ -54,9 +59,10 @@ export const evaluations: Evaluation[] = [
     {
         id: 'eval_2',
         clientId: 'cli_1',
-        clientName: 'John Doe',
-        date: '2024-06-20',
+        clientName: 'João da Silva',
+        date: '2024-10-25',
         protocol: 'Pollock 7',
+        observations: 'Aumento da força notado.',
         bodyMeasurements: {
             weight: 82,
             height: 180,
@@ -64,17 +70,37 @@ export const evaluations: Evaluation[] = [
             hipCircumference: 98,
         },
         bodyComposition: {
-            bodyFatPercentage: 16.2,
-            muscleMass: 66,
+            bodyFatPercentage: 18,
+            muscleMass: 68,
             boneDensity: 1.21,
         },
     },
     {
         id: 'eval_3',
+        clientId: 'cli_1',
+        clientName: 'João da Silva',
+        date: '2024-11-25',
+        protocol: 'Pollock 7',
+        observations: 'Melhora na resistência cardiovascular.',
+        bodyMeasurements: {
+            weight: 80,
+            height: 180,
+            waistCircumference: 82,
+            hipCircumference: 96,
+        },
+        bodyComposition: {
+            bodyFatPercentage: 15,
+            muscleMass: 70,
+            boneDensity: 1.22,
+        },
+    },
+    {
+        id: 'eval_4',
         clientId: 'cli_2',
-        clientName: 'Jane Smith',
-        date: '2024-05-01',
+        clientName: 'Maria Oliveira',
+        date: '2024-11-01',
         protocol: 'YMCA',
+        observations: 'Iniciando programa de perda de peso.',
         bodyMeasurements: {
             weight: 65,
             height: 165,
@@ -82,17 +108,18 @@ export const evaluations: Evaluation[] = [
             hipCircumference: 95,
         },
         bodyComposition: {
-            bodyFatPercentage: 22.1,
+            bodyFatPercentage: 25,
             muscleMass: 48,
             boneDensity: 1.1,
         },
     },
     {
-        id: 'eval_4',
+        id: 'eval_5',
         clientId: 'cli_3',
-        clientName: 'Peter Jones',
-        date: '2024-07-01',
+        clientName: 'Pedro Santos',
+        date: '2024-11-15',
         protocol: 'Guedes',
+        observations: 'Manutenção do condicionamento físico.',
         bodyMeasurements: {
             weight: 95,
             height: 190,
@@ -101,7 +128,7 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 25.0,
-            muscleMass: 70,
+            muscleMass: 37.8,
             boneDensity: 1.3,
         },
     }
@@ -117,3 +144,5 @@ export const protocols = [
     'YMCA',
     'Public Service Exam',
 ];
+
+    
