@@ -419,9 +419,9 @@ export default function DashboardPage() {
                                 <Card 
                                     key={ev.id} 
                                     className={cn(
-                                        "shrink-0 w-40 text-center cursor-pointer transition-colors",
+                                        "shrink-0 w-36 text-center cursor-pointer transition-colors",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card shadow-md'
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent rounded-2xl' : 'bg-card rounded-2xl shadow-md'
                                             : isSelected ? 'border-2 border-primary' : '',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
@@ -617,3 +617,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
