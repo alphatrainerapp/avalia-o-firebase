@@ -341,7 +341,7 @@ export default function DashboardPage() {
                             </div>
                              <Button 
                                 onClick={handleNewEvaluation} 
-                                className="bg-[#2596be] text-white shadow-md hover:bg-[#2596be]/90"
+                                className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"
                             >
                                 <Plus className="mr-2" /> Nova Avaliação
                             </Button>
