@@ -428,13 +428,13 @@ export default function DashboardPage() {
                                     onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
                                 >
                                     <CardHeader className="p-4 relative">
-                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground/80" : "text-card-foreground")}>
+                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-white" : "text-card-foreground")}>
                                             {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })}/{new Date(ev.date).getFullYear().toString().slice(-2)}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
                                          {isCompareMode ? (
-                                            <p className="text-4xl font-bold">5</p>
+                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-white" : "text-card-foreground")}>5</p>
                                          ) : (
                                             <>
                                                 <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
