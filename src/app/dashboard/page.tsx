@@ -419,9 +419,9 @@ export default function DashboardPage() {
                                 <Card 
                                     key={ev.id} 
                                     className={cn(
-                                        "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-none",
+                                        "shrink-0 w-40 text-center cursor-pointer transition-colors",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent' : 'bg-card'
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card shadow-md'
                                             : isSelected ? 'border-2 border-primary' : '',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
