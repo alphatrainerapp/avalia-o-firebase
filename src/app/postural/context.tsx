@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 export type Deviations = { [key: string]: string[] };
 
@@ -18,27 +18,30 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
   const [photos, setPhotos] = useState<{ [key: string]: string | undefined }>({});
   const [deviations, setDeviations] = useState<Deviations>({});
 
-  const setPhoto = (type: string, url: string) => {
+  const setPhoto = useCallback((type: string, url: string) => {
     setPhotos(prev => ({ ...prev, [type]: url }));
-  };
+  }, []);
 
-  const toggleDeviation = (view: string, deviation: string) => {
+  const toggleDeviation = useCallback((view: string, deviation: string) => {
     setDeviations(prev => {
-        const newDeviations = { ...prev };
-        const viewDeviations = newDeviations[view] || [];
+        const currentDeviations = prev[view] || [];
+        const isSelected = currentDeviations.includes(deviation);
 
-        if (viewDeviations.includes(deviation)) {
-            newDeviations[view] = viewDeviations.filter(d => d !== deviation);
+        if (isSelected) {
+            // Remove if already selected
+            const newViewDeviations = currentDeviations.filter(d => d !== deviation);
+            return { ...prev, [view]: newViewDeviations };
         } else {
-            newDeviations[view] = [...viewDeviations, deviation];
+            // Add if not selected
+            const newViewDeviations = [...currentDeviations, deviation];
+            return { ...prev, [view]: newViewDeviations };
         }
-        return newDeviations;
     });
-  };
+  }, []);
 
-  const clearDeviations = () => {
+  const clearDeviations = useCallback(() => {
     setDeviations({});
-  }
+  }, []);
 
   return (
     <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearDeviations }}>
