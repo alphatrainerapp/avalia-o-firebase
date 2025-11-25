@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 export default function PosturalAnalysisSidePage() {
     const { toast } = useToast();
@@ -24,6 +26,7 @@ export default function PosturalAnalysisSidePage() {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const imageContainerRef = useRef<HTMLDivElement>(null);
     const startPos = useRef({ x: 0, y: 0 });
+    const isMobile = useIsMobile();
 
     const sideImage = photos['right'];
 
@@ -138,6 +141,70 @@ export default function PosturalAnalysisSidePage() {
         }
     ];
 
+    const renderAnalysisContent = () => {
+        if (isMobile) {
+            return (
+                <Carousel className="w-full">
+                    <CarouselContent>
+                        {analysisSections.map((section, index) => (
+                            <CarouselItem key={index}>
+                                <div className="p-1">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>{section.title}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 pl-6">
+                                            {section.items.map((item, itemIndex) => (
+                                                <div key={itemIndex}>
+                                                    <div className="grid gap-2 mt-2">
+                                                        {item.options.map(option => (
+                                                            <div key={option} className="flex items-center space-x-2">
+                                                                <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                                <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="ml-12" />
+                    <CarouselNext className="mr-12" />
+                </Carousel>
+            );
+        }
+
+        return (
+            <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full">
+                {analysisSections.map((section) => (
+                    <AccordionItem value={section.title} key={section.title}>
+                        <AccordionTrigger className="text-base font-semibold">{section.title}</AccordionTrigger>
+                        <AccordionContent>
+                            <div className="space-y-4 pl-2">
+                                {section.items.map((item, itemIndex) => (
+                                    <div key={itemIndex}>
+                                        <div className="grid gap-2 mt-2">
+                                            {item.options.map(option => (
+                                                <div key={option} className="flex items-center space-x-2">
+                                                    <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                    <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+        );
+    };
+
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -222,29 +289,7 @@ export default function PosturalAnalysisSidePage() {
                         </div>
 
                         <div className="space-y-4">
-                             <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full">
-                                {analysisSections.map((section) => (
-                                    <AccordionItem value={section.title} key={section.title}>
-                                        <AccordionTrigger className="text-base font-semibold">{section.title}</AccordionTrigger>
-                                        <AccordionContent>
-                                            <div className="space-y-4 pl-2">
-                                                {section.items.map((item, itemIndex) => (
-                                                    <div key={itemIndex}>
-                                                        <div className="grid gap-2 mt-2">
-                                                            {item.options.map(option => (
-                                                                <div key={option} className="flex items-center space-x-2">
-                                                                    <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
-                                                                    <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
+                            {renderAnalysisContent()}
                         </div>
                     </div>
                 </CardContent>
