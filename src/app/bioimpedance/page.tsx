@@ -179,13 +179,24 @@ export default function BioimpedancePage() {
         const canvasHeight = canvas.height;
         
         const canvasAspectRatio = canvasWidth / canvasHeight;
-        
-        const finalImgWidth = pdfWidth;
-        const finalImgHeight = finalImgWidth / canvasAspectRatio;
+        const pdfAspectRatio = pdfWidth / pdfHeight;
 
+        let finalImgWidth, finalImgHeight;
+
+        if (canvasAspectRatio > pdfAspectRatio) {
+          // Canvas is wider than PDF page
+          finalImgWidth = pdfWidth;
+          finalImgHeight = pdfWidth / canvasAspectRatio;
+        } else {
+          // Canvas is taller than or equal to PDF page aspect ratio
+          finalImgHeight = pdfHeight;
+          finalImgWidth = pdfHeight * canvasAspectRatio;
+        }
+        
+        const x = (pdfWidth - finalImgWidth) / 2;
         const y = (pdfHeight - finalImgHeight) / 2;
 
-        pdf.addImage(imgData, 'PNG', 0, y > 0 ? y : 0, finalImgWidth, finalImgHeight);
+        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
         pdf.save(`relatorio_bioimpedancia_${client.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório de bioimpedância foi salvo com sucesso.' });
@@ -449,3 +460,5 @@ export default function BioimpedancePage() {
         </>
     );
 }
+
+    
