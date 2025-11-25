@@ -173,8 +173,8 @@ export default function PosturalAnalysisPage() {
                                 )}
                                 {showGrid && (
                                     <div className="absolute inset-0 grid grid-cols-10 grid-rows-15 gap-0 pointer-events-none">
-                                        {[...Array(10)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-blue-500/30"></div>)}
-                                        {[...Array(15)].map((_, i) => <div key={`h-${i}`} className="w-full border-t border-blue-500/30 col-span-10"></div>)}
+                                        {[...Array(10)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-black/30"></div>)}
+                                        {[...Array(15)].map((_, i) => <div key={`h-${i}`} className="w-full border-t border-black/30 col-span-10"></div>)}
                                     </div>
                                 )}
                                 <div className="absolute top-2 left-2 flex flex-col gap-2">
