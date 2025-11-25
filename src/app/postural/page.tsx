@@ -112,10 +112,12 @@ export default function PosturalPage() {
                         <Save className="mr-2" />
                         Salvar
                     </Button>
-                    <Button variant="outline">
-                        Próximo
-                        <ArrowRight className="ml-2" />
-                    </Button>
+                    <Link href="/postural/analysis">
+                        <Button variant="outline">
+                            Próximo
+                            <ArrowRight className="ml-2" />
+                        </Button>
+                    </Link>
                 </div>
             </div>
         </div>
