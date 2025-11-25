@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Download, Plus, Save, Activity, User, BarChart, FileText, X } from 'lucide-react';
 import {
   Select,
@@ -24,6 +24,9 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import ComparisonCharts from '@/components/ComparisonCharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import EvaluationReport from '@/components/EvaluationReport';
 
 
 export default function DashboardPage() {
@@ -36,6 +39,7 @@ export default function DashboardPage() {
     const [availableProtocols, setAvailableProtocols] = useState<string[]>(audienceProtocols[selectedAudience]);
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
     const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
+    const reportRef = useRef<HTMLDivElement>(null);
 
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
@@ -339,6 +343,64 @@ export default function DashboardPage() {
         toast({ title: "Salvo!", description: "Os dados da avaliação foram salvos com sucesso." });
     }
 
+    const handleExportPdf = async () => {
+        const reportElement = reportRef.current;
+        if (!reportElement) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível gerar o PDF.' });
+            return;
+        }
+
+        toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
+
+        // Hide scrollbars before capturing
+        const originalStyle = reportElement.style.overflow;
+        reportElement.style.overflow = 'visible';
+
+        const canvas = await html2canvas(reportElement, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            logging: true,
+            allowTaint: true,
+        });
+
+        // Restore scrollbars
+        reportElement.style.overflow = originalStyle;
+
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: 'a4',
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const height = pdfWidth / ratio;
+
+        let position = 0;
+        let pageHeight = pdf.internal.pageSize.height;
+        let remainingHeight = canvasHeight * pdfWidth / canvasWidth;
+
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
+        remainingHeight -= pageHeight;
+        
+        while (remainingHeight > 0) {
+            position = remainingHeight - (canvasHeight * pdfWidth / canvasWidth);
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
+            remainingHeight -= pageHeight;
+        }
+
+
+        pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+
+        toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
+    };
+
     const handleCompareToggle = (checked: boolean) => {
         setCompareMode(checked);
         if (!checked) {
@@ -411,6 +473,7 @@ export default function DashboardPage() {
 
 
   return (
+    <>
     <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
         <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
@@ -424,7 +487,7 @@ export default function DashboardPage() {
                 <Button variant="outline" onClick={handleSave}><Save className="mr-2" /> Salvar</Button>
                 <Button variant="outline"><BarChart className="mr-2" /> Bioimpedância</Button>
                 <Button variant="outline"><User className="mr-2" /> Avaliação Postural</Button>
-                <Button><Download className="mr-2" /> Exportar PDF</Button>
+                <Button onClick={handleExportPdf}><Download className="mr-2" /> Exportar PDF</Button>
             </div>
         </header>
 
@@ -834,5 +897,17 @@ export default function DashboardPage() {
         </div>
         <Toaster />
     </div>
+    <div className="fixed -left-[2000px] -top-[2000px] w-[800px] bg-white" >
+      {client && (evaluation || comparedEvaluations) && (
+        <EvaluationReport 
+            ref={reportRef}
+            client={client}
+            evaluation={evaluation}
+            comparedEvaluations={isCompareMode ? comparedEvaluations : []}
+            perimetriaFields={perimetriaFields}
+        />
+      )}
+    </div>
+    </>
   );
 }
