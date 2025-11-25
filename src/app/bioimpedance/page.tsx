@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Activity, ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Plus, Save, User, X } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Plus, Save, User, X, Download } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -21,6 +21,10 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import BioimpedanceReport from '@/components/BioimpedanceReport';
+
 
 const omronFields: { key: keyof BioimpedanceOmron; label: string; unit: string }[] = [
     { key: 'weight', label: 'Peso corporal', unit: 'kg' },
@@ -94,6 +98,7 @@ export default function BioimpedancePage() {
     const [isModalOpen, setModalOpen] = useState(true);
     const [selectedScale, setSelectedScale] = useState<BioimpedanceScale>(null);
     const { toast } = useToast();
+    const reportRef = useRef<HTMLDivElement>(null);
 
     const simpleScaleImage = getPlaceholderImage('simple-scale-omron');
     const completeScaleImage = getPlaceholderImage('complete-bioimpedance-inbody');
@@ -146,6 +151,57 @@ export default function BioimpedancePage() {
         console.log("Saving evaluations...", allEvaluations);
         toast({ title: 'Salvo!', description: 'Os dados da bioimpedância foram salvos.' });
     };
+    
+    const handleExportPdf = async () => {
+        const reportElement = reportRef.current;
+        if (!reportElement || !client || comparedEvaluations.length === 0) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Selecione pelo menos uma avaliação para gerar o PDF.' });
+            return;
+        }
+
+        toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
+
+        const canvas = await html2canvas(reportElement, {
+            scale: 2,
+            useCORS: true,
+            logging: true,
+            allowTaint: true,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: 'a4',
+        });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const height = pdfWidth / ratio;
+
+        let position = 0;
+        let pageHeight = pdf.internal.pageSize.height;
+        let remainingHeight = canvasHeight * pdfWidth / canvasWidth;
+
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
+        remainingHeight -= pageHeight;
+        
+        while (remainingHeight > 0) {
+            position = remainingHeight - (canvasHeight * pdfWidth / canvasWidth);
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
+            remainingHeight -= pageHeight;
+        }
+
+
+        pdf.save(`relatorio_bioimpedancia_${client.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+
+        toast({ title: 'PDF Exportado!', description: 'O relatório de bioimpedância foi salvo com sucesso.' });
+    };
 
     const handleInputChange = (evalId: string, block: 'omron' | 'inbody', field: string, value: string) => {
         setAllEvaluations(prevEvals => prevEvals.map(ev => {
@@ -165,19 +221,21 @@ export default function BioimpedancePage() {
     };
 
     const renderComparisonRows = () => {
-        const fields = selectedScale === 'omron' ? omronFields : inbodyFields.flatMap(b => b.fields.map(f => ({...f, block: b.block})));
+        if (!selectedScale) return null;
+
+        const fields = selectedScale === 'omron' ? omronFields.map(f => ({...f, block: ''})) : inbodyFields.flatMap(b => b.fields.map(f => ({...f, block: b.block})));
 
         const rows: JSX.Element[] = [];
         let lastBlock = '';
 
         fields.forEach(fieldInfo => {
             const fieldKey = fieldInfo.key as string;
-            const currentBlock = 'block' in fieldInfo ? fieldInfo.block : '';
+            const currentBlock = fieldInfo.block;
 
             if(currentBlock && currentBlock !== lastBlock && selectedScale === 'inbody') {
                  rows.push(
-                    <TableRow key={`header-${currentBlock}`} className="bg-muted/50">
-                        <TableCell colSpan={comparedEvaluations.length + 1} className="font-bold text-primary py-2 px-4">{currentBlock}</TableCell>
+                    <TableRow key={`header-${currentBlock}`} className="bg-muted/50 hover:bg-muted/50">
+                        <TableCell colSpan={comparedEvaluations.length + 2} className="font-bold text-primary py-2 px-4">{currentBlock}</TableCell>
                     </TableRow>
                 );
                 lastBlock = currentBlock;
@@ -298,7 +356,8 @@ export default function BioimpedancePage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Save className="mr-2" /> Salvar Alterações</Button>
+                        <Button onClick={handleSave}><Save className="mr-2" /> Salvar Alterações</Button>
+                        <Button onClick={handleExportPdf}><Download className="mr-2" /> Gerar Relatório PDF</Button>
                     </div>
                 </header>
 
@@ -386,6 +445,18 @@ export default function BioimpedancePage() {
                     )}
 
                 </div>
+            </div>
+            <div className="fixed -left-[2000px] -top-[2000px] w-[800px] bg-white" >
+              {client && comparedEvaluations.length > 0 && selectedScale && (
+                <BioimpedanceReport 
+                    ref={reportRef}
+                    client={client}
+                    evaluations={comparedEvaluations}
+                    scaleType={selectedScale}
+                    inbodyFields={inbodyFields}
+                    omronFields={omronFields}
+                />
+              )}
             </div>
         </>
     );
