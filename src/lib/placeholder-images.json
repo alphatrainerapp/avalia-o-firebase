@@ -23,6 +23,18 @@
       "description": "Avatar for Peter Jones.",
       "imageUrl": "https://images.unsplash.com/photo-1583692331507-fc0bd348695d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYW4lMjBmYWNlfGVufDB8fHx8MTc2Mzk4NzU1OHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "man face"
+    },
+    {
+      "id": "simple-scale-omron",
+      "description": "Image of a simple bioimpedance scale (Omron).",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/8181/omron-scale.png",
+      "imageHint": "digital scale"
+    },
+    {
+      "id": "complete-bioimpedance-inbody",
+      "description": "Image of a complete bioimpedance analysis machine (InBody).",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/6504/inbody-machine.png",
+      "imageHint": "bioimpedance machine"
     }
   ]
 }

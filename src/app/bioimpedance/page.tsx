@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Activity, ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Plus, Save, User, X } from 'lucide-react';
 import {
   Select,
@@ -19,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getPlaceholderImage } from '@/lib/placeholder-images';
 
 const omronFields: { key: keyof BioimpedanceOmron; label: string; unit: string }[] = [
     { key: 'weight', label: 'Peso corporal', unit: 'kg' },
@@ -88,6 +90,9 @@ export default function BioimpedancePage() {
     const [isModalOpen, setModalOpen] = useState(true);
     const [selectedScale, setSelectedScale] = useState<BioimpedanceScale>(null);
     const { toast } = useToast();
+
+    const simpleScaleImage = getPlaceholderImage('simple-scale-omron');
+    const completeScaleImage = getPlaceholderImage('complete-bioimpedance-inbody');
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
     const clientEvaluations = useMemo(() => {
@@ -228,20 +233,50 @@ export default function BioimpedancePage() {
     return (
         <>
             <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Selecione o tipo de balança</DialogTitle>
                         <DialogDescription>
                             Escolha a balança utilizada para carregar os campos de avaliação correspondentes.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <Button onClick={() => handleScaleSelect('omron')} variant="outline">
-                            Balança Simples
-                        </Button>
-                        <Button onClick={() => handleScaleSelect('inbody')} variant="outline">
-                            Bioimpedância Completa
-                        </Button>
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                       <Card 
+                            className="cursor-pointer hover:border-primary transition-colors"
+                            onClick={() => handleScaleSelect('omron')}
+                        >
+                            <CardContent className="p-4 flex flex-col items-center gap-4">
+                                {simpleScaleImage && (
+                                    <Image 
+                                        src={simpleScaleImage.imageUrl} 
+                                        alt="Balança Simples" 
+                                        width={150} 
+                                        height={150} 
+                                        className="object-contain rounded-md"
+                                        data-ai-hint={simpleScaleImage.imageHint}
+                                    />
+                                )}
+                                <p className="font-semibold text-center">Balança Simples</p>
+                            </CardContent>
+                       </Card>
+                       <Card 
+                            className="cursor-pointer hover:border-primary transition-colors"
+                            onClick={() => handleScaleSelect('inbody')}
+                        >
+                             <CardContent className="p-4 flex flex-col items-center gap-4">
+                                {completeScaleImage && (
+                                    <Image 
+                                        src={completeScaleImage.imageUrl} 
+                                        alt="Bioimpedância Completa" 
+                                        width={150} 
+                                        height={150} 
+                                        className="object-contain rounded-md"
+                                        data-ai-hint={completeScaleImage.imageHint}
+                                    />
+                                )}
+                                <p className="font-semibold text-center">Bioimpedância Completa</p>
+                            </CardContent>
+                       </Card>
                     </div>
                 </DialogContent>
             </Dialog>
