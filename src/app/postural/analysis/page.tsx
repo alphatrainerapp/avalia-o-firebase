@@ -11,19 +11,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { usePosturalContext } from '../context';
 
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
+    const { photos } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
-    const [frontImage, setFrontImage] = useState<string | null>(null);
+    const frontImage = photos['front'];
 
     useEffect(() => {
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-        const storedImage = localStorage.getItem('postural-front-image');
-        if (storedImage) {
-            setFrontImage(storedImage);
-        }
     }, []);
 
     const handleSave = () => {

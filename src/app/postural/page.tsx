@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, UploadCloud, Save, ArrowRight, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { usePosturalContext } from './context';
 
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
-    const [photos, setPhotos] = useState<{ [key in PhotoType]?: string }>({});
+    const { photos, setPhoto } = usePosturalContext();
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
         back: useRef<HTMLInputElement>(null),
@@ -29,10 +29,7 @@ export default function PosturalPage() {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const imageUrl = event.target?.result as string;
-                setPhotos(prev => ({ ...prev, [type]: imageUrl }));
-                if (type === 'front') {
-                    localStorage.setItem('postural-front-image', imageUrl);
-                }
+                setPhoto(type, imageUrl);
             };
             reader.readAsDataURL(file);
         }
