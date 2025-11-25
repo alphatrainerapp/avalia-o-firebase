@@ -616,10 +616,10 @@ export default function DashboardPage() {
                                 <Card 
                                     key={ev.id} 
                                     className={cn(
-                                        "shrink-0 w-32 text-center cursor-pointer transition-colors shadow-xl",
+                                        "shrink-0 w-36 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-[#01baba] text-white border-transparent shadow-lg rounded-2xl' : 'bg-card rounded-2xl'
-                                            : isSelected ? 'border-2 border-primary' : '',
+                                            ? isSelectedForCompare ? 'bg-[#01baba] text-white border-transparent shadow-lg' : 'bg-card'
+                                            : isSelected ? 'border-2 border-primary' : 'bg-card',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
                                     onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
