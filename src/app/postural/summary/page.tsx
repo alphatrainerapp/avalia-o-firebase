@@ -57,24 +57,29 @@ export default function PosturalSummaryPage() {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [selectedClientId]);
 
-    const muscleAnalysis = useMemo(() => {
-        const shortened: Set<string> = new Set();
-        const lengthened: Set<string> = new Set();
+    const groupedMuscleAnalysis = useMemo(() => {
+        const analysis: { [deviation: string]: { shortened: string[], lengthened: string[] } } = {};
 
         Object.keys(deviations).forEach(view => {
             deviations[view].forEach(deviationName => {
                 const mapping = muscleMappings[deviationName];
                 if (mapping) {
-                    mapping.shortened.forEach(muscle => shortened.add(muscle));
-                    mapping.lengthened.forEach(muscle => lengthened.add(muscle));
+                    if (!analysis[deviationName]) {
+                        analysis[deviationName] = { shortened: [], lengthened: [] };
+                    }
+                    analysis[deviationName].shortened.push(...mapping.shortened);
+                    analysis[deviationName].lengthened.push(...mapping.lengthened);
                 }
             });
         });
 
-        return {
-            shortened: Array.from(shortened),
-            lengthened: Array.from(lengthened),
-        };
+        // Remove duplicates
+        for (const deviation in analysis) {
+            analysis[deviation].shortened = [...new Set(analysis[deviation].shortened)];
+            analysis[deviation].lengthened = [...new Set(analysis[deviation].lengthened)];
+        }
+
+        return analysis;
     }, [deviations]);
 
     
@@ -253,10 +258,10 @@ export default function PosturalSummaryPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Resumo dos Desvios Encontrados na Última Avaliação</CardTitle>
+                        <CardTitle>Resumo dos Desvios Encontrados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {Object.keys(viewTitles).map(viewKey => {
+                        {Object.keys(deviations).map(viewKey => {
                             const selected = deviations[viewKey] || [];
                             if (selected.length === 0) return null;
 
@@ -280,29 +285,38 @@ export default function PosturalSummaryPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular por Desvio</CardTitle>
                     </CardHeader>
-                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-semibold text-red-600 mb-2">Músculos Provavelmente Encurtados/Superativos</h3>
-                            {muscleAnalysis.shortened.length > 0 ? (
-                                <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    {muscleAnalysis.shortened.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum músculo encurtado identificado.</p>
-                            )}
-                        </div>
-                         <div>
-                            <h3 className="font-semibold text-blue-600 mb-2">Músculos Provavelmente Alongados/Inibidos</h3>
-                            {muscleAnalysis.lengthened.length > 0 ? (
-                                <ul className="list-disc pl-5 space-y-1 text-sm">
-                                    {muscleAnalysis.lengthened.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum músculo alongado identificado.</p>
-                            )}
-                        </div>
+                    <CardContent className="space-y-6">
+                         {Object.keys(groupedMuscleAnalysis).length > 0 ? (
+                            Object.entries(groupedMuscleAnalysis).map(([deviation, muscles]) => (
+                                <Card key={deviation} className="bg-muted/30">
+                                    <CardHeader className="pb-2 pt-4">
+                                        <CardTitle className="text-base">{deviation}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                        <div>
+                                            <h4 className="font-semibold text-red-600 mb-2">Músculos Encurtados/Superativos</h4>
+                                            {muscles.shortened.length > 0 ? (
+                                                <ul className="list-disc pl-5 space-y-1 text-sm">
+                                                    {muscles.shortened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                                </ul>
+                                            ) : <p className="text-sm text-muted-foreground">Nenhum</p>}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-blue-600 mb-2">Músculos Alongados/Inibidos</h4>
+                                            {muscles.lengthened.length > 0 ? (
+                                                <ul className="list-disc pl-5 space-y-1 text-sm">
+                                                    {muscles.lengthened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                                </ul>
+                                            ) : <p className="text-sm text-muted-foreground">Nenhum</p>}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        ) : (
+                             <p className="text-center text-muted-foreground py-4">Nenhuma análise muscular gerada. Selecione os desvios posturais para ver os resultados.</p>
+                        )}
                     </CardContent>
                 </Card>
                 
