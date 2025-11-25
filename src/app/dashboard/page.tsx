@@ -38,7 +38,6 @@ export default function DashboardPage() {
     const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
     const { toast } = useToast();
     const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
-    const [availableProtocols, setAvailableProtocols] = useState<string[]>(audienceProtocols[selectedAudience]);
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
     const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const reportRef = useRef<HTMLDivElement>(null);
@@ -57,34 +56,24 @@ export default function DashboardPage() {
 
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
+    const availableProtocols = audienceProtocols[selectedAudience] || [];
+
     useEffect(() => {
         const currentEval = clientEvaluations.find(e => e.id === selectedEvaluationId);
+        let initialState: Partial<Evaluation & Client & any> = {};
+
         if (client && currentEval) {
-            const initialFormState = {
+            initialState = {
                 ...client,
                 ...currentEval,
                 clientName: client.name,
                 gender: client.gender,
                 protocol: currentEval.protocol || availableProtocols[0],
             };
-            setFormState(initialFormState);
-            
             const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(currentEval.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
-            const newProtocols = audienceProtocols[audience];
-            setAvailableProtocols(newProtocols);
-
-            const protocol = initialFormState.protocol;
-            let currentRequired: SkinfoldKeys[] = [];
-            if (protocol.includes('Pollock 3 dobras')) {
-                currentRequired = client.gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
-            } else {
-                currentRequired = protocolSkinfolds[protocol as keyof typeof protocolSkinfolds] || [];
-            }
-            setRequiredSkinfolds(currentRequired);
-
         } else if (client) {
-             const newFormState = {
+             initialState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
@@ -94,16 +83,10 @@ export default function DashboardPage() {
                 perimetria: {},
                 skinFolds: {},
              };
-             setFormState(newFormState);
-             let currentRequired: SkinfoldKeys[] = [];
-             if (newFormState.protocol.includes('Pollock 3 dobras')) {
-                currentRequired = client.gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
-            } else {
-                currentRequired = protocolSkinfolds[newFormState.protocol as keyof typeof protocolSkinfolds] || [];
-            }
-            setRequiredSkinfolds(currentRequired);
         }
-    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
+        setFormState(initialState);
+
+    }, [client, selectedEvaluationId, clientEvaluations]);
 
 
     useEffect(() => {
@@ -152,13 +135,12 @@ export default function DashboardPage() {
         if (bodyDensity > 0) {
             const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
              if (fatPercentage > 0 && fatPercentage < 100) {
-                handleInputChange({
-                    target: {
-                        name: 'bodyComposition.bodyFatPercentage',
-                        value: fatPercentage.toFixed(2),
-                        type: 'number'
-                    }
-                } as any);
+                setFormState(prev => {
+                    const newState = JSON.parse(JSON.stringify(prev));
+                    if (!newState.bodyComposition) newState.bodyComposition = {};
+                    newState.bodyComposition.bodyFatPercentage = parseFloat(fatPercentage.toFixed(2));
+                    return newState;
+                });
             }
         }
 
@@ -202,7 +184,6 @@ export default function DashboardPage() {
     const handleAudienceChange = (audience: string) => {
         setSelectedAudience(audience);
         const newProtocols = audienceProtocols[audience];
-        setAvailableProtocols(newProtocols);
         setFormState(prev => ({ ...prev, protocol: newProtocols[0] }));
     };
     
