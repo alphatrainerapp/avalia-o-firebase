@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, perimetriaPoints, skinfoldPoints, boneDiameterPoints, calculateBodyComposition, type BodyComposition } from '@/lib/data';
-import BodyMeasurementChart from '@/components/BodyMeasurementChart';
+import BodyModel from '@/components/BodyModel';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -352,20 +352,11 @@ export default function DashboardPage() {
         const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
-        const ratio = imgWidth / imgHeight;
-
-        let finalWidth = pdfWidth;
-        let finalHeight = finalWidth / ratio;
-
-        if (finalHeight > pdfHeight) {
-            finalHeight = pdfHeight;
-            finalWidth = finalHeight * ratio;
-        }
-
-        const x = (pdfWidth - finalWidth) / 2;
-        const y = 0;
-
-        pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+        const ratio = imgHeight / imgWidth;
+        const width = pdfWidth;
+        const height = width * ratio;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
@@ -440,19 +431,6 @@ export default function DashboardPage() {
         { name: 'bicondilarUmero', label: 'Bicondilar do Úmero (cm)' },
         { name: 'bicondilarFemur', label: 'Bicondilar do Fêmur (cm)' },
     ];
-
-    const chartPoints = useMemo(() => {
-        switch (activeTab) {
-            case 'perimetria':
-                return perimetriaPoints;
-            case 'dobras':
-                return skinfoldPoints;
-            case 'diametros':
-                return boneDiameterPoints;
-            default:
-                return [];
-        }
-    }, [activeTab]);
 
 
   return (
@@ -793,7 +771,7 @@ export default function DashboardPage() {
                         <CardTitle>Modelo Corporal</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <BodyMeasurementChart points={chartPoints} />
+                        <BodyModel deviations={{}} />
                     </CardContent>
                 </Card>
                 <Card>
@@ -886,5 +864,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
