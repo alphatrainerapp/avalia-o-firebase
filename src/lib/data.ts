@@ -195,39 +195,39 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
 };
 
 export const perimetriaPoints = [
-    { top: '23%', left: '48%' }, // ombro
-    { top: '30%', left: '48%' }, // torax
-    { top: '40%', left: '48%' }, // cintura
-    { top: '45%', left: '48%' }, // abdomen
-    { top: '55%', left: '48%' }, // quadril
-    { top: '33%', left: '35%' }, // braco E
-    { top: '33%', left: '65%' }, // braco D
-    { top: '40%', left: '32%' }, // antebraco E
-    { top: '40%', left: '68%' }, // antebraco D
-    { top: '65%', left: '42%' }, // coxa E
-    { top: '65%', left: '58%' }, // coxa D
-    { top: '80%', left: '40%' }, // panturrilha E
-    { top: '80%', left: '60%' }, // panturrilha D
+    { top: '23%', left: '48%', label: 'Ombro' },
+    { top: '30%', left: '48%', label: 'Tórax' },
+    { top: '40%', left: '48%', label: 'Cintura' },
+    { top: '45%', left: '48%', label: 'Abdômen' },
+    { top: '55%', left: '48%', label: 'Quadril' },
+    { top: '33%', left: '35%', label: 'Braço E' },
+    { top: '33%', left: '65%', label: 'Braço D' },
+    { top: '40%', left: '32%', label: 'Antebraço E' },
+    { top: '40%', left: '68%', label: 'Antebraço D' },
+    { top: '65%', left: '42%', label: 'Coxa E' },
+    { top: '65%', left: '58%', label: 'Coxa D' },
+    { top: '80%', left: '40%', label: 'Panturrilha E' },
+    { top: '80%', left: '60%', label: 'Panturrilha D' },
 ];
 
 export const skinfoldPoints = [
-    { top: '25%', left: '55%' }, // peitoral
-    { top: '30%', left: '68%' }, // axilarMedia
-    { top: '28%', left: '30%' }, // subscapular (costas) - aproximado
-    { top: '33%', left: '70%' }, // tricipital
-    { top: '33%', left: '30%' }, // bicipital
-    { top: '42%', left: '68%' }, // supraIliaca
-    { top: '45%', left: '55%' }, // abdominal
-    { top: '60%', left: '58%' }, // coxa
-    { top: '82%', left: '62%' }, // panturrilha
+    { top: '25%', left: '55%', label: 'Peitoral' },
+    { top: '30%', left: '68%', label: 'Axilar Média' },
+    { top: '28%', left: '30%', label: 'Subscapular' },
+    { top: '33%', left: '70%', label: 'Tricipital' },
+    { top: '33%', left: '30%', label: 'Bicipital' },
+    { top: '42%', left: '68%', label: 'Supra-ilíaca' },
+    { top: '45%', left: '55%', label: 'Abdominal' },
+    { top: '60%', left: '58%', label: 'Coxa' },
+    { top: '82%', left: '62%', label: 'Panturrilha' },
 ];
 
 export const boneDiameterPoints = [
-    { top: '45%', left: '28%' }, // biestiloidal (punho)
-    { top: '45%', left: '72%' }, // biestiloidal (punho)
-    { top: '70%', left: '40%' }, // bicondilarFemur (joelho)
-    { top: '70%', left: '60%' }, // bicondilarFemur (joelho)
-    { top: '35%', left: '30%' }, // bicondilarUmero (cotovelo)
-    { top: '35%', left: '70%' }, // bicondilarUmero (cotovelo)
+    { top: '45%', left: '28%', label: 'Punho (Biestiloidal)' },
+    { top: '45%', left: '72%', label: 'Punho (Biestiloidal)' },
+    { top: '70%', left: '40%', label: 'Joelho (Bicondilar do Fêmur)' },
+    { top: '70%', left: '60%', label: 'Joelho (Bicondilar do Fêmur)' },
+    { top: '35%', left: '30%', label: 'Cotovelo (Bicondilar do Úmero)' },
+    { top: '35%', left: '70%', label: 'Cotovelo (Bicondilar do Úmero)' },
 ];
     
