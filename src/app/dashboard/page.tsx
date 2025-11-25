@@ -119,8 +119,11 @@ export default function DashboardPage() {
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
+        const { name, value, type } = e.target;
         const keys = name.split('.');
+        
+        const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
+
         if (keys.length > 1) {
             setFormState(prev => {
                 const newState = {...prev};
@@ -129,11 +132,11 @@ export default function DashboardPage() {
                     current[keys[i]] = current[keys[i]] || {};
                     current = current[keys[i]];
                 }
-                current[keys[keys.length - 1]] = value;
+                current[keys[keys.length - 1]] = parsedValue;
                 return newState;
             });
         } else {
-            setFormState(prev => ({ ...prev, [name]: value }));
+            setFormState(prev => ({ ...prev, [name]: parsedValue }));
         }
     };
 
