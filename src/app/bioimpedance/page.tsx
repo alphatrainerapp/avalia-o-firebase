@@ -177,23 +177,23 @@ export default function BioimpedancePage() {
         const pdfHeight = pdf.internal.pageSize.getHeight();
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
-        const imgHeight = pdfWidth / ratio;
+        
+        const canvasAspectRatio = canvasWidth / canvasHeight;
+        const pageAspectRatio = pdfWidth / pdfHeight;
 
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-
-        while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
+        let finalImgWidth = pdfWidth;
+        let finalImgHeight = pdfHeight;
+        
+        if (canvasAspectRatio > pageAspectRatio) {
+            finalImgHeight = pdfWidth / canvasAspectRatio;
+        } else {
+            finalImgWidth = pdfHeight * canvasAspectRatio;
         }
 
+        const x = (pdfWidth - finalImgWidth) / 2;
+        const y = (pdfHeight - finalImgHeight) / 2;
 
+        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
         pdf.save(`relatorio_bioimpedancia_${client.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório de bioimpedância foi salvo com sucesso.' });
