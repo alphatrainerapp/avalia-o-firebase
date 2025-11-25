@@ -246,7 +246,7 @@ export default function BioimpedancePage() {
                 </DialogContent>
             </Dialog>
 
-            <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
+            <div className="min-h-screen bg-background text-foreground">
                 <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                      <div className="flex items-center gap-3">
                         <Link href="/dashboard"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
@@ -259,7 +259,7 @@ export default function BioimpedancePage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button onClick={handleSave} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Save className="mr-2" /> Salvar Alterações</Button>
+                        <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Save className="mr-2" /> Salvar Alterações</Button>
                     </div>
                 </header>
 
@@ -293,17 +293,17 @@ export default function BioimpedancePage() {
                                             key={ev.id} 
                                             className={cn(
                                                 "shrink-0 w-36 text-center cursor-pointer transition-colors shadow-xl",
-                                                isSelectedForCompare ? 'bg-[#01baba] text-white border-transparent shadow-lg rounded-2xl' : 'bg-card rounded-2xl'
+                                                isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg rounded-2xl' : 'bg-card rounded-2xl'
                                             )}
                                             onClick={() => handleCompareSelection(ev.id)}
                                         >
                                             <CardHeader className="p-4 relative">
-                                                 <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-white" : "text-card-foreground")}>
+                                                 <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
                                                     {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', timeZone: 'UTC' })}
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="p-4 pt-0">
-                                                <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-white" : "text-card-foreground")}>{index + 1}</p>
+                                                <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
                                             </CardContent>
                                         </Card>
                                     )

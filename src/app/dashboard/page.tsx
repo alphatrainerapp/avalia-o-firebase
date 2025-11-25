@@ -485,7 +485,7 @@ export default function DashboardPage() {
 
   return (
     <>
-    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background text-foreground">
         <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
                 <Activity className="size-8 text-primary" />

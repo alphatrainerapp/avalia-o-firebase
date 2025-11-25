@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from "@/components/ui/toaster";
 import { PT_Sans } from 'next/font/google'
 import './globals.css';
+import Header from '@/components/Header';
 
 export const metadata: Metadata = {
   title: 'Alpha Insights',
@@ -22,7 +23,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-body antialiased`}>
-        {children}
+        <Header />
+        <main>{children}</main>
         <Toaster />
       </body>
     </html>
