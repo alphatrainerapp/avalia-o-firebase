@@ -237,10 +237,10 @@ export default function BioimpedancePage() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <Button onClick={() => handleScaleSelect('omron')} variant="outline">
-                            Balança Simples (Omron HBF-514)
+                            Balança Simples
                         </Button>
                         <Button onClick={() => handleScaleSelect('inbody')} variant="outline">
-                            Bioimpedância Completa (InBody 270)
+                            Bioimpedância Completa
                         </Button>
                     </div>
                 </DialogContent>
@@ -254,7 +254,7 @@ export default function BioimpedancePage() {
                         <div>
                             <h1 className="text-2xl font-bold">Bioimpedância</h1>
                             <p className="text-muted-foreground">
-                                {selectedScale ? `Resultados para ${selectedScale === 'omron' ? 'Omron HBF-514' : 'InBody 270'}` : 'Selecione uma balança'}
+                                {selectedScale ? `Resultados para ${selectedScale === 'omron' ? 'Balança Simples' : 'Bioimpedância Completa'}` : 'Selecione uma balança'}
                             </p>
                         </div>
                     </div>
