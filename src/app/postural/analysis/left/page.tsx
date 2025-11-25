@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
 
-export default function PosturalAnalysisSidePage() {
+export default function PosturalAnalysisLeftPage() {
     const { toast } = useToast();
     const { photos } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
@@ -25,7 +25,7 @@ export default function PosturalAnalysisSidePage() {
     const imageContainerRef = useRef<HTMLDivElement>(null);
     const startPos = useRef({ x: 0, y: 0 });
 
-    const sideImage = photos['right'];
+    const sideImage = photos['left'];
 
     useEffect(() => {
         const today = new Date();
@@ -133,7 +133,7 @@ export default function PosturalAnalysisSidePage() {
         {
             title: 'Pés',
             items: [
-                { options: ['Pé pronado (lateral)', 'Pé supinado (lateral)'] }
+                { options ['Pé pronado (lateral)', 'Pé supinado (lateral)'] }
             ]
         }
     ];
@@ -143,7 +143,7 @@ export default function PosturalAnalysisSidePage() {
         <div className="min-h-screen bg-background text-foreground">
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <Link href="/postural/analysis/posterior"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
+                    <Link href="/postural/analysis/side"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Avaliação Postural</h1>
@@ -155,7 +155,7 @@ export default function PosturalAnalysisSidePage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Análise da Visão Lateral Direita</CardTitle>
+                    <CardTitle>Análise da Visão Lateral Esquerda</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -171,7 +171,7 @@ export default function PosturalAnalysisSidePage() {
                                 {sideImage && (
                                     <Image
                                         src={sideImage}
-                                        alt="Visão Lateral"
+                                        alt="Visão Lateral Esquerda"
                                         layout="fill"
                                         objectFit="contain"
                                         className="rounded-lg transition-transform duration-200"
@@ -252,14 +252,10 @@ export default function PosturalAnalysisSidePage() {
 
 
             <div className="flex justify-end gap-4 mt-8">
-                 <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                    <Save className="mr-2" />
-                    Salvar
-                </Button>
-                <Link href="/postural/analysis/left">
-                    <Button variant="outline">
-                        Próximo
-                        <ArrowRight className="ml-2" />
+                 <Link href="/dashboard">
+                    <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                        <Check className="mr-2" />
+                        Salvar e Finalizar
                     </Button>
                 </Link>
             </div>
