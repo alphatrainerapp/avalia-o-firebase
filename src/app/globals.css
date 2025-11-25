@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    --background: 222 9% 96%; /* Lighter Gray for main background */
+    --background: 0 0% 100%; /* White */
     --foreground: 222 20% 25%; /* Dark Blue-Gray for text */
-    --card: 0 0% 100%; /* White */
+    --card: 222 9% 96%; /* Lighter Gray for cards */
     --card-foreground: 222 20% 25%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 20% 25%;
