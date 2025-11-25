@@ -84,7 +84,7 @@ export default function ComparisonCharts({ evaluations, client }: ComparisonChar
     );
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
             {renderChart('Massa Gorda', 'Massa Gorda (kg)', 'hsl(var(--chart-2))')}
             {renderChart('Massa Muscular', 'Massa Muscular (kg)', 'hsl(var(--chart-1))')}
             {renderChart('Massa Residual', 'Massa Residual (kg)', 'hsl(var(--chart-3))')}
