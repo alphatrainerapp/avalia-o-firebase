@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid } from 'lucide-react';
@@ -15,6 +15,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
     const [showGrid, setShowGrid] = useState(false);
+    const [currentDate, setCurrentDate] = useState('');
+
+    useEffect(() => {
+        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
+    }, []);
 
     const handleSave = () => {
         console.log('Saving postural analysis...');
@@ -79,7 +84,7 @@ export default function PosturalAnalysisPage() {
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Avaliação Postural</h1>
-                        <p className="text-muted-foreground">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                        <p className="text-muted-foreground">Data: {currentDate}</p>
                     </div>
                 </div>
                 <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / SALVAR</p>
