@@ -495,12 +495,14 @@ export default function DashboardPage() {
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button onClick={handleSave} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Save className="mr-2" /> Salvar</Button>
+                <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Save className="mr-2" /> Salvar</Button>
                 <Link href="/bioimpedance">
-                  <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><BarChart className="mr-2" /> Bioimpedância</Button>
+                  <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><BarChart className="mr-2" /> Bioimpedância</Button>
                 </Link>
-                <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><User className="mr-2" /> Avaliação Postural</Button>
-                <Button onClick={handleExportPdf} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Download className="mr-2" /> Exportar PDF</Button>
+                <Link href="/postural">
+                    <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><User className="mr-2" /> Avaliação Postural</Button>
+                </Link>
+                <Button onClick={handleExportPdf} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Download className="mr-2" /> Exportar PDF</Button>
             </div>
         </header>
 
@@ -517,7 +519,7 @@ export default function DashboardPage() {
                             </div>
                              <Button 
                                 onClick={handleNewEvaluation} 
-                                className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"
+                                className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
                             >
                                 <Plus className="mr-2" /> Nova Avaliação
                             </Button>
@@ -616,22 +618,22 @@ export default function DashboardPage() {
                                 <Card 
                                     key={ev.id} 
                                     className={cn(
-                                        "shrink-0 w-36 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
+                                        "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                                         isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-[#01baba] text-white border-transparent shadow-lg' : 'bg-card'
+                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
                                             : isSelected ? 'border-2 border-primary' : 'bg-card',
                                         !isCompareMode && 'hover:bg-accent'
                                     )}
                                     onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
                                 >
                                     <CardHeader className="p-4 relative">
-                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-white" : "text-card-foreground")}>
+                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
                                             {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })}/{new Date(ev.date).getFullYear().toString().slice(-2)}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
                                          {isCompareMode ? (
-                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-white" : "text-card-foreground")}>{index + 1}</p>
+                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
                                          ) : (
                                             <>
                                                 <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
@@ -791,7 +793,7 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
                                             <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                            <div className="font-bold text-lg">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</div>
+                                            <div className="font-bold text-lg text-foreground">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</div>
                                         </div>
                                     </div>
                                     <p className="text-xs text-foreground mt-2">
