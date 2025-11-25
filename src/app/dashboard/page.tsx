@@ -368,8 +368,6 @@ export default function DashboardPage() {
         setCompareMode(checked);
         if (!checked) {
             setSelectedEvalIdsForCompare([]);
-        } else {
-            setSelectedEvaluationId(null)
         }
     }
 
