@@ -349,13 +349,17 @@ export default function DashboardPage() {
         });
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
-        
-        const ratio = imgWidth / pdfWidth;
-        const finalHeight = imgHeight / ratio;
-
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalHeight);
+        const ratio = imgWidth / imgHeight;
+        let finalWidth = pdfWidth;
+        let finalHeight = finalWidth / ratio;
+        if (finalHeight > pdfHeight) {
+            finalHeight = pdfHeight;
+            finalWidth = finalHeight * ratio;
+        }
+        pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
