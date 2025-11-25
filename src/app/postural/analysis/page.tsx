@@ -16,9 +16,14 @@ export default function PosturalAnalysisPage() {
     const { toast } = useToast();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
+    const [frontImage, setFrontImage] = useState<string | null>(null);
 
     useEffect(() => {
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
+        const storedImage = localStorage.getItem('postural-front-image');
+        if (storedImage) {
+            setFrontImage(storedImage);
+        }
     }, []);
 
     const handleSave = () => {
@@ -98,7 +103,7 @@ export default function PosturalAnalysisPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg">
                             <Image
-                                src="https://firebasestudio.ai/public-hosting/projects/2654/assets/4044/posture-front.png"
+                                src={frontImage || "https://firebasestudio.ai/public-hosting/projects/2654/assets/4044/posture-front.png"}
                                 alt="Visão Frontal"
                                 layout="fill"
                                 objectFit="contain"

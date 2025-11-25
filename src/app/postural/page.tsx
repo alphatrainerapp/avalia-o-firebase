@@ -28,7 +28,11 @@ export default function PosturalPage() {
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                setPhotos(prev => ({ ...prev, [type]: event.target?.result as string }));
+                const imageUrl = event.target?.result as string;
+                setPhotos(prev => ({ ...prev, [type]: imageUrl }));
+                if (type === 'front') {
+                    localStorage.setItem('postural-front-image', imageUrl);
+                }
             };
             reader.readAsDataURL(file);
         }
