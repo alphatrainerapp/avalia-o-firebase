@@ -354,21 +354,13 @@ export default function DashboardPage() {
         const canvasHeight = canvas.height;
         
         const canvasAspectRatio = canvasWidth / canvasHeight;
-        const pageAspectRatio = pdfWidth / pdfHeight;
-
-        let finalImgWidth = pdfWidth;
-        let finalImgHeight = pdfHeight;
         
-        if (canvasAspectRatio > pageAspectRatio) {
-            finalImgHeight = pdfWidth / canvasAspectRatio;
-        } else {
-            finalImgWidth = pdfHeight * canvasAspectRatio;
-        }
+        const finalImgWidth = pdfWidth;
+        const finalImgHeight = finalImgWidth / canvasAspectRatio;
 
-        const x = (pdfWidth - finalImgWidth) / 2;
         const y = (pdfHeight - finalImgHeight) / 2;
 
-        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+        pdf.addImage(imgData, 'PNG', 0, y > 0 ? y : 0, finalImgWidth, finalImgHeight);
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
