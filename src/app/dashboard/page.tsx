@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys } from '@/lib/data';
+import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, perimetriaPoints, skinfoldPoints, boneDiameterPoints } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -40,6 +40,7 @@ export default function DashboardPage() {
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
     const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const reportRef = useRef<HTMLDivElement>(null);
+    const [activeTab, setActiveTab] = useState('perimetria');
 
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
@@ -224,7 +225,7 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            return Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712) * 3.02;
+            return (3.02 * Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712));
         }
         return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
@@ -242,17 +243,10 @@ export default function DashboardPage() {
     
     const muscleMass = useMemo(() => {
         if (leanMassKg > 0 && boneMass > 0) {
-            const weight = formState.bodyMeasurements?.weight;
-            if (weight) {
-                // Assuming residual is a fixed % of weight (e.g. 21% for female, 24% for male)
-                const residualFactor = formState.gender === 'Feminino' ? 0.21 : 0.24;
-                const residual = weight * residualFactor;
-                const calculatedMuscleMass = leanMassKg - boneMass - residual;
-                 return calculatedMuscleMass > 0 ? calculatedMuscleMass : 0;
-            }
+           return leanMassKg - boneMass;
         }
         return 0;
-    }, [leanMassKg, boneMass, formState.bodyMeasurements?.weight, formState.gender]);
+    }, [leanMassKg, boneMass]);
 
     const residualMass = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
@@ -471,6 +465,19 @@ export default function DashboardPage() {
         { name: 'bicondilarFemur', label: 'Bicondilar do Fêmur (cm)' },
     ];
 
+    const chartPoints = useMemo(() => {
+        switch (activeTab) {
+            case 'perimetria':
+                return perimetriaPoints;
+            case 'dobras':
+                return skinfoldPoints;
+            case 'diametros':
+                return boneDiameterPoints;
+            default:
+                return [];
+        }
+    }, [activeTab]);
+
 
   return (
     <>
@@ -652,7 +659,7 @@ export default function DashboardPage() {
                         <CardTitle>Registros de Dados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="perimetria">
+                        <Tabs defaultValue="perimetria" onValueChange={setActiveTab}>
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
                                 <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
@@ -795,10 +802,10 @@ export default function DashboardPage() {
             <div className="lg:col-span-1 space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Dashboard</CardTitle>
+                        <CardTitle>Modelo Corporal</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <BodyMeasurementChart />
+                        <BodyMeasurementChart points={chartPoints} />
                     </CardContent>
                 </Card>
                 <Card>

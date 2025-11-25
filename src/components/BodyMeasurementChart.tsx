@@ -2,21 +2,16 @@
 
 import React from 'react';
 
-const BodyMeasurementChart = () => {
-  const points = [
-    { top: '15%', left: '48%' },
-    { top: '25%', left: '52%' },
-    { top: '35%', left: '47%' },
-    { top: '45%', left: '53%' },
-    { top: '55%', left: '46%' },
-    { top: '65%', left: '54%' },
-    { top: '75%', left: '48%' },
-    { top: '20%', left: '35%' },
-    { top: '20%', left: '65%' },
-    { top: '80%', left: '38%' },
-    { top: '80%', left: '62%' },
-  ];
+type Point = {
+    top: string;
+    left: string;
+};
 
+type BodyMeasurementChartProps = {
+    points?: Point[];
+};
+
+const BodyMeasurementChart = ({ points = [] }: BodyMeasurementChartProps) => {
   return (
     <div className="relative w-full h-[400px] flex items-center justify-center">
       <svg
@@ -30,7 +25,7 @@ const BodyMeasurementChart = () => {
       {points.map((point, index) => (
         <div
           key={index}
-          className="absolute w-3 h-3 rounded-full bg-primary/50"
+          className="absolute w-3 h-3 rounded-full bg-red-500 border-2 border-white animate-pulse"
           style={{ top: point.top, left: point.left, transform: 'translate(-50%, -50%)' }}
         ></div>
       ))}

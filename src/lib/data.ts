@@ -194,4 +194,40 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
 };
 
+export const perimetriaPoints = [
+    { top: '23%', left: '48%' }, // ombro
+    { top: '30%', left: '48%' }, // torax
+    { top: '40%', left: '48%' }, // cintura
+    { top: '45%', left: '48%' }, // abdomen
+    { top: '55%', left: '48%' }, // quadril
+    { top: '33%', left: '35%' }, // braco E
+    { top: '33%', left: '65%' }, // braco D
+    { top: '40%', left: '32%' }, // antebraco E
+    { top: '40%', left: '68%' }, // antebraco D
+    { top: '65%', left: '42%' }, // coxa E
+    { top: '65%', left: '58%' }, // coxa D
+    { top: '80%', left: '40%' }, // panturrilha E
+    { top: '80%', left: '60%' }, // panturrilha D
+];
+
+export const skinfoldPoints = [
+    { top: '25%', left: '55%' }, // peitoral
+    { top: '30%', left: '68%' }, // axilarMedia
+    { top: '28%', left: '30%' }, // subscapular (costas) - aproximado
+    { top: '33%', left: '70%' }, // tricipital
+    { top: '33%', left: '30%' }, // bicipital
+    { top: '42%', left: '68%' }, // supraIliaca
+    { top: '45%', left: '55%' }, // abdominal
+    { top: '60%', left: '58%' }, // coxa
+    { top: '82%', left: '62%' }, // panturrilha
+];
+
+export const boneDiameterPoints = [
+    { top: '45%', left: '28%' }, // biestiloidal (punho)
+    { top: '45%', left: '72%' }, // biestiloidal (punho)
+    { top: '70%', left: '40%' }, // bicondilarFemur (joelho)
+    { top: '70%', left: '60%' }, // bicondilarFemur (joelho)
+    { top: '35%', left: '30%' }, // bicondilarUmero (cotovelo)
+    { top: '35%', left: '70%' }, // bicondilarUmero (cotovelo)
+];
     
