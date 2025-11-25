@@ -4,12 +4,11 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, User, Camera, ArrowRight, Edit } from 'lucide-react';
+import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
-import { posturalDeviations } from '@/lib/postural-data';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { muscleMappings } from '@/lib/postural-data';
 import { clients, evaluations } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -57,6 +56,27 @@ export default function PosturalSummaryPage() {
             .filter(e => e.clientId === selectedClientId)
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [selectedClientId]);
+
+    const muscleAnalysis = useMemo(() => {
+        const shortened: Set<string> = new Set();
+        const lengthened: Set<string> = new Set();
+
+        Object.keys(deviations).forEach(view => {
+            deviations[view].forEach(deviationName => {
+                const mapping = muscleMappings[deviationName];
+                if (mapping) {
+                    mapping.shortened.forEach(muscle => shortened.add(muscle));
+                    mapping.lengthened.forEach(muscle => lengthened.add(muscle));
+                }
+            });
+        });
+
+        return {
+            shortened: Array.from(shortened),
+            lengthened: Array.from(lengthened),
+        };
+    }, [deviations]);
+
     
     const handleClientChange = (clientId: string) => {
         setSelectedClientId(clientId);
@@ -95,11 +115,7 @@ export default function PosturalSummaryPage() {
     };
     
     const handleBackToEvaluation = () => {
-        if (isSaved) {
-            router.push('/dashboard');
-        } else {
-            setShowSaveAlert(true);
-        }
+       router.push('/dashboard');
     };
 
     const handleSaveAndContinue = () => {
@@ -147,8 +163,8 @@ export default function PosturalSummaryPage() {
                 </div>
                  <div className="flex items-center gap-2">
                     <Button onClick={handleBackToEvaluation} variant="outline">
-                        <Edit className="mr-2"/>
-                        Voltar à Avaliação
+                        <ArrowLeft className="mr-2"/>
+                        Voltar ao Dashboard
                     </Button>
                     <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
                 </div>
@@ -259,6 +275,34 @@ export default function PosturalSummaryPage() {
                         {Object.values(deviations).flat().length === 0 && (
                             <p className="text-center text-muted-foreground">Nenhum desvio postural foi selecionado na avaliação atual.</p>
                         )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular</CardTitle>
+                    </CardHeader>
+                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 className="font-semibold text-red-600 mb-2">Músculos Provavelmente Encurtados/Superativos</h3>
+                            {muscleAnalysis.shortened.length > 0 ? (
+                                <ul className="list-disc pl-5 space-y-1 text-sm">
+                                    {muscleAnalysis.shortened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Nenhum músculo encurtado identificado.</p>
+                            )}
+                        </div>
+                         <div>
+                            <h3 className="font-semibold text-blue-600 mb-2">Músculos Provavelmente Alongados/Inibidos</h3>
+                            {muscleAnalysis.lengthened.length > 0 ? (
+                                <ul className="list-disc pl-5 space-y-1 text-sm">
+                                    {muscleAnalysis.lengthened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Nenhum músculo alongado identificado.</p>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
                 
