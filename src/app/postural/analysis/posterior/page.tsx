@@ -11,10 +11,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { usePosturalContext } from '../context';
+import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
 
-export default function PosturalAnalysisPage() {
+export default function PosturalAnalysisPosteriorPage() {
     const { toast } = useToast();
     const { photos } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
@@ -25,7 +25,7 @@ export default function PosturalAnalysisPage() {
     const imageContainerRef = useRef<HTMLDivElement>(null);
     const startPos = useRef({ x: 0, y: 0 });
 
-    const frontImage = photos['front'];
+    const backImage = photos['back'];
 
     useEffect(() => {
         const today = new Date();
@@ -88,46 +88,44 @@ export default function PosturalAnalysisPage() {
 
     const analysisSections = [
         {
-            title: 'Assimetria de Quadril',
+            title: 'Ombros',
             items: [
-                {
-                    subtitle: 'Obliquidade Pélvica',
-                    options: ['Quadril direito mais alto', 'Quadril esquerdo mais alto']
-                },
-                {
-                    subtitle: 'Rotação Pélvica',
-                    options: ['Rotação pélvica à direita', 'Rotação pélvica à esquerda']
-                },
-                {
-                    subtitle: 'Deslocamento lateral da pelve',
-                    options: ['Pelve desviada para direita', 'Pelve desviada para esquerda']
-                }
+                { options: ['Ombro direito alto', 'Ombro esquerdo alto'] },
+                { options: ['Escápula alada D', 'Escápula alada E'] },
+                { options: ['Rotação escapular D/E'] },
+                { options: ['Basculamento escapular'] },
+                { options: ['Cintura escapular desviada D/E'] }
             ]
         },
         {
-            title: 'Assimetria de Ombros',
+            title: 'Coluna',
             items: [
-                {
-                    subtitle: 'Ombro Elevado / Ombro Baixo',
-                    options: ['Ombro direito mais alto', 'Ombro esquerdo mais alto']
-                },
-                {
-                    subtitle: 'Desvio lateral da cintura escapular',
-                    options: ['Cintura escapular desviada para direita', 'Cintura escapular desviada para esquerda']
-                },
-                {
-                    subtitle: 'Rotação dos ombros',
-                    options: ['Rotação interna predominante (braços viram para dentro)', 'Rotação externa predominante']
-                }
+                { options: ['Escoliose C direita', 'Escoliose C esquerda', 'Escoliose S'] },
+                { options: ['Tronco desviado D/E'] },
+                { options: ['Rotação do tronco D/E'] },
+                { options: ['Inclinação do tronco D/E'] }
             ]
         },
         {
-            title: 'Tipos de Escoliose',
+            title: 'Pelve',
             items: [
-                {
-                    subtitle: 'Quanto à direção da convexidade',
-                    options: ['Escoliose em “C” convexa à direita', 'Escoliose em “C” convexa à esquerda', 'Escoliose em “S” (dupla curva)']
-                }
+                { options: ['Quadril direito alto', 'Quadril esquerdo alto'] },
+                { options: ['Pelve desviada D/E'] },
+                { options: ['Rotação pélvica D/E'] }
+            ]
+        },
+        {
+            title: 'Joelhos',
+            items: [
+                { options: ['Valgo', 'Varo'] },
+                { options: ['Torção tibial interna', 'Torção tibial externa'] },
+            ]
+        },
+        {
+            title: 'Pés',
+            items: [
+                { options: ['Pé pronado direito/esquerdo', 'Pé supinado direito/esquerdo'] },
+                { options: ['Tendão de Aquiles em valgo/varo'] },
             ]
         }
     ];
@@ -137,7 +135,7 @@ export default function PosturalAnalysisPage() {
         <div className="min-h-screen bg-background text-foreground">
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <Link href="/postural"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
+                    <Link href="/postural/analysis"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Avaliação Postural</h1>
@@ -149,7 +147,7 @@ export default function PosturalAnalysisPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Análise da Visão Frontal</CardTitle>
+                    <CardTitle>Análise da Visão Posterior</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -162,10 +160,10 @@ export default function PosturalAnalysisPage() {
                                 onMouseUp={handleMouseUp}
                                 onMouseLeave={handleMouseUp}
                              >
-                                {frontImage && (
+                                {backImage && (
                                     <Image
-                                        src={frontImage}
-                                        alt="Visão Frontal"
+                                        src={backImage}
+                                        alt="Visão Posterior"
                                         layout="fill"
                                         objectFit="contain"
                                         className="rounded-lg transition-transform duration-200"
@@ -222,14 +220,13 @@ export default function PosturalAnalysisPage() {
                                         <AccordionTrigger className="text-base font-semibold">{section.title}</AccordionTrigger>
                                         <AccordionContent>
                                             <div className="space-y-4 pl-2">
-                                                {section.items.map(item => (
-                                                    <div key={item.subtitle}>
-                                                        <Label className="font-medium text-sm">{item.subtitle}</Label>
+                                                {section.items.map((item, itemIndex) => (
+                                                    <div key={itemIndex}>
                                                         <div className="grid gap-2 mt-2">
                                                             {item.options.map(option => (
                                                                 <div key={option} className="flex items-center space-x-2">
-                                                                    <Checkbox id={`${section.title}-${item.subtitle}-${option}`} />
-                                                                    <Label htmlFor={`${section.title}-${item.subtitle}-${option}`} className="font-normal text-sm">{option}</Label>
+                                                                    <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                                    <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -251,7 +248,7 @@ export default function PosturalAnalysisPage() {
                     <Save className="mr-2" />
                     Salvar
                 </Button>
-                <Link href="/postural/analysis/posterior">
+                <Link href="/postural/analysis/side">
                     <Button variant="outline">
                         Próximo
                         <ArrowRight className="ml-2" />
