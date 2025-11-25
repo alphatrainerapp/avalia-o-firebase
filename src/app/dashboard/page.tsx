@@ -224,8 +224,7 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            // 3.02 * (H² * R * F * 400)^0,712 - Rocha
-            return Math.pow(3.02 * (Math.pow(heightInM, 2) * wristInM * femurInM * 400), 0.712);
+            return Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712) * 3.02;
         }
         return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
@@ -248,11 +247,12 @@ export default function DashboardPage() {
                 // Assuming residual is a fixed % of weight (e.g. 21% for female, 24% for male)
                 const residualFactor = formState.gender === 'Feminino' ? 0.21 : 0.24;
                 const residual = weight * residualFactor;
-                return leanMassKg - boneMass - residual;
+                const calculatedMuscleMass = leanMassKg - boneMass - residual;
+                 return calculatedMuscleMass > 0 ? calculatedMuscleMass : 0;
             }
         }
-        return formState.bodyComposition?.muscleMass || 0;
-    }, [leanMassKg, boneMass, formState.bodyMeasurements?.weight, formState.gender, formState.bodyComposition?.muscleMass]);
+        return 0;
+    }, [leanMassKg, boneMass, formState.bodyMeasurements?.weight, formState.gender]);
 
     const residualMass = useMemo(() => {
         const weight = formState.bodyMeasurements?.weight;
@@ -484,10 +484,10 @@ export default function DashboardPage() {
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleSave}><Save className="mr-2" /> Salvar</Button>
-                <Button variant="outline"><BarChart className="mr-2" /> Bioimpedância</Button>
-                <Button variant="outline"><User className="mr-2" /> Avaliação Postural</Button>
-                <Button onClick={handleExportPdf}><Download className="mr-2" /> Exportar PDF</Button>
+                <Button onClick={handleSave} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Save className="mr-2" /> Salvar</Button>
+                <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><BarChart className="mr-2" /> Bioimpedância</Button>
+                <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><User className="mr-2" /> Avaliação Postural</Button>
+                <Button onClick={handleExportPdf} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Download className="mr-2" /> Exportar PDF</Button>
             </div>
         </header>
 
