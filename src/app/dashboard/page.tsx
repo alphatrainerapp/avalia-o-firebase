@@ -794,7 +794,7 @@ export default function DashboardPage() {
                                             <div className="font-bold text-lg">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</div>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-primary-foreground/80 mt-2">
+                                    <p className="text-xs text-foreground mt-2">
                                         Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
                                     </p>
                                 </div>
