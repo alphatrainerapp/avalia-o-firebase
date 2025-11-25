@@ -96,7 +96,7 @@ export default function PosturalSummaryPage() {
     
     const handleBackToEvaluation = () => {
         if (isSaved) {
-            router.push('/postural/analysis/left');
+            router.push('/dashboard');
         } else {
             setShowSaveAlert(true);
         }
@@ -106,12 +106,12 @@ export default function PosturalSummaryPage() {
         saveAnalysis();
         toast({ title: 'Análise Salva', description: 'Suas alterações foram salvas.' });
         setShowSaveAlert(false);
-        router.push('/postural/analysis/left');
+        router.push('/dashboard');
     };
 
     const handleContinueWithoutSaving = () => {
         setShowSaveAlert(false);
-        router.push('/postural/analysis/left');
+        router.push('/dashboard');
     };
 
 
@@ -138,7 +138,7 @@ export default function PosturalSummaryPage() {
 
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="icon" onClick={handleBackToEvaluation}><ArrowLeft /></Button>
+                    <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis/left')}><ArrowLeft /></Button>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Resumo da Avaliação Postural</h1>
