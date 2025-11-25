@@ -28,8 +28,10 @@ export default function PosturalAnalysisPage() {
     const frontImage = photos['front'];
 
     useEffect(() => {
-        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
+        const today = new Date();
+        setCurrentDate(today.toLocaleDateString('pt-BR'));
     }, []);
+
 
     const handleSave = () => {
         console.log('Saving postural analysis...');
@@ -172,9 +174,23 @@ export default function PosturalAnalysisPage() {
                                     />
                                 )}
                                 {showGrid && (
-                                    <div className="absolute inset-0 grid grid-cols-10 grid-rows-15 gap-0 pointer-events-none">
-                                        {[...Array(10)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-black/30"></div>)}
-                                        {[...Array(15)].map((_, i) => <div key={`h-${i}`} className="w-full border-t border-black/30 col-span-10"></div>)}
+                                     <div className="absolute inset-0 pointer-events-none">
+                                        {/* Vertical lines */}
+                                        {[...Array(9)].map((_, i) => (
+                                            <div
+                                                key={`v-${i}`}
+                                                className="absolute bg-black/50"
+                                                style={{ left: `${(i + 1) * 10}%`, top: 0, bottom: 0, width: '1px' }}
+                                            />
+                                        ))}
+                                        {/* Horizontal lines */}
+                                        {[...Array(14)].map((_, i) => (
+                                            <div
+                                                key={`h-${i}`}
+                                                className="absolute bg-black/50"
+                                                style={{ top: `${(i + 1) * (100 / 15)}%`, left: 0, right: 0, height: '1px' }}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                                 <div className="absolute top-2 left-2 flex flex-col gap-2">
