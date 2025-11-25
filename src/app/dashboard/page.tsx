@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ComparisonTable } from '@/components/ComparisonTable';
+import ComparisonCharts from '@/components/ComparisonCharts';
 
 
 export default function DashboardPage() {
@@ -219,7 +220,8 @@ export default function DashboardPage() {
             const heightInM = height / 100;
             const wristInM = wrist / 100;
             const femurInM = femur / 100;
-            return 3.02 * Math.pow(heightInM, 2) * wristInM * femurInM * 400 * 0.712;
+            // 3.02 * (H² * R * F * 400)^0,712 - Rocha
+            return Math.pow(3.02 * (Math.pow(heightInM, 2) * wristInM * femurInM * 400), 0.712);
         }
         return 0;
     }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
@@ -237,7 +239,6 @@ export default function DashboardPage() {
     
     const muscleMass = useMemo(() => {
         if (leanMassKg > 0 && boneMass > 0) {
-            const residualMass = leanMassKg - boneMass;
             const weight = formState.bodyMeasurements?.weight;
             if (weight) {
                 // Assuming residual is a fixed % of weight (e.g. 21% for female, 24% for male)
@@ -568,13 +569,19 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
                 
-                {isCompareMode && client && (
-                    <ComparisonTable
-                        evaluations={comparedEvaluations}
-                        perimetriaFields={perimetriaFields}
-                        skinfoldFields={skinfoldFields}
-                        diametrosFields={diametrosFields}
-                    />
+                {isCompareMode && client && comparedEvaluations.length > 0 && (
+                    <div className="space-y-6">
+                        <ComparisonTable
+                            evaluations={comparedEvaluations}
+                            perimetriaFields={perimetriaFields}
+                            skinfoldFields={skinfoldFields}
+                            diametrosFields={diametrosFields}
+                        />
+                        <ComparisonCharts 
+                            evaluations={comparedEvaluations}
+                            client={client}
+                        />
+                    </div>
                 )}
                 
                 <Card>
@@ -667,7 +674,7 @@ export default function DashboardPage() {
                                                     name={`skinFolds.${field.name}`} 
                                                     value={formState.skinFolds?.[field.name] || ''} 
                                                     onChange={handleInputChange} 
-                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-2 border-primary bg-primary/10 ring-primary')}
+                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
                                                 />
                                             </div>
                                         ))}

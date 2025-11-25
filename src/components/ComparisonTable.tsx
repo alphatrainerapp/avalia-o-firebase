@@ -52,12 +52,12 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                         }
 
                         return (
-                            <TableCell key={ev.id}>
+                            <TableCell key={ev.id} className="text-center">
                                 {currentValue?.toFixed(1) ?? '-'}
                                 {difference !== null && (
-                                    <p className={cn("text-sm", difference > 0 ? "text-green-500" : "text-red-500")}>
-                                        {difference.toFixed(1)}
-                                    </p>
+                                    <span className={cn("block text-xs", difference > 0 ? "text-red-500" : "text-green-500")}>
+                                       {difference > 0 ? '+' : ''}{difference.toFixed(1)}
+                                    </span>
                                 )}
                             </TableCell>
                         );
@@ -69,9 +69,12 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
 
     return (
         <Card>
-            <CardContent className="pt-6">
+            <CardHeader>
+                <CardTitle>Tabela Comparativa</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
                 <Tabs defaultValue="perimetria" className="w-full">
-                    <TabsList className="bg-transparent p-0 border-b border-gray-200 justify-start rounded-none">
+                    <TabsList className="bg-transparent p-0 border-b border-gray-200 justify-start rounded-none mb-4">
                         <TabsTrigger value="perimetria" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Perimetria</TabsTrigger>
                         <TabsTrigger value="dobras" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Dobras</TabsTrigger>
                         <TabsTrigger value="diametros" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Diâmetros</TabsTrigger>
