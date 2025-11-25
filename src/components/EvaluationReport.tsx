@@ -1,6 +1,7 @@
 'use client';
 import React, { forwardRef } from 'react';
 import type { Evaluation, Client, BioimpedanceScale } from '@/lib/data';
+import { calculateBodyComposition } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
@@ -14,63 +15,30 @@ type EvaluationReportProps = {
     perimetriaFields: { key: string, label: string }[];
 };
 
-const calculateMasses = (evaluation: Evaluation, client: Client) => {
-    const { bodyMeasurements, bodyComposition, boneDiameters } = evaluation;
-    const weight = bodyMeasurements.weight;
-    const fatPercentage = bodyComposition.bodyFatPercentage;
-    
-    const fatMassKg = (weight && fatPercentage) ? (weight * fatPercentage) / 100 : 0;
-    const leanMassKg = weight - fatMassKg;
-
-    const height = bodyMeasurements?.height;
-    const wrist = boneDiameters?.biestiloidal;
-    const femur = boneDiameters?.bicondilarFemur;
-    
-    let boneMass = 0;
-    if (height && wrist && femur) {
-        const heightInM = height / 100;
-        const wristInM = wrist / 100;
-        const femurInM = femur / 100;
-        boneMass = Math.pow(3.02 * (Math.pow(heightInM, 2) * wristInM * femurInM * 400), 0.712);
-    }
-
-    const residualFactor = client.gender === 'Feminino' ? 0.21 : 0.24;
-    const residualMass = weight * residualFactor;
-    
-    const muscleMass = leanMassKg - boneMass - residualMass;
-
-    return {
-        fatMass: fatMassKg > 0 ? fatMassKg : 0,
-        muscleMass: muscleMass > 0 ? muscleMass : 0,
-        residualMass: residualMass > 0 ? residualMass : 0,
-        boneMass: boneMass > 0 ? boneMass : 0,
-    };
-};
-
 const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ client, evaluation, comparedEvaluations, perimetriaFields }, ref) => {
     
     const evaluationsToDisplay = comparedEvaluations.length > 0 ? comparedEvaluations : (evaluation ? [evaluation] : []);
 
     const mainEvaluation = evaluationsToDisplay[0];
 
-    const { fatMass, muscleMass, residualMass, boneMass } = mainEvaluation ? calculateMasses(mainEvaluation, client) : { fatMass: 0, muscleMass: 0, residualMass: 0, boneMass: 0 };
+    const { fatMassKg, muscleMassKg, residualMassKg, boneMassKg } = mainEvaluation ? calculateBodyComposition(mainEvaluation, client) : { fatMassKg: 0, muscleMassKg: 0, residualMassKg: 0, boneMassKg: 0 };
     
     const bmi = mainEvaluation && mainEvaluation.bodyMeasurements.weight && mainEvaluation.bodyMeasurements.height
         ? (mainEvaluation.bodyMeasurements.weight / ((mainEvaluation.bodyMeasurements.height / 100) ** 2)).toFixed(1)
         : 'N/A';
 
     const chartData = [
-        { name: 'Massa Gorda (kg)', value: parseFloat(fatMass.toFixed(2)), fill: '#f87171' },
-        { name: 'Massa Muscular (kg)', value: parseFloat(muscleMass.toFixed(2)), fill: '#60a5fa' },
-        { name: 'Massa Residual (kg)', value: parseFloat(residualMass.toFixed(2)), fill: '#a3a3a3' },
+        { name: 'Massa Gorda (kg)', value: parseFloat(fatMassKg.toFixed(2)), fill: '#f87171' },
+        { name: 'Massa Muscular (kg)', value: parseFloat(muscleMassKg.toFixed(2)), fill: '#60a5fa' },
+        { name: 'Massa Residual (kg)', value: parseFloat(residualMassKg.toFixed(2)), fill: '#a3a3a3' },
     ];
     
     const evolutionChartData = evaluationsToDisplay.map(ev => {
-        const masses = calculateMasses(ev, client);
+        const masses = calculateBodyComposition(ev, client);
         return {
             date: new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}),
-            'Gordura (kg)': masses.fatMass,
-            'Músculo (kg)': masses.muscleMass,
+            'Gordura (kg)': masses.fatMassKg,
+            'Músculo (kg)': masses.muscleMassKg,
         }
     });
 
@@ -132,29 +100,29 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         <TableRow>
                             <TableCell>Massa Gorda (kg)</TableCell>
                              {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateMasses(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.fatMass.toFixed(2)}</TableCell>
+                                 const masses = calculateBodyComposition(ev, client);
+                                return <TableCell key={ev.id} className="text-center">{masses.fatMassKg.toFixed(2)}</TableCell>
                             })}
                         </TableRow>
                         <TableRow>
                             <TableCell>Massa Muscular (kg)</TableCell>
                              {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateMasses(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.muscleMass.toFixed(2)}</TableCell>
+                                 const masses = calculateBodyComposition(ev, client);
+                                return <TableCell key={ev.id} className="text-center">{masses.muscleMassKg.toFixed(2)}</TableCell>
                             })}
                         </TableRow>
                         <TableRow>
                             <TableCell>Massa Residual (kg)</TableCell>
                              {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateMasses(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.residualMass.toFixed(2)}</TableCell>
+                                 const masses = calculateBodyComposition(ev, client);
+                                return <TableCell key={ev.id} className="text-center">{masses.residualMassKg.toFixed(2)}</TableCell>
                             })}
                         </TableRow>
                         <TableRow>
                             <TableCell>Massa Óssea (kg)</TableCell>
                             {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateMasses(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.boneMass.toFixed(2)}</TableCell>
+                                 const masses = calculateBodyComposition(ev, client);
+                                return <TableCell key={ev.id} className="text-center">{masses.boneMassKg.toFixed(2)}</TableCell>
                             })}
                         </TableRow>
                     </TableBody>

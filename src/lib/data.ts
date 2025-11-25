@@ -58,8 +58,6 @@ export type Evaluation = {
     };
     bodyComposition: {
         bodyFatPercentage: number;
-        muscleMass: number;
-        boneDensity: number;
     };
     perimetria?: {
         [key: string]: number | undefined;
@@ -104,6 +102,20 @@ export type Client = {
     height: number;
 };
 
+export type BodyComposition = {
+    fatMassKg: number;
+    leanMassKg: number;
+    muscleMassKg: number;
+    boneMassKg: number;
+    residualMassKg: number;
+    fatMassPercentage: number;
+    muscleMassPercentage: number;
+    boneMassPercentage: number;
+    residualMassPercentage: number;
+    idealWeight: number;
+    fatLossNeeded: number;
+};
+
 export const clients: Client[] = [
     { id: 'cli_1', name: 'João da Silva', email: 'joao.silva@example.com', avatarUrl: getPlaceholderImage('client-john-doe-avatar')?.imageUrl || '', age: 34, gender: 'Masculino', height: 180 },
     { id: 'cli_2', name: 'Maria Oliveira', email: 'maria.oliveira@example.com', avatarUrl: getPlaceholderImage('client-jane-smith-avatar')?.imageUrl || '', age: 28, gender: 'Feminino', height: 165 },
@@ -126,8 +138,6 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 22,
-            muscleMass: 65,
-            boneDensity: 1.2,
         },
         boneDiameters: {},
         bioimpedance: {
@@ -167,8 +177,6 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 18,
-            muscleMass: 68,
-            boneDensity: 1.21,
         },
         boneDiameters: {},
         bioimpedance: {
@@ -208,8 +216,6 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 15,
-            muscleMass: 70,
-            boneDensity: 1.22,
         },
         boneDiameters: {},
         bioimpedance: {
@@ -231,8 +237,6 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 25,
-            muscleMass: 48,
-            boneDensity: 1.1,
         },
         boneDiameters: {},
         bioimpedance: {
@@ -263,8 +267,6 @@ export const evaluations: Evaluation[] = [
         },
         bodyComposition: {
             bodyFatPercentage: 25.0,
-            muscleMass: 37.8,
-            boneDensity: 1.3,
         },
         boneDiameters: {},
         bioimpedance: {
@@ -334,3 +336,60 @@ export const boneDiameterPoints = [
     { top: '35%', left: '70%', label: 'Cotovelo (Bicondilar do Úmero)' },
 ];
     
+export function calculateBodyComposition(evaluation: Evaluation, client: Client): BodyComposition {
+    const weight = evaluation.bodyMeasurements?.weight || 0;
+    const height = evaluation.bodyMeasurements?.height || 0; // in cm
+    const gender = client.gender;
+    const fatPercentage = evaluation.bodyComposition?.bodyFatPercentage || 0;
+    const wristDiameter = evaluation.boneDiameters?.biestiloidal || 0; // cm
+    const femurDiameter = evaluation.boneDiameters?.bicondilarFemur || 0; // cm
+
+    if (weight === 0) {
+        return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
+    }
+
+    const fatMassKg = (weight * fatPercentage) / 100;
+    const leanMassKg = weight - fatMassKg;
+
+    // Bone Mass (Massa Óssea) - Von Dobeln (1964)
+    let boneMassKg = 0;
+    if (height > 0 && wristDiameter > 0 && femurDiameter > 0) {
+        const heightInM = height / 100;
+        const wristInM = wristDiameter / 100;
+        const femurInM = femurDiameter / 100;
+        boneMassKg = 3.02 * Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712);
+    }
+    
+    // Residual Mass (Massa Residual)
+    const residualFactor = gender === 'Feminino' ? 0.21 : 0.24;
+    const residualMassKg = weight * residualFactor;
+
+    // Muscle Mass (Massa Muscular)
+    const muscleMassKg = weight - fatMassKg - boneMassKg - residualMassKg;
+
+    const fatMassPercentage = fatPercentage;
+    const muscleMassPercentage = (muscleMassKg / weight) * 100;
+    const boneMassPercentage = (boneMassKg / weight) * 100;
+    const residualMassPercentage = (residualMassKg / weight) * 100;
+
+    // Ideal Weight
+    const idealLeanMassPercentage = gender === 'Masculino' ? 0.85 : 0.75;
+    const idealWeight = leanMassKg / idealLeanMassPercentage;
+    
+    // Fat Loss Needed
+    const fatLossNeeded = weight - idealWeight;
+    
+    return {
+        fatMassKg: fatMassKg > 0 ? fatMassKg : 0,
+        leanMassKg: leanMassKg > 0 ? leanMassKg : 0,
+        muscleMassKg: muscleMassKg > 0 ? muscleMassKg : 0,
+        boneMassKg: boneMassKg > 0 ? boneMassKg : 0,
+        residualMassKg: residualMassKg > 0 ? residualMassKg : 0,
+        fatMassPercentage,
+        muscleMassPercentage,
+        boneMassPercentage,
+        residualMassPercentage,
+        idealWeight,
+        fatLossNeeded,
+    };
+}

@@ -4,55 +4,23 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { Evaluation, Client } from '@/lib/data';
+import { calculateBodyComposition } from '@/lib/data';
+
 
 type ComparisonChartsProps = {
     evaluations: Evaluation[];
     client: Client;
 };
 
-// Helper function to calculate component masses for an evaluation
-const calculateMasses = (evaluation: Evaluation, client: Client) => {
-    const { bodyMeasurements, bodyComposition, boneDiameters } = evaluation;
-    const weight = bodyMeasurements.weight;
-    const fatPercentage = bodyComposition.bodyFatPercentage;
-    
-    const fatMassKg = (weight && fatPercentage) ? (weight * fatPercentage) / 100 : 0;
-    
-    const leanMassKg = weight - fatMassKg;
-
-    const height = bodyMeasurements?.height; // cm
-    const wrist = boneDiameters?.biestiloidal; // cm
-    const femur = boneDiameters?.bicondilarFemur; // cm
-    
-    let boneMass = 0;
-    if (height && wrist && femur) {
-        const heightInM = height / 100;
-        const wristInM = wrist / 100;
-        const femurInM = femur / 100;
-        boneMass = Math.pow(3.02 * (Math.pow(heightInM, 2) * wristInM * femurInM * 400), 0.712);
-    }
-
-    const residualFactor = client.gender === 'Feminino' ? 0.21 : 0.24;
-    const residualMass = weight * residualFactor;
-    
-    const muscleMass = leanMassKg - boneMass - residualMass;
-
-    return {
-        fatMass: fatMassKg,
-        muscleMass: muscleMass > 0 ? muscleMass : 0,
-        residualMass: residualMass,
-    };
-};
-
 
 export default function ComparisonCharts({ evaluations, client }: ComparisonChartsProps) {
     const chartData = evaluations.map(ev => {
-        const masses = calculateMasses(ev, client);
+        const masses = calculateBodyComposition(ev, client);
         return {
             date: new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
-            'Massa Gorda (kg)': parseFloat(masses.fatMass.toFixed(1)),
-            'Massa Muscular (kg)': parseFloat(masses.muscleMass.toFixed(1)),
-            'Massa Residual (kg)': parseFloat(masses.residualMass.toFixed(1)),
+            'Massa Gorda (kg)': parseFloat(masses.fatMassKg.toFixed(1)),
+            'Massa Muscular (kg)': parseFloat(masses.muscleMassKg.toFixed(1)),
+            'Massa Residual (kg)': parseFloat(masses.residualMassKg.toFixed(1)),
         };
     });
 

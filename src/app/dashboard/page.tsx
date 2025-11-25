@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, perimetriaPoints, skinfoldPoints, boneDiameterPoints } from '@/lib/data';
+import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, perimetriaPoints, skinfoldPoints, boneDiameterPoints, calculateBodyComposition, type BodyComposition } from '@/lib/data';
 import BodyMeasurementChart from '@/components/BodyMeasurementChart';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         }
         setFormState(initialState);
 
-    }, [client, selectedEvaluationId, clientEvaluations]);
+    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols]);
 
 
     useEffect(() => {
@@ -136,13 +136,18 @@ export default function DashboardPage() {
             const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
              if (fatPercentage > 0 && fatPercentage < 100) {
                 setFormState(prev => {
-                    const newState = JSON.parse(JSON.stringify(prev));
+                    const newState = JSON.parse(JSON.stringify(prev)); // Deep copy to avoid mutation issues
                     if (!newState.bodyComposition) newState.bodyComposition = {};
-                    // Check if the value has actually changed to prevent loops
-                    if (newState.bodyComposition.bodyFatPercentage !== parseFloat(fatPercentage.toFixed(2))) {
-                        newState.bodyComposition.bodyFatPercentage = parseFloat(fatPercentage.toFixed(2));
+                    
+                    const currentFatPercentage = newState.bodyComposition.bodyFatPercentage;
+                    const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
+                    
+                    // Only update if the value has changed to prevent infinite loops
+                    if (currentFatPercentage !== newFatPercentage) {
+                        newState.bodyComposition.bodyFatPercentage = newFatPercentage;
                         return newState;
                     }
+                    
                     return prev;
                 });
             }
@@ -256,61 +261,11 @@ export default function DashboardPage() {
         return Object.values(formState.skinFolds).reduce((sum: number, value: any) => sum + (Number(value) || 0), 0);
     }, [formState.skinFolds]);
 
-    const boneMass = useMemo(() => {
-        const height = formState.bodyMeasurements?.height; // cm
-        const wrist = formState.boneDiameters?.biestiloidal; // cm
-        const femur = formState.boneDiameters?.bicondilarFemur; // cm
-    
-        if (height && wrist && femur) {
-            const heightInM = height / 100;
-            const wristInM = wrist / 100;
-            const femurInM = femur / 100;
-            return (3.02 * Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712));
-        }
-        return 0;
-    }, [formState.bodyMeasurements?.height, formState.boneDiameters?.biestiloidal, formState.boneDiameters?.bicondilarFemur]);
-    
-    const fatMassKg = useMemo(() => {
-        const weight = formState.bodyMeasurements?.weight;
-        const fatPercentage = formState.bodyComposition?.bodyFatPercentage;
-        if (weight && fatPercentage) {
-            return (weight * fatPercentage) / 100;
-        }
-        return 0;
-    }, [formState.bodyMeasurements?.weight, formState.bodyComposition?.bodyFatPercentage]);
-    
-    const leanMassKg = useMemo(() => (formState.bodyMeasurements?.weight || 0) - fatMassKg, [formState.bodyMeasurements?.weight, fatMassKg]);
-    
-    const muscleMass = useMemo(() => {
-        if (leanMassKg > 0 && boneMass > 0) {
-           return leanMassKg - boneMass;
-        }
-        return 0;
-    }, [leanMassKg, boneMass]);
+    const bodyComposition = useMemo<BodyComposition>(() => {
+        if (!client || !formState) return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
+        return calculateBodyComposition(formState as Evaluation, client);
+    }, [formState, client]);
 
-    const residualMass = useMemo(() => {
-        const weight = formState.bodyMeasurements?.weight;
-    
-        if (weight && fatMassKg > 0 && muscleMass > 0 && boneMass > 0) {
-            const calculatedResidual = weight - (fatMassKg + muscleMass + boneMass);
-            return calculatedResidual > 0 ? calculatedResidual : 0;
-        }
-        
-        if(weight) {
-            const residualFactor = formState.gender === 'Feminino' ? 0.21 : 0.24;
-            return weight * residualFactor;
-        }
-
-        return 0;
-    }, [formState.bodyMeasurements?.weight, fatMassKg, muscleMass, boneMass, formState.gender]);
-    
-    const residualMassPercentage = useMemo(() => {
-        const weight = formState.bodyMeasurements?.weight;
-        if (weight && residualMass > 0) {
-            return (residualMass / weight) * 100;
-        }
-        return 0;
-    }, [residualMass, formState.bodyMeasurements?.weight]);
 
     const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
         if (percentage === undefined || !gender) return '-';
@@ -327,17 +282,8 @@ export default function DashboardPage() {
         }
     };
     
-    const fatClassification = useMemo(() => getFatClassification(formState.bodyComposition?.bodyFatPercentage, formState.gender), [formState.bodyComposition?.bodyFatPercentage, formState.gender]);
-    const leanMassPercentage = useMemo(() => {
-        const weight = formState.bodyMeasurements?.weight;
-        if (!weight || weight === 0) return 0;
-        return (leanMassKg / weight) * 100;
-    }, [leanMassKg, formState.bodyMeasurements?.weight]);
-    const idealWeight = useMemo(() => leanMassKg / (formState.gender === 'Masculino' ? 0.85 : 0.75), [leanMassKg, formState.gender]);
-    const fatLossNeeded = useMemo(() => (formState.bodyMeasurements?.weight || 0) - idealWeight, [formState.bodyMeasurements?.weight, idealWeight]);
-
-
-
+    const fatClassification = useMemo(() => getFatClassification(bodyComposition.fatMassPercentage, formState.gender), [bodyComposition.fatMassPercentage, formState.gender]);
+    
     const handleNewEvaluation = () => {
         if(client){
             const newEvalId = `eval_${allEvaluations.length + 1}`;
@@ -355,8 +301,6 @@ export default function DashboardPage() {
                 },
                 bodyComposition: {
                     bodyFatPercentage: 0,
-                    muscleMass: 0,
-                    boneDensity: 0
                 },
                 perimetria: {},
                 skinFolds: {},
@@ -683,7 +627,7 @@ export default function DashboardPage() {
                                             <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
                                          ) : (
                                             <>
-                                                <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage.toFixed(0)}<span className="text-lg">%</span></p>
+                                                <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage?.toFixed(0) ?? 'N/A'}<span className="text-lg">%</span></p>
                                                 <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
                                             </>
                                          )}
@@ -840,7 +784,7 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
                                             <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                            <div className="font-bold text-lg text-foreground">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</div>
+                                            <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</div>
                                         </div>
                                     </div>
                                     <p className="text-xs text-foreground mt-2">
@@ -871,19 +815,9 @@ export default function DashboardPage() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyComposition.bodyFatPercentage.toFixed(1) : evaluation?.bodyComposition.bodyFatPercentage.toFixed(1) || '0.0'}%</p>
-                        <p className="text-xs text-muted-foreground">{((isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyMeasurements.weight : evaluation?.bodyMeasurements.weight || 0) * (isCompareMode && comparedEvaluations.length > 0 ? comparedEvaluations[0]?.bodyComposition.bodyFatPercentage : evaluation?.bodyComposition.bodyFatPercentage || 0) / 100).toFixed(1)} kg</p>
+                        <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage.toFixed(1)}%</p>
+                        <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg.toFixed(1)} kg</p>
                     </CardContent>
-                     {isCompareMode && comparedEvaluations.length > 1 && (
-                         <CardContent className="border-t pt-4">
-                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                                <span>Comparando com</span>
-                                <span>{new Date(comparedEvaluations[1].date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
-                            </div>
-                            <p className="text-2xl font-bold">{comparedEvaluations[1].bodyComposition.bodyFatPercentage.toFixed(1)}%</p>
-                            <p className="text-xs text-muted-foreground">{(((comparedEvaluations[1].bodyMeasurements.weight || 0) * (comparedEvaluations[1].bodyComposition.bodyFatPercentage || 0)) / 100).toFixed(1)} kg</p>
-                         </CardContent>
-                     )}
                 </Card>
                  <Card>
                     <CardHeader className="pb-2">
@@ -893,27 +827,17 @@ export default function DashboardPage() {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{muscleMass > 0 ? muscleMass.toFixed(1) : '0.0'} kg</p>
-                        <p className="text-xs text-muted-foreground">{(((muscleMass) / (formState.bodyMeasurements?.weight || 1)) * 100).toFixed(1)}%</p>
+                        <p className="text-2xl font-bold">{bodyComposition.muscleMassKg.toFixed(1)} kg</p>
+                        <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage.toFixed(1)}%</p>
                     </CardContent>
-                      {isCompareMode && comparedEvaluations.length > 1 && (
-                         <CardContent className="border-t pt-4">
-                            <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-                                <span>Comparando com</span>
-                                <span>{new Date(comparedEvaluations[1].date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
-                            </div>
-                            <p className="text-2xl font-bold">{comparedEvaluations[1].bodyComposition.muscleMass.toFixed(1)} kg</p>
-                            <p className="text-xs text-muted-foreground">{(((comparedEvaluations[1].bodyComposition.muscleMass || 0) / (comparedEvaluations[1].bodyMeasurements.weight || 1)) * 100).toFixed(1)}%</p>
-                         </CardContent>
-                     )}
                 </Card>
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold">{residualMass > 0 ? residualMass.toFixed(1) : '0.0'} kg</p>
-                        <p className="text-xs text-muted-foreground">{residualMassPercentage > 0 ? residualMassPercentage.toFixed(1) : '0.0'}%</p>
+                        <p className="text-2xl font-bold">{bodyComposition.residualMassKg.toFixed(1)} kg</p>
+                        <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage.toFixed(1)}%</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -931,27 +855,27 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa gorda (kg / %):</span>
-                            <span className="font-medium">{fatMassKg.toFixed(1)} kg / {formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '0.0'}%</span>
+                            <span className="font-medium">{bodyComposition.fatMassKg.toFixed(1)} kg / {bodyComposition.fatMassPercentage.toFixed(1)}%</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa magra (kg / %):</span>
-                            <span className="font-medium">{leanMassKg.toFixed(1)} kg / {leanMassPercentage.toFixed(1)}%</span>
+                            <span className="font-medium">{bodyComposition.leanMassKg.toFixed(1)} kg / {(100 - bodyComposition.fatMassPercentage).toFixed(1)}%</span>
                         </div>
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa óssea (kg):</span>
-                            <span className="font-medium">{boneMass > 0 ? boneMass.toFixed(2) : '-'} kg</span>
+                            <span className="font-medium">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</span>
                         </div>
                          <div className="flex justify-between">
                             <span className="text-muted-foreground">Massa muscular (kg):</span>
-                            <span className="font-medium">{muscleMass > 0 ? muscleMass.toFixed(1) : '-'} kg</span>
+                            <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? bodyComposition.muscleMassKg.toFixed(1) : '-'} kg</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Peso desejável:</span>
-                            <span className="font-medium">{idealWeight > 0 ? idealWeight.toFixed(1) : '-'} kg</span>
+                            <span className="font-medium">{bodyComposition.idealWeight > 0 ? bodyComposition.idealWeight.toFixed(1) : '-'} kg</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Perda de gordura necessária:</span>
-                            <span className="font-medium">{fatLossNeeded > 0 ? fatLossNeeded.toFixed(1) : '0.0'} kg</span>
+                            <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? bodyComposition.fatLossNeeded.toFixed(1) : '0.0'} kg</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -973,5 +897,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
