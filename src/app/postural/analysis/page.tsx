@@ -102,13 +102,15 @@ export default function PosturalAnalysisPage() {
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg">
-                            <Image
-                                src={frontImage || "https://firebasestudio.ai/public-hosting/projects/2654/assets/4044/posture-front.png"}
-                                alt="Visão Frontal"
-                                layout="fill"
-                                objectFit="contain"
-                                className="rounded-lg"
-                            />
+                            {frontImage && (
+                                <Image
+                                    src={frontImage}
+                                    alt="Visão Frontal"
+                                    layout="fill"
+                                    objectFit="contain"
+                                    className="rounded-lg"
+                                />
+                            )}
                             {showGrid && (
                                 <div className="absolute inset-0 grid grid-cols-5 grid-rows-10 gap-0 pointer-events-none">
                                     {[...Array(5)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-blue-500/30"></div>)}
