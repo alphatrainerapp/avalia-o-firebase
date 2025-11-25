@@ -343,35 +343,29 @@ export default function DashboardPage() {
         const imgData = canvas.toDataURL('image/png');
         
         const pdf = new jsPDF({
-            orientation: 'p',
+            orientation: 'portrait',
             unit: 'px',
             format: 'a4',
         });
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        
-        const canvasAspectRatio = canvasWidth / canvasHeight;
-        const pdfAspectRatio = pdfWidth / pdfHeight;
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = imgWidth / imgHeight;
 
-        let finalImgWidth, finalImgHeight;
+        let finalWidth = pdfWidth;
+        let finalHeight = finalWidth / ratio;
 
-        if (canvasAspectRatio > pdfAspectRatio) {
-          // Canvas is wider than PDF page
-          finalImgWidth = pdfWidth;
-          finalImgHeight = pdfWidth / canvasAspectRatio;
-        } else {
-          // Canvas is taller than or equal to PDF page aspect ratio
-          finalImgHeight = pdfHeight;
-          finalImgWidth = pdfHeight * canvasAspectRatio;
+        if (finalHeight > pdfHeight) {
+            finalHeight = pdfHeight;
+            finalWidth = finalHeight * ratio;
         }
-        
-        const x = (pdfWidth - finalImgWidth) / 2;
-        const y = (pdfHeight - finalImgHeight) / 2;
 
-        pdf.addImage(imgData, 'PNG', x, y, finalImgWidth, finalImgHeight);
+        const x = (pdfWidth - finalWidth) / 2;
+        const y = 0;
+
+        pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
