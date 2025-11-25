@@ -133,7 +133,7 @@ export default function PosturalAnalysisLeftPage() {
         {
             title: 'Pés',
             items: [
-                { options ['Pé pronado (lateral)', 'Pé supinado (lateral)'] }
+                { options: ['Pé pronado (lateral)', 'Pé supinado (lateral)'] }
             ]
         }
     ];
