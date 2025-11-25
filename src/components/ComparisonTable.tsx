@@ -55,7 +55,10 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                             <TableCell key={ev.id} className="text-center">
                                 {currentValue?.toFixed(1) ?? '-'}
                                 {difference !== null && (
-                                    <span className={cn("block text-xs", difference > 0 ? "text-red-500" : "text-green-500")}>
+                                    <span className={cn(
+                                        "block text-xs", 
+                                        difference > 0 ? (dataKey === 'skinFolds' ? "text-red-500" : "text-green-500") : (dataKey === 'skinFolds' ? "text-green-500" : "text-red-500")
+                                    )}>
                                        {difference > 0 ? '+' : ''}{difference.toFixed(1)}
                                     </span>
                                 )}
