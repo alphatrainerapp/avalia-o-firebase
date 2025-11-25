@@ -173,7 +173,7 @@ export default function BioimpedancePage() {
             if(currentBlock && currentBlock !== lastBlock && selectedScale === 'inbody') {
                  rows.push(
                     <TableRow key={`header-${currentBlock}`} className="bg-muted/50">
-                        <TableCell colSpan={comparedEvaluations.length + 1} className="font-bold text-primary-foreground py-2 px-4">{currentBlock}</TableCell>
+                        <TableCell colSpan={comparedEvaluations.length + 1} className="font-bold text-primary py-2 px-4">{currentBlock}</TableCell>
                     </TableRow>
                 );
                 lastBlock = currentBlock;
