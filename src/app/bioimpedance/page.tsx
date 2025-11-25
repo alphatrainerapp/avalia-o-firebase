@@ -61,6 +61,10 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
         block: 'Análise de Gordura Regional',
         fields: [
             { key: 'trunkFat', label: 'Gordura tronco', unit: 'kg' },
+            { key: 'rightArmFat', label: 'Gordura do braço direito', unit: 'kg' },
+            { key: 'leftArmFat', label: 'Gordura do braço esquerdo', unit: 'kg' },
+            { key: 'rightLegFat', label: 'Gordura da perna direita', unit: 'kg' },
+            { key: 'leftLegFat', label: 'Gordura da perna esquerda', unit: 'kg' },
             { key: 'limbsFat', label: 'Gordura de membros', unit: 'kg' },
         ],
     },
@@ -167,7 +171,7 @@ export default function BioimpedancePage() {
         let lastBlock = '';
 
         fields.forEach(fieldInfo => {
-            const fieldKey = fieldInfo.key;
+            const fieldKey = fieldInfo.key as string;
             const currentBlock = 'block' in fieldInfo ? fieldInfo.block : '';
 
             if(currentBlock && currentBlock !== lastBlock && selectedScale === 'inbody') {

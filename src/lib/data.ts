@@ -32,6 +32,10 @@ export type BioimpedanceInBody = {
     leftLegLeanMass?: number;
     trunkLeanMass?: number;
     trunkFat?: number;
+    rightArmFat?: number;
+    leftArmFat?: number;
+    rightLegFat?: number;
+    leftLegFat?: number;
     limbsFat?: number;
     waistHipRatio?: number;
     bmi?: number;
