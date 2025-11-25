@@ -295,43 +295,6 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     'Slaughter-Lohman': ['tricipital', 'panturrilha'],
     'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
 };
-
-export const perimetriaPoints = [
-    { top: '23%', left: '48%', label: 'Ombro' },
-    { top: '30%', left: '48%', label: 'Tórax' },
-    { top: '40%', left: '48%', label: 'Cintura' },
-    { top: '45%', left: '48%', label: 'Abdômen' },
-    { top: '55%', left: '48%', label: 'Quadril' },
-    { top: '33%', left: '35%', label: 'Braço E' },
-    { top: '33%', left: '65%', label: 'Braço D' },
-    { top: '40%', left: '32%', label: 'Antebraço E' },
-    { top: '40%', left: '68%', label: 'Antebraço D' },
-    { top: '65%', left: '42%', label: 'Coxa E' },
-    { top: '65%', left: '58%', label: 'Coxa D' },
-    { top: '80%', left: '40%', label: 'Panturrilha E' },
-    { top: '80%', left: '60%', label: 'Panturrilha D' },
-];
-
-export const skinfoldPoints = [
-    { top: '25%', left: '55%', label: 'Peitoral' },
-    { top: '30%', left: '68%', label: 'Axilar Média' },
-    { top: '28%', left: '30%', label: 'Subscapular' },
-    { top: '33%', left: '70%', label: 'Tricipital' },
-    { top: '33%', left: '30%', label: 'Bicipital' },
-    { top: '42%', left: '68%', label: 'Supra-ilíaca' },
-    { top: '45%', left: '55%', label: 'Abdominal' },
-    { top: '60%', left: '58%', label: 'Coxa' },
-    { top: '82%', left: '62%', label: 'Panturrilha' },
-];
-
-export const boneDiameterPoints = [
-    { top: '45%', left: '28%', label: 'Punho (Biestiloidal)' },
-    { top: '45%', left: '72%', label: 'Punho (Biestiloidal)' },
-    { top: '70%', left: '40%', label: 'Joelho (Bicondilar do Fêmur)' },
-    { top: '70%', left: '60%', label: 'Joelho (Bicondilar do Fêmur)' },
-    { top: '35%', left: '30%', label: 'Cotovelo (Bicondilar do Úmero)' },
-    { top: '35%', left: '70%', label: 'Cotovelo (Bicondilar do Úmero)' },
-];
     
 export function calculateBodyComposition(evaluation: Evaluation, client: Client): BodyComposition {
     const weight = evaluation.bodyMeasurements?.weight || 0;

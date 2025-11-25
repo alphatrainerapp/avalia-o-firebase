@@ -15,8 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, perimetriaPoints, skinfoldPoints, boneDiameterPoints, calculateBodyComposition, type BodyComposition } from '@/lib/data';
-import BodyModel from '@/components/BodyModel';
+import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, calculateBodyComposition, type BodyComposition } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -769,14 +768,6 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="lg:col-span-1 space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Modelo Corporal</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <BodyModel activeTab={activeTab} />
-                    </CardContent>
-                </Card>
                 <Card>
                     <CardHeader className="pb-2">
                          <div className="flex items-center justify-between">

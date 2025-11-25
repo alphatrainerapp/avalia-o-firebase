@@ -24,7 +24,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import BodyModel from '@/components/BodyModel';
 
 const viewTitles: { [key: string]: string } = {
     anterior: 'Visão Anterior',
@@ -155,126 +154,114 @@ export default function PosturalSummaryPage() {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="sm:col-span-2">
-                                    <label htmlFor="name" className="text-sm font-medium">Nome</label>
-                                    <Select value={selectedClientId} onValueChange={handleClientChange}>
-                                        <SelectTrigger id="name">
-                                            <SelectValue placeholder="Selecione um cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="sm:col-span-2">
+                                <label htmlFor="name" className="text-sm font-medium">Nome</label>
+                                <Select value={selectedClientId} onValueChange={handleClientChange}>
+                                    <SelectTrigger id="name">
+                                        <SelectValue placeholder="Selecione um cliente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                        </CardHeader>
-                        <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                            {clientEvaluations.map((ev, index) => {
-                                const isSelectedForCompare = selectedEvalIds.includes(ev.id);
-                                return (
-                                    <Card 
-                                        key={ev.id} 
-                                        className={cn(
-                                            "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
-                                            isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
-                                        )}
-                                        onClick={() => handleCompareSelection(ev.id)}
-                                    >
-                                        <CardHeader className="p-4 relative">
-                                                <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                                {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', timeZone: 'UTC' })}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                                        </CardContent>
-                                    </Card>
-                                )
-                            })}
-                        </CardContent>
-                        {selectedEvalIds.length > 0 && (
-                            <CardFooter>
-                                    <p className="text-sm text-muted-foreground">
-                                    {selectedEvalIds.length}/{clientEvaluations.length} avaliações selecionadas para comparação.
-                                </p>
-                            </CardFooter>
-                        )}
-                    </Card>
-
-                    {comparedEvaluations.length > 0 && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2"><Camera /> Comparativo de Fotos</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {Object.keys(photoViewMapping).map((photoType) => (
-                                    <div key={photoType}>
-                                        <h3 className="font-semibold mb-2 text-lg">{photoViewMapping[photoType as PhotoType].title}</h3>
-                                        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${comparedEvaluations.length} gap-4`}>
-                                            {comparedEvaluations.map(ev => (
-                                                <div key={`${ev.id}-${photoType}`} className="flex flex-col items-center">
-                                                    <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
-                                                    <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
-                                                        {/* We use the currently uploaded photos as mock for all evaluations */}
-                                                        {photos[photoType] ? (
-                                                            <Image src={photos[photoType]!} alt={`Foto para ${ev.date}`} layout="fill" objectFit="contain" />
-                                                        ) : (
-                                                            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem foto</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                        {clientEvaluations.map((ev, index) => {
+                            const isSelectedForCompare = selectedEvalIds.includes(ev.id);
+                            return (
+                                <Card 
+                                    key={ev.id} 
+                                    className={cn(
+                                        "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
+                                        isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
+                                    )}
+                                    onClick={() => handleCompareSelection(ev.id)}
+                                >
+                                    <CardHeader className="p-4 relative">
+                                            <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                        <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </CardContent>
+                    {selectedEvalIds.length > 0 && (
+                        <CardFooter>
+                                <p className="text-sm text-muted-foreground">
+                                {selectedEvalIds.length}/{clientEvaluations.length} avaliações selecionadas para comparação.
+                            </p>
+                        </CardFooter>
                     )}
+                </Card>
 
-
+                {comparedEvaluations.length > 0 && (
                     <Card>
                         <CardHeader>
-                            <CardTitle>Resumo dos Desvios Encontrados na Última Avaliação</CardTitle>
+                            <CardTitle className="flex items-center gap-2"><Camera /> Comparativo de Fotos</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            {Object.keys(viewTitles).map(viewKey => {
-                                const selected = deviations[viewKey] || [];
-                                if (selected.length === 0) return null;
-
-                                return (
-                                    <div key={viewKey} className="mb-6">
-                                        <h3 className="font-bold text-lg mb-2 border-b pb-1">{viewTitles[viewKey]}</h3>
-                                        <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                            {selected.map(deviationName => (
-                                                <li key={deviationName}>{deviationName}</li>
-                                            ))}
-                                        </ul>
+                        <CardContent className="space-y-4">
+                            {Object.keys(photoViewMapping).map((photoType) => (
+                                <div key={photoType}>
+                                    <h3 className="font-semibold mb-2 text-lg">{photoViewMapping[photoType as PhotoType].title}</h3>
+                                    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${comparedEvaluations.length} gap-4`}>
+                                        {comparedEvaluations.map(ev => (
+                                            <div key={`${ev.id}-${photoType}`} className="flex flex-col items-center">
+                                                <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
+                                                <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
+                                                    {/* We use the currently uploaded photos as mock for all evaluations */}
+                                                    {photos[photoType] ? (
+                                                        <Image src={photos[photoType]!} alt={`Foto para ${ev.date}`} layout="fill" objectFit="contain" />
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem foto</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                );
-                            })}
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
-                            {Object.values(deviations).flat().length === 0 && (
-                                <p className="text-center text-muted-foreground">Nenhum desvio postural foi selecionado na avaliação atual.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                    
-                </div>
-                 <div className="lg:col-span-1 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Modelo Corporal</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <BodyModel activeTab={null} />
-                        </CardContent>
-                    </Card>
-                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Resumo dos Desvios Encontrados na Última Avaliação</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {Object.keys(viewTitles).map(viewKey => {
+                            const selected = deviations[viewKey] || [];
+                            if (selected.length === 0) return null;
+
+                            return (
+                                <div key={viewKey} className="mb-6">
+                                    <h3 className="font-bold text-lg mb-2 border-b pb-1">{viewTitles[viewKey]}</h3>
+                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
+                                        {selected.map(deviationName => (
+                                            <li key={deviationName}>{deviationName}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            );
+                        })}
+
+                        {Object.values(deviations).flat().length === 0 && (
+                            <p className="text-center text-muted-foreground">Nenhum desvio postural foi selecionado na avaliação atual.</p>
+                        )}
+                    </CardContent>
+                </Card>
+                
             </div>
 
             <div className="flex justify-end gap-4 mt-8">
