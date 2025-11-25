@@ -41,7 +41,7 @@ export default function DashboardPage() {
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
     const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const reportRef = useRef<HTMLDivElement>(null);
-    const [activeTab, setActiveTab] = useState('perimetria');
+    const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros'>('perimetria');
 
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
@@ -349,14 +349,13 @@ export default function DashboardPage() {
         });
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
-        const ratio = imgHeight / imgWidth;
-        const width = pdfWidth;
-        const height = width * ratio;
         
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        const ratio = imgWidth / pdfWidth;
+        const finalHeight = imgHeight / ratio;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, finalHeight);
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
@@ -625,7 +624,7 @@ export default function DashboardPage() {
                         <CardTitle>Registros de Dados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="perimetria" onValueChange={setActiveTab}>
+                        <Tabs defaultValue="perimetria" onValueChange={(value) => setActiveTab(value as any)}>
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
                                 <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
@@ -771,7 +770,7 @@ export default function DashboardPage() {
                         <CardTitle>Modelo Corporal</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <BodyModel deviations={{}} />
+                        <BodyModel activeTab={activeTab} />
                     </CardContent>
                 </Card>
                 <Card>

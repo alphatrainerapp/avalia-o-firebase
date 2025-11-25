@@ -8,7 +8,7 @@ import { ArrowLeft, Check, User, Camera, ArrowRight, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
-import { muscleMappings } from '@/lib/postural-data';
+import { posturalDeviations } from '@/lib/postural-data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { clients, evaluations } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -249,34 +249,11 @@ export default function PosturalSummaryPage() {
                                 return (
                                     <div key={viewKey} className="mb-6">
                                         <h3 className="font-bold text-lg mb-2 border-b pb-1">{viewTitles[viewKey]}</h3>
-                                        <Accordion type="multiple" className="w-full">
-                                            {selected.map(deviationName => {
-                                                const mapping = muscleMappings[deviationName];
-                                                if (!mapping) return null;
-
-                                                return (
-                                                    <AccordionItem value={deviationName} key={deviationName}>
-                                                        <AccordionTrigger className="text-base font-semibold">{deviationName}</AccordionTrigger>
-                                                        <AccordionContent>
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                                                                <div>
-                                                                    <h4 className="font-medium text-red-600">Músculos Encurtados</h4>
-                                                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                                                        {mapping.encurtados.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                                                    </ul>
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="font-medium text-green-600">Músculos Alongados</h4>
-                                                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                                                        {mapping.alongados.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </AccordionContent>
-                                                    </AccordionItem>
-                                                );
-                                            })}
-                                        </Accordion>
+                                        <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
+                                            {selected.map(deviationName => (
+                                                <li key={deviationName}>{deviationName}</li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 );
                             })}
@@ -291,10 +268,10 @@ export default function PosturalSummaryPage() {
                  <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Modelo Corporal Dinâmico</CardTitle>
+                            <CardTitle>Modelo Corporal</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <BodyModel deviations={deviations} />
+                            <BodyModel activeTab={null} />
                         </CardContent>
                     </Card>
                 </div>

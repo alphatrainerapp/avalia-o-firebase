@@ -166,34 +166,3 @@ export const posturalDeviations = {
     }
   ]
 };
-
-export const muscleMappings: { [key: string]: { encurtados: string[], alongados: string[] } } = {
-  'Cabeça inclinada': { 'encurtados': ['Esternocleidomastoideo unilateral', 'Trapézio superior unilateral', 'Escalenos'], 'alongados': ['Esternocleidomastoideo contralateral', 'Trapézio médio e inferior contralateral'] },
-  'Cabeça rodada': { 'encurtados': ['Esternocleidomastoideo', 'Esplenio da cabeça', 'Trapézio superior'], 'alongados': ['Esternocleidomastoideo contralateral', 'Esplenio contralateral'] },
-  'Ombro elevado': { 'encurtados': ['Trapézio superior', 'Elevador da escápula'], 'alongados': ['Trapézio inferior', 'Serrátil anterior'] },
-  'Ombro baixo': { 'encurtados': ['Latíssimo do dorso', 'Peitoral menor'], 'alongados': ['Trapézio superior', 'Elevador da escápula'] },
-  'Escápula abduzida': { 'encurtados': ['Serrátil anterior', 'Peitoral menor'], 'alongados': ['Romboides', 'Trapézio médio'] },
-  'Escápula aduzida': { 'encurtados': ['Romboides', 'Trapézio médio'], 'alongados': ['Serrátil anterior', 'Peitoral menor'] },
-  'Quadril alto': { 'encurtados': ['Quadrado lombar', 'Oblíquos'], 'alongados': ['Adutores contralaterais', 'Glúteo médio contralateral'] },
-  'Quadril baixo': { 'encurtados': ['Adutores', 'Glúteo médio contralateral'], 'alongados': ['Quadrado lombar contralateral', 'Oblíquos'] },
-  'Geno valgo': { 'encurtados': ['Adutores', 'Tensor da fáscia lata'], 'alongados': ['Glúteo médio e mínimo', 'Rotadores laterais do quadril'] },
-  'Geno varo': { 'encurtados': ['Glúteo médio', 'TFL'], 'alongados': ['Adutores'] },
-  'Pé pronado': { 'encurtados': ['Fibulares', 'Gastrocnêmio medial'], 'alongados': ['Tibial posterior', 'Flexores plantares'] },
-  'Pé supinado': { 'encurtados': ['Tibial posterior', 'Flexores plantares'], 'alongados': ['Fibulares'] },
-  'Escápula alada': { 'encurtados': ['Romboides', 'Peitoral menor'], 'alongados': ['Serrátil anterior'] },
-  'Quadril elevado': { 'encurtados': ['Quadrado lombar', 'Eretores da espinha'], 'alongados': ['Glúteo médio', 'Adutores contralaterais'] },
-  'Pelve em rotação': { 'encurtados': ['Oblíquos internos de um lado', 'Oblíquos externos do outro'], 'alongados': ['Rotadores contralaterais'] },
-  'Joelho em rotação interna': { 'encurtados': ['TFL', 'Vasto lateral'], 'alongados': ['Rotadores laterais do quadril'] },
-  'Joelho em rotação externa': { 'encurtados': ['Rotadores externos do quadril'], 'alongados': ['TFL', 'Adutores'] },
-  'Cabeça projetada': { 'encurtados': ['Esternocleidomastoideo', 'Suboccipitais'], 'alongados': ['Flexores profundos cervicais'] },
-  'Cifose torácica': { 'encurtados': ['Peitoral maior e menor'], 'alongados': ['Eretores da espinha torácica', 'Romboides'] },
-  'Hipercifose torácica': { 'encurtados': ['Peitoral maior e menor'], 'alongados': ['Eretores da espinha torácica', 'Romboides'] },
-  'Lordose lombar aumentada': { 'encurtados': ['Iliopsoas', 'Reto femoral', 'Eretores da espinha'], 'alongados': ['Glúteo máximo', 'Abdominais'] },
-  'Retificação lombar': { 'encurtados': ['Abdominais profundos', 'Abdominais'], 'alongados': ['Eretores da espinha'] },
-  'Pelve em anteversão': { 'encurtados': ['Iliopsoas', 'Reto femoral'], 'alongados': ['Isquiotibiais', 'Glúteos', 'Glúteo máximo'] },
-  'Pelve em retroversão': { 'encurtados': ['Isquiotibiais'], 'alongados': ['Iliopsoas', 'Eretores da espinha'] },
-  'Joelho hiperestendido': { 'encurtados': ['Quadríceps', 'Gastrocnêmio'], 'alongados': ['Isquiotibiais'] },
-  'Joelho flexionado': { 'encurtados': ['Isquiotibiais'], 'alongados': ['Quadríceps'] },
-  'Pé pronado (lateral)': { 'encurtados': ['Fibulares'], 'alongados': ['Tibial posterior'] },
-  'Pé supinado (lateral)': { 'encurtados': ['Tibial posterior'], 'alongados': ['Fibulares'] },
-};
