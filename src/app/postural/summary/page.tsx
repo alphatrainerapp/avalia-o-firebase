@@ -3,7 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Check, User, Camera } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Check, User, Camera, ArrowRight, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
@@ -13,6 +14,16 @@ import { clients, evaluations } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const viewTitles: { [key: string]: string } = {
     anterior: 'Visão Anterior',
@@ -32,12 +43,14 @@ const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof ty
 
 
 export default function PosturalSummaryPage() {
-    const { photos, deviations, clearDeviations } = usePosturalContext();
+    const { photos, deviations, clearDeviations, isSaved, saveAnalysis } = usePosturalContext();
     const { toast } = useToast();
+    const router = useRouter();
     
     // Mocking postural evaluations being linked to general evaluations
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
+    const [showSaveAlert, setShowSaveAlert] = useState(false);
     
     const clientEvaluations = useMemo(() => {
         return evaluations
@@ -75,22 +88,70 @@ export default function PosturalSummaryPage() {
 
 
     const handleFinish = () => {
-        console.log("Final Analysis:", deviations);
+        saveAnalysis();
+        toast({ title: 'Análise Salva', description: 'A análise postural foi finalizada e salva.' });
         clearDeviations();
+        router.push('/dashboard');
     };
+    
+    const handleBackToEvaluation = () => {
+        if (isSaved) {
+            router.push('/postural/analysis/left');
+        } else {
+            setShowSaveAlert(true);
+        }
+    };
+
+    const handleSaveAndContinue = () => {
+        saveAnalysis();
+        toast({ title: 'Análise Salva', description: 'Suas alterações foram salvas.' });
+        setShowSaveAlert(false);
+        router.push('/postural/analysis/left');
+    };
+
+    const handleContinueWithoutSaving = () => {
+        setShowSaveAlert(false);
+        router.push('/postural/analysis/left');
+    };
+
 
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <AlertDialog open={showSaveAlert} onOpenChange={setShowSaveAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem alterações não salvas!</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Deseja salvar as alterações feitas na avaliação postural antes de voltar?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                         <Button variant="outline" onClick={handleContinueWithoutSaving}>
+                            Continuar sem Salvar
+                        </Button>
+                        <AlertDialogAction onClick={handleSaveAndContinue}>Salvar e Voltar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <Link href="/postural/analysis/left"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
+                    <Button variant="outline" size="icon" onClick={handleBackToEvaluation}><ArrowLeft /></Button>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Resumo da Avaliação Postural</h1>
                         <p className="text-muted-foreground">Compare avaliações e veja a evolução</p>
                     </div>
                 </div>
-                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
+                 <div className="flex items-center gap-2">
+                    <Button onClick={handleBackToEvaluation} variant="outline">
+                        <Edit className="mr-2"/>
+                        Voltar à Avaliação
+                    </Button>
+                    <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
+                </div>
             </header>
 
             <div className="space-y-6">
@@ -226,12 +287,10 @@ export default function PosturalSummaryPage() {
             </div>
 
             <div className="flex justify-end gap-4 mt-8">
-                <Link href="/dashboard">
-                    <Button onClick={handleFinish} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                        <Check className="mr-2" />
-                        Salvar e Finalizar
-                    </Button>
-                </Link>
+                <Button onClick={handleFinish} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                    <Check className="mr-2" />
+                    Salvar e Finalizar
+                </Button>
             </div>
         </div>
     );

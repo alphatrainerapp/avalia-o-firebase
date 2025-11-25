@@ -19,7 +19,7 @@ import { posturalDeviations } from '@/lib/postural-data';
 
 export default function PosturalAnalysisLeftPage() {
     const { toast } = useToast();
-    const { photos, deviations, toggleDeviation } = usePosturalContext();
+    const { photos, deviations, toggleDeviation, saveAnalysis } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
     const [zoom, setZoom] = useState(1);
@@ -40,7 +40,7 @@ export default function PosturalAnalysisLeftPage() {
 
 
     const handleSave = () => {
-        console.log('Saving postural analysis...');
+        saveAnalysis();
         toast({
             title: 'Análise Salva',
             description: 'A análise postural foi salva com sucesso.',

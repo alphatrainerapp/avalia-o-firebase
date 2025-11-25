@@ -10,6 +10,8 @@ type PosturalContextType = {
   deviations: Deviations;
   toggleDeviation: (view: string, deviation: string) => void;
   clearDeviations: () => void;
+  isSaved: boolean;
+  saveAnalysis: () => void;
 };
 
 const PosturalContext = createContext<PosturalContextType | undefined>(undefined);
@@ -17,9 +19,11 @@ const PosturalContext = createContext<PosturalContextType | undefined>(undefined
 export const PosturalContextProvider = ({ children }: { children: ReactNode }) => {
   const [photos, setPhotos] = useState<{ [key: string]: string | undefined }>({});
   const [deviations, setDeviations] = useState<Deviations>({});
+  const [isSaved, setIsSaved] = useState(true);
 
   const setPhoto = useCallback((type: string, url: string) => {
     setPhotos(prev => ({ ...prev, [type]: url }));
+    setIsSaved(false);
   }, []);
 
   const toggleDeviation = useCallback((view: string, deviation: string) => {
@@ -37,14 +41,22 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
             return { ...prev, [view]: newViewDeviations };
         }
     });
+    setIsSaved(false);
   }, []);
 
   const clearDeviations = useCallback(() => {
     setDeviations({});
+    setIsSaved(true);
   }, []);
 
+  const saveAnalysis = useCallback(() => {
+    // In a real app, this would save to a database.
+    console.log("Saving analysis data...", { photos, deviations });
+    setIsSaved(true);
+  }, [photos, deviations]);
+
   return (
-    <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearDeviations }}>
+    <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearDeviations, isSaved, saveAnalysis }}>
       {children}
     </PosturalContext.Provider>
   );
