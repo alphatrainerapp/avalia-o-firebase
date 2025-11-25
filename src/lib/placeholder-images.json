@@ -35,6 +35,12 @@
       "description": "Image of a complete bioimpedance analysis machine (InBody).",
       "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/6504/inbody-machine.png",
       "imageHint": "bioimpedance machine"
+    },
+    {
+      "id": "alpha-trainer-logo",
+      "description": "The official logo for Alpha Trainer.",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/8980/alpha-trainer-logo.png",
+      "imageHint": "logo brand"
     }
   ]
 }

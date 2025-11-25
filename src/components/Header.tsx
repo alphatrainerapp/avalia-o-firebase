@@ -6,29 +6,25 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
+import Image from 'next/image';
 
 const Header = () => {
     const trainerAvatar = getPlaceholderImage('trainer-avatar');
+    const logo = getPlaceholderImage('alpha-trainer-logo');
 
     return (
         <header className="flex h-16 items-center justify-between bg-header-background px-6 text-header-foreground">
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <svg
-                        className="h-8 w-8"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                    >
-                        <path
-                            d="M12 2L2 22H22L12 2Z"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <span className="text-lg font-bold tracking-wider">ALPHA TRAINER</span>
-                </div>
+                 {logo && (
+                    <Image
+                        src={logo.imageUrl}
+                        alt="Alpha Trainer Logo"
+                        width={150}
+                        height={40}
+                        className="object-contain"
+                        data-ai-hint={logo.imageHint}
+                    />
+                 )}
             </div>
             <div className="flex flex-1 justify-end items-center gap-4">
                 <div className="relative w-full max-w-xs">
