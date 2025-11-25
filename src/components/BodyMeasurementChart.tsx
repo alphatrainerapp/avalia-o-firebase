@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 type Point = {
     top: string;
@@ -17,14 +18,13 @@ const BodyMeasurementChart = ({ points = [] }: BodyMeasurementChartProps) => {
   return (
     <TooltipProvider>
       <div className="relative w-full h-[400px] flex items-center justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 125.4 308.2"
-          className="h-full w-auto"
-          fill="hsl(var(--primary))"
-        >
-          <path d="M62.7,45.4C75.2,45.4,85.3,35.3,85.3,22.7S75.2,0,62.7,0,39.9,10.1,39.9,22.7,50.2,45.4,62.7,45.4ZM23.4,103.1c-1.8-4.5-5.2-7.9-9.5-9.6l-1.3-.5c-3.1-1.3-6.6-2-10.2-2-4.4,0-8.5,1-12.2,2.8-8.6,4.3-13.8,11.9-13.8,20.5,0,8.2,4.8,15.6,12.9,20.1,3.4,1.8,7.2,2.8,11.2,2.8,4.7,0,9.1-1.2,13-3.5l.3-.2c.2-.1.4-.2.6-.3,0,0,0,0,0,0,0,0,.1,0,.1,0,.1,0,.1-.1.2-.1,4.7-2.6,8-6.9,9.6-12.8l.6-2.1c.2-.7.4-1.5.5-2.3v-9.6c-.1-.8-.3-1.6-.5-2.3l-.6-2.1ZM125.4,116c0-8.6-5.2-16.2-13.8-20.5-3.7-1.8-7.8-2.8-12.2-2.8-3.5,0-7.1.7-10.2,2l-1.3.5c-4.3,1.7-7.7,5-9.6,9.6l-.6,2.1c-.2.7-.4,1.5-.5,2.3v9.6c.1.8.3,1.6.5,2.3l.6,2.1c1.6,5.9,4.9,10.2,9.6,12.8.1,0,.1.1.2.1,0,0,.1,0,.1,0,0,0,0,0,0,0,.2.1.4.2.6.3l.3.2c3.9,2.3,8.3,3.5,13,3.5,4,0,7.8-1,11.2-2.8,8.2-4.5,12.9-11.9,12.9-20.1ZM86.2,109.9c-2.3,0-4.2,1.9-4.2,4.2v189.9c0,2.3,1.9,4.2,4.2,4.2H111c7.9,0,14.3-6.4,14.3-14.3V120.1c0-7.9-6.4-14.3-14.3-14.3h-24.8ZM39.1,109.9H14.3C6.4,109.9,0,116.3,0,124.1V289.8c0,7.9,6.4,14.3,14.3,14.3H39.1c2.3,0,4.2-1.9,4.2-4.2V114.1c.1-2.3-1.8-4.2-4.2-4.2Z" />
-        </svg>
+        <Image
+          src="https://firebasestudio.ai/public-hosting/projects/2654/assets/4042/body-model.png"
+          alt="Body model"
+          width={150}
+          height={400}
+          className="h-full w-auto object-contain"
+        />
         {points.map((point, index) => (
           <Tooltip key={index}>
             <TooltipTrigger asChild>
