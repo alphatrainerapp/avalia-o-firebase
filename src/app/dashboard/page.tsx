@@ -116,6 +116,53 @@ export default function DashboardPage() {
         }
         setRequiredSkinfolds(currentRequired);
     }, [formState.protocol, formState.gender]);
+    
+    useEffect(() => {
+        const { skinFolds, age, gender, protocol } = formState;
+
+        if (!skinFolds || !age || !gender || !protocol) return;
+
+        const getSkinfoldSum = (keys: SkinfoldKeys[]) => {
+            return keys.reduce((sum, key) => sum + (skinFolds[key] || 0), 0);
+        };
+        
+        let bodyDensity = 0;
+        
+        if (protocol.includes('Pollock 7 dobras')) {
+            const sum7 = getSkinfoldSum(protocolSkinfolds['Pollock 7 dobras']);
+            if (sum7 > 0) {
+                 if (gender === 'Masculino') {
+                    bodyDensity = 1.112 - (0.00043499 * sum7) + (0.00000055 * sum7 * sum7) - (0.00028826 * age);
+                } else {
+                    bodyDensity = 1.097 - (0.00046971 * sum7) + (0.00000056 * sum7 * sum7) - (0.00012828 * age);
+                }
+            }
+        } else if (protocol.includes('Pollock 3 dobras')) {
+            const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
+            const sum3 = getSkinfoldSum(skinfoldKeys);
+             if (sum3 > 0) {
+                 if (gender === 'Masculino') {
+                    bodyDensity = 1.10938 - (0.0008267 * sum3) + (0.0000016 * sum3 * sum3) - (0.0002574 * age);
+                } else {
+                    bodyDensity = 1.0994921 - (0.0009929 * sum3) + (0.0000023 * sum3 * sum3) - (0.0001392 * age);
+                }
+            }
+        }
+        
+        if (bodyDensity > 0) {
+            const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
+             if (fatPercentage > 0 && fatPercentage < 100) {
+                handleInputChange({
+                    target: {
+                        name: 'bodyComposition.bodyFatPercentage',
+                        value: fatPercentage.toFixed(2),
+                        type: 'number'
+                    }
+                } as any);
+            }
+        }
+
+    }, [formState.skinFolds, formState.age, formState.gender, formState.protocol]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -129,7 +176,9 @@ export default function DashboardPage() {
             let current: any = newState;
 
             for (let i = 0; i < keys.length - 1; i++) {
-                current[keys[i]] = current[keys[i]] || {};
+                if (!current[keys[i]]) {
+                    current[keys[i]] = {};
+                }
                 current = current[keys[i]];
             }
             
@@ -937,5 +986,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
