@@ -86,7 +86,7 @@ export default function DashboardPage() {
         }
         setFormState(initialState);
 
-    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols]);
+    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
 
 
     useEffect(() => {
@@ -576,7 +576,7 @@ export default function DashboardPage() {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
-                            <CardTitle>Avaliações {new Date().getFullYear()}</CardTitle>
+                            <CardTitle>Avaliações ({clientEvaluations.length})</CardTitle>
                             <div className="flex items-center gap-2">
                                 <Label htmlFor="compare-switch" className="text-sm">Comparar</Label>
                                 <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
@@ -619,7 +619,7 @@ export default function DashboardPage() {
                                 >
                                     <CardHeader className="p-4 relative">
                                         <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })}/{new Date(ev.date).getFullYear().toString().slice(-2)}
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
