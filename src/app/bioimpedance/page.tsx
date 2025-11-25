@@ -178,20 +178,19 @@ export default function BioimpedancePage() {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const ratio = canvasWidth / canvasHeight;
-        const height = pdfWidth / ratio;
+        const imgHeight = pdfWidth / ratio;
 
+        let heightLeft = imgHeight;
         let position = 0;
-        let pageHeight = pdf.internal.pageSize.height;
-        let remainingHeight = canvasHeight * pdfWidth / canvasWidth;
 
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
-        remainingHeight -= pageHeight;
-        
-        while (remainingHeight > 0) {
-            position = remainingHeight - (canvasHeight * pdfWidth / canvasWidth);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
-            remainingHeight -= pageHeight;
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
         }
 
 

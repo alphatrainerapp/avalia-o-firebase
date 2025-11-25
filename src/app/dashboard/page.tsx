@@ -333,19 +333,12 @@ export default function DashboardPage() {
 
         toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
 
-        // Hide scrollbars before capturing
-        const originalStyle = reportElement.style.overflow;
-        reportElement.style.overflow = 'visible';
-
         const canvas = await html2canvas(reportElement, {
             scale: 2, // Higher scale for better quality
             useCORS: true,
             logging: true,
             allowTaint: true,
         });
-
-        // Restore scrollbars
-        reportElement.style.overflow = originalStyle;
 
         const imgData = canvas.toDataURL('image/png');
         
@@ -360,20 +353,19 @@ export default function DashboardPage() {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const ratio = canvasWidth / canvasHeight;
-        const height = pdfWidth / ratio;
+        const imgHeight = pdfWidth / ratio;
 
+        let heightLeft = imgHeight;
         let position = 0;
-        let pageHeight = pdf.internal.pageSize.height;
-        let remainingHeight = canvasHeight * pdfWidth / canvasWidth;
 
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
-        remainingHeight -= pageHeight;
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
         
-        while (remainingHeight > 0) {
-            position = remainingHeight - (canvasHeight * pdfWidth / canvasWidth);
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, remainingHeight);
-            remainingHeight -= pageHeight;
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
         }
 
 
