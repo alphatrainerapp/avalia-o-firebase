@@ -1,6 +1,6 @@
 'use client';
 import React, { forwardRef } from 'react';
-import type { Evaluation, Client } from '@/lib/data';
+import type { Evaluation, Client, BioimpedanceScale } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';

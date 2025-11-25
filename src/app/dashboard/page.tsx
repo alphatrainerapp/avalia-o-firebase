@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Download, Plus, Save, Activity, User, BarChart, FileText, X } from 'lucide-react';
 import {
   Select,
@@ -321,6 +322,9 @@ export default function DashboardPage() {
                 perimetria: {},
                 skinFolds: {},
                 boneDiameters: {},
+                bioimpedance: {
+                    scaleType: null
+                },
                 observations: '',
             };
             
@@ -492,7 +496,9 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
                 <Button onClick={handleSave} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Save className="mr-2" /> Salvar</Button>
-                <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><BarChart className="mr-2" /> Bioimpedância</Button>
+                <Link href="/bioimpedance">
+                  <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><BarChart className="mr-2" /> Bioimpedância</Button>
+                </Link>
                 <Button className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><User className="mr-2" /> Avaliação Postural</Button>
                 <Button onClick={handleExportPdf} className="bg-[#01baba] text-white shadow-md hover:bg-[#01baba]/90"><Download className="mr-2" /> Exportar PDF</Button>
             </div>

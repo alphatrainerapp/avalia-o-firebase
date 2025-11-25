@@ -4,6 +4,44 @@ export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitora
 
 export type BoneDiameterKeys = 'biestiloidal' | 'bicondilarFemur' | 'bicondilarUmero';
 
+export type BioimpedanceScale = 'omron' | 'inbody' | null;
+
+export type BioimpedanceOmron = {
+    weight?: number;
+    bmi?: number;
+    bodyFatPercentage?: number;
+    skeletalMusclePercentage?: number;
+    visceralFatLevel?: number;
+    basalMetabolicRate?: number;
+    metabolicAge?: number;
+    leanBodyMass?: number;
+    bodyFatMass?: number;
+};
+
+export type BioimpedanceInBody = {
+    totalBodyWeight?: number;
+    skeletalMuscleMass?: number;
+    bodyFatMass?: number;
+    totalBodyWater?: number;
+    bodyProtein?: number;
+    bodyMinerals?: number;
+    fatFreeMass?: number;
+    rightArmLeanMass?: number;
+    leftArmLeanMass?: number;
+    rightLegLeanMass?: number;
+    leftLegLeanMass?: number;
+    trunkLeanMass?: number;
+    trunkFat?: number;
+    limbsFat?: number;
+    waistHipRatio?: number;
+    bmi?: number;
+    bodyFatPercentage?: number;
+    visceralFatArea?: number;
+    basalMetabolicRate?: number;
+    fatControl?: number;
+    muscleControl?: number;
+};
+
 
 export type Evaluation = {
     id: string;
@@ -48,6 +86,11 @@ export type Evaluation = {
     };
     boneDiameters?: {
         [key in BoneDiameterKeys]?: number;
+    };
+    bioimpedance: {
+      scaleType: BioimpedanceScale;
+      omron?: BioimpedanceOmron;
+      inbody?: BioimpedanceInBody;
     }
 };
 
@@ -86,7 +129,28 @@ export const evaluations: Evaluation[] = [
             muscleMass: 65,
             boneDensity: 1.2,
         },
-        boneDiameters: {}
+        boneDiameters: {},
+        bioimpedance: {
+            scaleType: 'inbody',
+            inbody: {
+                totalBodyWeight: 85,
+                skeletalMuscleMass: 35.2,
+                bodyFatMass: 18.5,
+                totalBodyWater: 50.1,
+                fatFreeMass: 66.5,
+                bmi: 26.2,
+                bodyFatPercentage: 21.8,
+                waistHipRatio: 0.9,
+                basalMetabolicRate: 1800,
+                rightArmLeanMass: 3.5,
+                leftArmLeanMass: 3.4,
+                trunkLeanMass: 28.1,
+                rightLegLeanMass: 9.8,
+                leftLegLeanMass: 9.7,
+                fatControl: -3.5,
+                muscleControl: 2.8,
+            }
+        }
     },
     {
         id: 'eval_2',
@@ -106,7 +170,28 @@ export const evaluations: Evaluation[] = [
             muscleMass: 68,
             boneDensity: 1.21,
         },
-        boneDiameters: {}
+        boneDiameters: {},
+        bioimpedance: {
+            scaleType: 'inbody',
+            inbody: {
+                totalBodyWeight: 82,
+                skeletalMuscleMass: 36.5,
+                bodyFatMass: 14.8,
+                totalBodyWater: 52.3,
+                fatFreeMass: 67.2,
+                bmi: 25.3,
+                bodyFatPercentage: 18.0,
+                waistHipRatio: 0.87,
+                basalMetabolicRate: 1850,
+                rightArmLeanMass: 3.7,
+                leftArmLeanMass: 3.6,
+                trunkLeanMass: 29.0,
+                rightLegLeanMass: 10.1,
+                leftLegLeanMass: 10.0,
+                fatControl: -0.8,
+                muscleControl: 1.5,
+            }
+        }
     },
     {
         id: 'eval_3',
@@ -126,7 +211,10 @@ export const evaluations: Evaluation[] = [
             muscleMass: 70,
             boneDensity: 1.22,
         },
-        boneDiameters: {}
+        boneDiameters: {},
+        bioimpedance: {
+            scaleType: 'inbody'
+        }
     },
     {
         id: 'eval_4',
@@ -146,7 +234,19 @@ export const evaluations: Evaluation[] = [
             muscleMass: 48,
             boneDensity: 1.1,
         },
-        boneDiameters: {}
+        boneDiameters: {},
+        bioimpedance: {
+            scaleType: 'omron',
+            omron: {
+                weight: 65,
+                bmi: 23.9,
+                bodyFatPercentage: 30.2,
+                skeletalMusclePercentage: 28.5,
+                visceralFatLevel: 5,
+                basalMetabolicRate: 1400,
+                metabolicAge: 30,
+            }
+        }
     },
     {
         id: 'eval_5',
@@ -166,7 +266,10 @@ export const evaluations: Evaluation[] = [
             muscleMass: 37.8,
             boneDensity: 1.3,
         },
-        boneDiameters: {}
+        boneDiameters: {},
+        bioimpedance: {
+            scaleType: null
+        }
     }
 ];
 
