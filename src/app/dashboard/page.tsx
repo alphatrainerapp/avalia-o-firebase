@@ -124,20 +124,19 @@ export default function DashboardPage() {
         
         const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
 
-        if (keys.length > 1) {
-            setFormState(prev => {
-                const newState = {...prev};
-                let current: any = newState;
-                for (let i = 0; i < keys.length - 1; i++) {
-                    current[keys[i]] = current[keys[i]] || {};
-                    current = current[keys[i]];
-                }
-                current[keys[keys.length - 1]] = parsedValue;
-                return newState;
-            });
-        } else {
-            setFormState(prev => ({ ...prev, [name]: parsedValue }));
-        }
+        setFormState(prev => {
+            const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+            let current: any = newState;
+
+            for (let i = 0; i < keys.length - 1; i++) {
+                current[keys[i]] = current[keys[i]] || {};
+                current = current[keys[i]];
+            }
+            
+            current[keys[keys.length - 1]] = parsedValue;
+
+            return newState;
+        });
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -570,11 +569,11 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <Label htmlFor="height">Altura (cm)</Label>
-                                <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
+                                <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} />
                             </div>
                             <div>
                                 <Label htmlFor="weight">Peso (kg)</Label>
-                                <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, weight: Number(e.target.value)}}))} />
+                                <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} />
                             </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
