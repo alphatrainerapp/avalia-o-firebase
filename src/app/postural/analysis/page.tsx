@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid } from 'lucide-react';
+import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,12 +12,19 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { usePosturalContext } from '../context';
+import { Slider } from '@/components/ui/slider';
 
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
     const { photos } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
+    const [zoom, setZoom] = useState(1);
+    const [isDragging, setIsDragging] = useState(false);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const imageContainerRef = useRef<HTMLDivElement>(null);
+    const startPos = useRef({ x: 0, y: 0 });
+
     const frontImage = photos['front'];
 
     useEffect(() => {
@@ -31,6 +38,51 @@ export default function PosturalAnalysisPage() {
             description: 'A análise postural foi salva com sucesso.',
         });
     };
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (zoom <= 1) return;
+        setIsDragging(true);
+        startPos.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+        if (imageContainerRef.current) {
+            imageContainerRef.current.style.cursor = 'grabbing';
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+         if (imageContainerRef.current) {
+            imageContainerRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
+        }
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging || !imageContainerRef.current) return;
+        
+        const newX = e.clientX - startPos.current.x;
+        const newY = e.clientY - startPos.current.y;
+        
+        const containerRect = imageContainerRef.current.getBoundingClientRect();
+        const imageWidth = containerRect.width * zoom;
+        const imageHeight = containerRect.height * zoom;
+
+        const max_X = (imageWidth - containerRect.width) / 2;
+        const max_Y = (imageHeight - containerRect.height) / 2;
+        
+        const constrainedX = Math.max(Math.min(newX, max_X), -max_X);
+        const constrainedY = Math.max(Math.min(newY, max_Y), -max_Y);
+
+        setPosition({ x: constrainedX, y: constrainedY });
+    };
+
+     useEffect(() => {
+        if (zoom <= 1) {
+            setPosition({ x: 0, y: 0 });
+        }
+        if (imageContainerRef.current) {
+             imageContainerRef.current.style.cursor = zoom > 1 ? 'grab' : 'default';
+        }
+    }, [zoom]);
+
 
     const analysisSections = [
         {
@@ -99,30 +151,52 @@ export default function PosturalAnalysisPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg">
-                            {frontImage && (
-                                <Image
-                                    src={frontImage}
-                                    alt="Visão Frontal"
-                                    layout="fill"
-                                    objectFit="contain"
-                                    className="rounded-lg"
-                                />
-                            )}
-                            {showGrid && (
-                                <div className="absolute inset-0 grid grid-cols-5 grid-rows-10 gap-0 pointer-events-none">
-                                    {[...Array(5)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-blue-500/30"></div>)}
-                                    {[...Array(10)].map((_, i) => <div key={`h-${i}`} className="w-full border-t border-blue-500/30 col-span-5"></div>)}
+                        <div className="space-y-4">
+                             <div 
+                                ref={imageContainerRef}
+                                className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg overflow-hidden"
+                                onMouseDown={handleMouseDown}
+                                onMouseMove={handleMouseMove}
+                                onMouseUp={handleMouseUp}
+                                onMouseLeave={handleMouseUp}
+                             >
+                                {frontImage && (
+                                    <Image
+                                        src={frontImage}
+                                        alt="Visão Frontal"
+                                        layout="fill"
+                                        objectFit="contain"
+                                        className="rounded-lg transition-transform duration-200"
+                                        style={{ transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)` }}
+                                        draggable={false}
+                                    />
+                                )}
+                                {showGrid && (
+                                    <div className="absolute inset-0 grid grid-cols-10 grid-rows-15 gap-0 pointer-events-none">
+                                        {[...Array(10)].map((_, i) => <div key={`v-${i}`} className="h-full border-r border-blue-500/30"></div>)}
+                                        {[...Array(15)].map((_, i) => <div key={`h-${i}`} className="w-full border-t border-blue-500/30 col-span-10"></div>)}
+                                    </div>
+                                )}
+                                <div className="absolute top-2 left-2 flex flex-col gap-2">
+                                    <Button variant="outline" size="icon" onClick={() => setShowGrid(!showGrid)}>
+                                        <Grid className={cn(showGrid && "text-primary")} />
+                                    </Button>
+                                    <Button variant="outline" size="icon">
+                                        <Maximize />
+                                    </Button>
                                 </div>
-                            )}
-                            <div className="absolute top-2 left-2 flex flex-col gap-2">
-                                <Button variant="outline" size="icon" onClick={() => setShowGrid(!showGrid)}>
-                                    <Grid className={cn(showGrid && "text-primary")} />
-                                </Button>
-                                <Button variant="outline" size="icon">
-                                    <Maximize />
-                                </Button>
                             </div>
+                            <div className="flex items-center gap-2 px-4">
+                               <ZoomOut className="size-5" />
+                               <Slider
+                                   value={[zoom]}
+                                   onValueChange={(value) => setZoom(value[0])}
+                                   min={1}
+                                   max={3}
+                                   step={0.1}
+                               />
+                               <ZoomIn className="size-5" />
+                           </div>
                         </div>
 
                         <div className="space-y-4">
