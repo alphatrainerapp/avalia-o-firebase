@@ -69,7 +69,6 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
             { key: 'leftArmFat', label: 'Gordura do braço esquerdo', unit: 'kg' },
             { key: 'rightLegFat', label: 'Gordura da perna direita', unit: 'kg' },
             { key: 'leftLegFat', label: 'Gordura da perna esquerda', unit: 'kg' },
-            { key: 'limbsFat', label: 'Gordura de membros', unit: 'kg' },
         ],
     },
     {
@@ -82,11 +81,9 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
         ],
     },
     {
-        block: 'Metabolismo e Controle',
+        block: 'Metabolismo',
         fields: [
             { key: 'basalMetabolicRate', label: 'Taxa metabólica basal (TMB)', unit: 'kcal' },
-            { key: 'fatControl', label: 'Controle de gordura', unit: 'kg' },
-            { key: 'muscleControl', label: 'Controle de músculo', unit: 'kg' },
         ],
     },
 ];

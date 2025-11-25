@@ -36,14 +36,11 @@ export type BioimpedanceInBody = {
     leftArmFat?: number;
     rightLegFat?: number;
     leftLegFat?: number;
-    limbsFat?: number;
     waistHipRatio?: number;
     bmi?: number;
     bodyFatPercentage?: number;
     visceralFatArea?: number;
     basalMetabolicRate?: number;
-    fatControl?: number;
-    muscleControl?: number;
 };
 
 
@@ -161,8 +158,6 @@ export const evaluations: Evaluation[] = [
                 trunkLeanMass: 28.1,
                 rightLegLeanMass: 9.8,
                 leftLegLeanMass: 9.7,
-                fatControl: -3.5,
-                muscleControl: 2.8,
             }
         }
     },
@@ -200,8 +195,6 @@ export const evaluations: Evaluation[] = [
                 trunkLeanMass: 29.0,
                 rightLegLeanMass: 10.1,
                 leftLegLeanMass: 10.0,
-                fatControl: -0.8,
-                muscleControl: 1.5,
             }
         }
     },
