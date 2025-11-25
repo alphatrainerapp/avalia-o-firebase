@@ -138,8 +138,12 @@ export default function DashboardPage() {
                 setFormState(prev => {
                     const newState = JSON.parse(JSON.stringify(prev));
                     if (!newState.bodyComposition) newState.bodyComposition = {};
-                    newState.bodyComposition.bodyFatPercentage = parseFloat(fatPercentage.toFixed(2));
-                    return newState;
+                    // Check if the value has actually changed to prevent loops
+                    if (newState.bodyComposition.bodyFatPercentage !== parseFloat(fatPercentage.toFixed(2))) {
+                        newState.bodyComposition.bodyFatPercentage = parseFloat(fatPercentage.toFixed(2));
+                        return newState;
+                    }
+                    return prev;
                 });
             }
         }
@@ -176,6 +180,8 @@ export default function DashboardPage() {
             setSelectedEvaluationId(null);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
+        } else if (name === 'gender') {
+            setFormState(prev => ({...prev, [name]: value, protocol: audienceProtocols[selectedAudience][0] }));
         } else {
              setFormState(prev => ({...prev, [name]: value}));
         }
@@ -967,3 +973,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
