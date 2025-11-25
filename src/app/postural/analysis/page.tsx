@@ -15,10 +15,11 @@ import { usePosturalContext } from '../context';
 import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { posturalDeviations } from '@/lib/postural-data';
 
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
-    const { photos } = usePosturalContext();
+    const { photos, deviations, toggleDeviation } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
     const [zoom, setZoom] = useState(1);
@@ -29,6 +30,8 @@ export default function PosturalAnalysisPage() {
     const isMobile = useIsMobile();
 
     const frontImage = photos['front'];
+    const viewKey = 'anterior';
+    const analysisSections = posturalDeviations[viewKey];
 
     useEffect(() => {
         const today = new Date();
@@ -37,7 +40,7 @@ export default function PosturalAnalysisPage() {
 
 
     const handleSave = () => {
-        console.log('Saving postural analysis...');
+        console.log('Saving postural analysis...', deviations);
         toast({
             title: 'Análise Salva',
             description: 'A análise postural foi salva com sucesso.',
@@ -89,52 +92,6 @@ export default function PosturalAnalysisPage() {
     }, [zoom]);
 
 
-    const analysisSections = [
-        {
-            title: 'Assimetria de Quadril',
-            items: [
-                {
-                    subtitle: 'Obliquidade Pélvica',
-                    options: ['Quadril direito mais alto', 'Quadril esquerdo mais alto']
-                },
-                {
-                    subtitle: 'Rotação Pélvica',
-                    options: ['Rotação pélvica à direita', 'Rotação pélvica à esquerda']
-                },
-                {
-                    subtitle: 'Deslocamento lateral da pelve',
-                    options: ['Pelve desviada para direita', 'Pelve desviada para esquerda']
-                }
-            ]
-        },
-        {
-            title: 'Assimetria de Ombros',
-            items: [
-                {
-                    subtitle: 'Ombro Elevado / Ombro Baixo',
-                    options: ['Ombro direito mais alto', 'Ombro esquerdo mais alto']
-                },
-                {
-                    subtitle: 'Desvio lateral da cintura escapular',
-                    options: ['Cintura escapular desviada para direita', 'Cintura escapular desviada para esquerda']
-                },
-                {
-                    subtitle: 'Rotação dos ombros',
-                    options: ['Rotação interna predominante (braços viram para dentro)', 'Rotação externa predominante']
-                }
-            ]
-        },
-        {
-            title: 'Tipos de Escoliose',
-            items: [
-                {
-                    subtitle: 'Quanto à direção da convexidade',
-                    options: ['Escoliose em “C” convexa à direita', 'Escoliose em “C” convexa à esquerda', 'Escoliose em “S” (dupla curva)']
-                }
-            ]
-        }
-    ];
-
     const renderAnalysisContent = () => {
         if (isMobile) {
             return (
@@ -154,7 +111,11 @@ export default function PosturalAnalysisPage() {
                                                     <div className="grid gap-2 mt-2">
                                                         {item.options.map(option => (
                                                             <div key={option} className="flex items-center space-x-2">
-                                                                <Checkbox id={`${section.title}-${item.subtitle}-${option}`} />
+                                                                <Checkbox 
+                                                                    id={`${section.title}-${item.subtitle}-${option}`} 
+                                                                    checked={deviations[viewKey]?.includes(option)}
+                                                                    onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                                />
                                                                 <Label htmlFor={`${section.title}-${item.subtitle}-${option}`} className="font-normal text-sm">{option}</Label>
                                                             </div>
                                                         ))}
@@ -186,7 +147,11 @@ export default function PosturalAnalysisPage() {
                                         <div className="grid gap-2 mt-2">
                                             {item.options.map(option => (
                                                 <div key={option} className="flex items-center space-x-2">
-                                                    <Checkbox id={`${section.title}-${item.subtitle}-${option}`} />
+                                                    <Checkbox 
+                                                        id={`${section.title}-${item.subtitle}-${option}`} 
+                                                        checked={deviations[viewKey]?.includes(option)}
+                                                        onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                    />
                                                     <Label htmlFor={`${section.title}-${item.subtitle}-${option}`} className="font-normal text-sm">{option}</Label>
                                                 </div>
                                             ))}
@@ -213,7 +178,7 @@ export default function PosturalAnalysisPage() {
                         <p className="text-muted-foreground">Data: {currentDate}</p>
                     </div>
                 </div>
-                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / SALVAR</p>
+                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
             <Card>

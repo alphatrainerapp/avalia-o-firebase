@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut, Check } from 'lucide-react';
+import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut, Check, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -15,10 +15,11 @@ import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { posturalDeviations } from '@/lib/postural-data';
 
 export default function PosturalAnalysisLeftPage() {
     const { toast } = useToast();
-    const { photos } = usePosturalContext();
+    const { photos, deviations, toggleDeviation } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
     const [zoom, setZoom] = useState(1);
@@ -29,6 +30,8 @@ export default function PosturalAnalysisLeftPage() {
     const isMobile = useIsMobile();
 
     const sideImage = photos['left'];
+    const viewKey = 'lateral_esquerda';
+    const analysisSections = posturalDeviations[viewKey];
 
     useEffect(() => {
         const today = new Date();
@@ -89,58 +92,6 @@ export default function PosturalAnalysisLeftPage() {
     }, [zoom]);
 
 
-    const analysisSections = [
-        {
-            title: 'Cabeça e Cervical',
-            items: [
-                { options: ['Cabeça projetada para frente', 'Cabeça recuada'] },
-                { options: ['Cervical em hiperextensão', 'Cervical retificada'] }
-            ]
-        },
-        {
-            title: 'Ombros',
-            items: [
-                { options: ['Ombro protraído', 'Ombro retraído'] }
-            ]
-        },
-        {
-            title: 'Coluna Torácica',
-            items: [
-                { options: ['Hipercifose', 'Retificação torácica'] }
-            ]
-        },
-        {
-            title: 'Coluna Lombar',
-            items: [
-                { options: ['Hiperlordose', 'Retificação lombar'] }
-            ]
-        },
-        {
-            title: 'Pelve',
-            items: [
-                { options: ['Anteversão', 'Retroversão'] }
-            ]
-        },
-        {
-            title: 'Tronco',
-            items: [
-                { options: ['Tronco inclinado para frente', 'Tronco inclinado para trás'] }
-            ]
-        },
-        {
-            title: 'Joelhos',
-            items: [
-                { options: ['Joelho hiperestendido', 'Joelho em flexo'] }
-            ]
-        },
-        {
-            title: 'Pés',
-            items: [
-                { options: ['Pé pronado (lateral)', 'Pé supinado (lateral)'] }
-            ]
-        }
-    ];
-
     const renderAnalysisContent = () => {
         if (isMobile) {
             return (
@@ -156,10 +107,15 @@ export default function PosturalAnalysisLeftPage() {
                                         <CardContent className="space-y-4 pl-6">
                                             {section.items.map((item, itemIndex) => (
                                                 <div key={itemIndex}>
+                                                     {item.subtitle && <Label className="font-medium text-sm">{item.subtitle}</Label>}
                                                     <div className="grid gap-2 mt-2">
                                                         {item.options.map(option => (
                                                             <div key={option} className="flex items-center space-x-2">
-                                                                <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                                <Checkbox 
+                                                                    id={`${section.title}-${itemIndex}-${option}`} 
+                                                                    checked={deviations[viewKey]?.includes(option)}
+                                                                    onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                                />
                                                                 <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
                                                             </div>
                                                         ))}
@@ -187,10 +143,15 @@ export default function PosturalAnalysisLeftPage() {
                             <div className="space-y-4 pl-2">
                                 {section.items.map((item, itemIndex) => (
                                     <div key={itemIndex}>
+                                         {item.subtitle && <Label className="font-medium text-sm">{item.subtitle}</Label>}
                                         <div className="grid gap-2 mt-2">
                                             {item.options.map(option => (
                                                 <div key={option} className="flex items-center space-x-2">
-                                                    <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                    <Checkbox 
+                                                        id={`${section.title}-${itemIndex}-${option}`}
+                                                        checked={deviations[viewKey]?.includes(option)}
+                                                        onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                    />
                                                     <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
                                                 </div>
                                             ))}
@@ -217,7 +178,7 @@ export default function PosturalAnalysisLeftPage() {
                         <p className="text-muted-foreground">Data: {currentDate}</p>
                     </div>
                 </div>
-                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / SALVAR</p>
+                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
             <Card>
@@ -297,10 +258,14 @@ export default function PosturalAnalysisLeftPage() {
 
 
             <div className="flex justify-end gap-4 mt-8">
-                 <Link href="/dashboard">
-                    <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                        <Check className="mr-2" />
-                        Salvar e Finalizar
+                 <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                    <Save className="mr-2" />
+                    Salvar
+                </Button>
+                 <Link href="/postural/summary">
+                    <Button variant="outline">
+                        Ver Resumo
+                        <FileText className="ml-2" />
                     </Button>
                 </Link>
             </div>

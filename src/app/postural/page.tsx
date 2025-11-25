@@ -14,7 +14,7 @@ import { usePosturalContext } from './context';
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
-    const { photos, setPhoto } = usePosturalContext();
+    const { photos, setPhoto, clearDeviations } = usePosturalContext();
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
         back: useRef<HTMLInputElement>(null),
@@ -26,7 +26,9 @@ export default function PosturalPage() {
 
     useEffect(() => {
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-    }, []);
+        // Clear previous analysis data when starting a new one
+        clearDeviations();
+    }, [clearDeviations]);
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: PhotoType) => {
         const file = e.target.files?.[0];
@@ -97,7 +99,7 @@ export default function PosturalPage() {
                         <p className="text-muted-foreground">Data: {currentDate}</p>
                     </div>
                 </div>
-                 <p className="text-sm font-semibold text-primary uppercase">Upload / Avaliação / Salvar</p>
+                 <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
             <div className="space-y-8">

@@ -15,10 +15,11 @@ import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { posturalDeviations } from '@/lib/postural-data';
 
 export default function PosturalAnalysisPosteriorPage() {
     const { toast } = useToast();
-    const { photos } = usePosturalContext();
+    const { photos, deviations, toggleDeviation } = usePosturalContext();
     const [showGrid, setShowGrid] = useState(false);
     const [currentDate, setCurrentDate] = useState('');
     const [zoom, setZoom] = useState(1);
@@ -29,6 +30,8 @@ export default function PosturalAnalysisPosteriorPage() {
     const isMobile = useIsMobile();
 
     const backImage = photos['back'];
+    const viewKey = 'posterior';
+    const analysisSections = posturalDeviations[viewKey];
 
     useEffect(() => {
         const today = new Date();
@@ -88,51 +91,6 @@ export default function PosturalAnalysisPosteriorPage() {
         }
     }, [zoom]);
 
-
-    const analysisSections = [
-        {
-            title: 'Ombros',
-            items: [
-                { options: ['Ombro direito alto', 'Ombro esquerdo alto'] },
-                { options: ['Escápula alada D', 'Escápula alada E'] },
-                { options: ['Rotação escapular D/E'] },
-                { options: ['Basculamento escapular'] },
-                { options: ['Cintura escapular desviada D/E'] }
-            ]
-        },
-        {
-            title: 'Coluna',
-            items: [
-                { options: ['Escoliose C direita', 'Escoliose C esquerda', 'Escoliose S'] },
-                { options: ['Tronco desviado D/E'] },
-                { options: ['Rotação do tronco D/E'] },
-                { options: ['Inclinação do tronco D/E'] }
-            ]
-        },
-        {
-            title: 'Pelve',
-            items: [
-                { options: ['Quadril direito alto', 'Quadril esquerdo alto'] },
-                { options: ['Pelve desviada D/E'] },
-                { options: ['Rotação pélvica D/E'] }
-            ]
-        },
-        {
-            title: 'Joelhos',
-            items: [
-                { options: ['Valgo', 'Varo'] },
-                { options: ['Torção tibial interna', 'Torção tibial externa'] },
-            ]
-        },
-        {
-            title: 'Pés',
-            items: [
-                { options: ['Pé pronado direito/esquerdo', 'Pé supinado direito/esquerdo'] },
-                { options: ['Tendão de Aquiles em valgo/varo'] },
-            ]
-        }
-    ];
-
     const renderAnalysisContent = () => {
         if (isMobile) {
             return (
@@ -148,10 +106,15 @@ export default function PosturalAnalysisPosteriorPage() {
                                         <CardContent className="space-y-4 pl-6">
                                             {section.items.map((item, itemIndex) => (
                                                 <div key={itemIndex}>
+                                                    {item.subtitle && <Label className="font-medium text-sm">{item.subtitle}</Label>}
                                                     <div className="grid gap-2 mt-2">
                                                         {item.options.map(option => (
                                                             <div key={option} className="flex items-center space-x-2">
-                                                                <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                                <Checkbox 
+                                                                    id={`${section.title}-${itemIndex}-${option}`}
+                                                                    checked={deviations[viewKey]?.includes(option)}
+                                                                    onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                                />
                                                                 <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
                                                             </div>
                                                         ))}
@@ -179,10 +142,15 @@ export default function PosturalAnalysisPosteriorPage() {
                             <div className="space-y-4 pl-2">
                                 {section.items.map((item, itemIndex) => (
                                     <div key={itemIndex}>
+                                        {item.subtitle && <Label className="font-medium text-sm">{item.subtitle}</Label>}
                                         <div className="grid gap-2 mt-2">
                                             {item.options.map(option => (
                                                 <div key={option} className="flex items-center space-x-2">
-                                                    <Checkbox id={`${section.title}-${itemIndex}-${option}`} />
+                                                    <Checkbox 
+                                                        id={`${section.title}-${itemIndex}-${option}`}
+                                                        checked={deviations[viewKey]?.includes(option)}
+                                                        onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                    />
                                                     <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
                                                 </div>
                                             ))}
@@ -209,7 +177,7 @@ export default function PosturalAnalysisPosteriorPage() {
                         <p className="text-muted-foreground">Data: {currentDate}</p>
                     </div>
                 </div>
-                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / SALVAR</p>
+                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
             <Card>
