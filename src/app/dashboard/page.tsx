@@ -28,6 +28,7 @@ import ComparisonCharts from '@/components/ComparisonCharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export default function DashboardPage() {
@@ -526,25 +527,30 @@ export default function DashboardPage() {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="sm:col-span-2">
-                                <Label htmlFor="name">Nome</Label>
-                                <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
-                                    <SelectTrigger id="name">
-                                        <SelectValue placeholder="Selecione um cliente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                            <Label htmlFor="age">Idade</Label>
-                            <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
+                        <div className="flex items-center gap-4">
+                            {client && (
+                                <Avatar className="h-16 w-16">
+                                    <AvatarImage src={client.avatarUrl} alt={client.name} />
+                                    <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                </Avatar>
+                            )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                                <div className="sm:col-span-2">
+                                    <Label htmlFor="name">Nome</Label>
+                                    <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
+                                        <SelectTrigger id="name">
+                                            <SelectValue placeholder="Selecione um cliente" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="age">Idade</Label>
+                                    <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
+                                </div>
+                                <div>
                                 <Label htmlFor="gender">Sexo</Label>
                                 <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
                                     <SelectTrigger id="gender">
@@ -556,6 +562,9 @@ export default function DashboardPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <Label htmlFor="height">Altura (cm)</Label>
                                 <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={(e) => setFormState(p => ({...p, bodyMeasurements: {...p.bodyMeasurements!, height: Number(e.target.value)}}))} />
@@ -926,3 +935,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
