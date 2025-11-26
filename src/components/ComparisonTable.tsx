@@ -59,7 +59,7 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                                 {difference !== null && (
                                     <div className={cn(
                                         "flex items-center justify-center gap-1 text-xs", 
-                                        difference > 0 ? (dataKey === 'skinFolds' ? "text-red-500" : "text-green-500") : (dataKey === 'skinFolds' ? "text-green-500" : "text-red-500")
+                                        difference > 0 ? "text-green-500" : "text-red-500"
                                     )}>
                                        {difference > 0 ? <ChevronUp className="size-3" /> : (difference < 0 ? <ChevronDown className="size-3" /> : null)}
                                        {difference.toFixed(1)}
