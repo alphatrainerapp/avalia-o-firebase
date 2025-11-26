@@ -161,21 +161,24 @@ export default function DashboardPage() {
         
         const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
 
-        setFormState(prev => {
-            const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+        const updateState = (prev: any) => {
+            const newState = JSON.parse(JSON.stringify(prev));
             let current: any = newState;
-
             for (let i = 0; i < keys.length - 1; i++) {
-                if (!current[keys[i]]) {
-                    current[keys[i]] = {};
-                }
+                if (!current[keys[i]]) current[keys[i]] = {};
                 current = current[keys[i]];
             }
-            
             current[keys[keys.length - 1]] = parsedValue;
-
             return newState;
-        });
+        };
+        
+        setFormState(updateState);
+        
+        if (selectedEvaluationId) {
+            setAllEvaluations(prevEvals => prevEvals.map(ev => 
+                ev.id === selectedEvaluationId ? updateState(ev) : ev
+            ));
+        }
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -856,3 +859,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
