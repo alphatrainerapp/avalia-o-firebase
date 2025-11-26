@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import type { Evaluation, SkinfoldKeys, BoneDiameterKeys } from '@/lib/data';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 type FieldDef = {
     key: string;
@@ -47,21 +48,22 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                             const prevData = prevEval[dataKey];
                             const previousValue = prevData?.[fieldKey as keyof typeof prevData] as number | undefined;
 
-                            if (typeof currentValue === 'number' && typeof previousValue === 'number') {
+                            if (currentValue !== undefined && previousValue !== undefined && currentValue !== null && previousValue !== null) {
                                 difference = currentValue - previousValue;
                             }
                         }
 
                         return (
                             <TableCell key={ev.id} className="text-center">
-                                {typeof currentValue === 'number' ? currentValue.toFixed(1) : '-'}
+                                <div className="font-medium">{typeof currentValue === 'number' ? currentValue.toFixed(1) : '-'}</div>
                                 {difference !== null && (
-                                    <span className={cn(
-                                        "block text-xs", 
+                                    <div className={cn(
+                                        "flex items-center justify-center gap-1 text-xs", 
                                         difference > 0 ? (dataKey === 'skinFolds' ? "text-red-500" : "text-green-500") : (dataKey === 'skinFolds' ? "text-green-500" : "text-red-500")
                                     )}>
-                                       {difference > 0 ? '+' : ''}{difference.toFixed(1)}
-                                    </span>
+                                       {difference > 0 ? <ChevronUp className="size-3" /> : (difference < 0 ? <ChevronDown className="size-3" /> : null)}
+                                       {difference.toFixed(1)}
+                                    </div>
                                 )}
                             </TableCell>
                         );
