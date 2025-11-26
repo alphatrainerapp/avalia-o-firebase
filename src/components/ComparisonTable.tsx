@@ -32,7 +32,7 @@ type ComparisonTableProps = {
 export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields, diametrosFields }: ComparisonTableProps) {
     
     const renderComparisonRows = (fields: (FieldDef | SkinfoldFieldDef | BoneDiameterFieldDef)[], dataKey: 'perimetria' | 'skinFolds' | 'boneDiameters') => {
-        return fields.map((field, index) => {
+        return fields.map((field) => {
             const fieldKey = 'key' in field ? field.key : field.name;
             return (
                 <TableRow key={`${dataKey}-${fieldKey}`}>
@@ -46,14 +46,15 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                             const prevEval = evaluations[evalIndex - 1];
                             const prevData = prevEval[dataKey];
                             const previousValue = prevData?.[fieldKey as keyof typeof prevData] as number | undefined;
-                            if (currentValue !== undefined && previousValue !== undefined) {
+
+                            if (typeof currentValue === 'number' && typeof previousValue === 'number') {
                                 difference = currentValue - previousValue;
                             }
                         }
 
                         return (
                             <TableCell key={ev.id} className="text-center">
-                                {currentValue?.toFixed(1) ?? '-'}
+                                {typeof currentValue === 'number' ? currentValue.toFixed(1) : '-'}
                                 {difference !== null && (
                                     <span className={cn(
                                         "block text-xs", 
