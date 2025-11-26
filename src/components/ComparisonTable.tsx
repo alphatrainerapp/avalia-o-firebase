@@ -38,14 +38,14 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                 <TableRow key={`${dataKey}-${fieldKey}`}>
                     <TableCell className="font-medium">{field.label}</TableCell>
                     {evaluations.map((ev, evalIndex) => {
-                        const data = ev[dataKey] as any;
-                        const currentValue = data?.[fieldKey] as number | undefined;
+                        const data = ev[dataKey];
+                        const currentValue = data?.[fieldKey as keyof typeof data] as number | undefined;
                         
                         let difference: number | null = null;
                         if (evalIndex > 0) {
                             const prevEval = evaluations[evalIndex - 1];
-                            const prevData = prevEval[dataKey] as any;
-                            const previousValue = prevData?.[fieldKey] as number | undefined;
+                            const prevData = prevEval[dataKey];
+                            const previousValue = prevData?.[fieldKey as keyof typeof prevData] as number | undefined;
                             if (currentValue !== undefined && previousValue !== undefined) {
                                 difference = currentValue - previousValue;
                             }
