@@ -23,6 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+
 
 const viewTitles: { [key: string]: string } = {
     anterior: 'Visão Anterior',
@@ -230,25 +232,38 @@ export default function PosturalSummaryPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Camera /> Comparativo de Fotos</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             {Object.keys(photoViewMapping).map((photoType) => (
                                 <div key={photoType}>
                                     <h3 className="font-semibold mb-2 text-lg">{photoViewMapping[photoType as PhotoType].title}</h3>
-                                    <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${comparedEvaluations.length} gap-4`}>
-                                        {comparedEvaluations.map(ev => (
-                                            <div key={`${ev.id}-${photoType}`} className="flex flex-col items-center">
-                                                <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
-                                                <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
-                                                    {/* We use the currently uploaded photos as mock for all evaluations */}
-                                                    {photos[photoType] ? (
-                                                        <Image src={photos[photoType]!} alt={`Foto para ${ev.date}`} layout="fill" objectFit="contain" />
-                                                    ) : (
-                                                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem foto</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <Carousel
+                                        opts={{
+                                            align: "start",
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <CarouselContent>
+                                            {comparedEvaluations.map((ev, index) => (
+                                                <CarouselItem key={`${ev.id}-${photoType}`} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                                                    <div className="p-1">
+                                                        <div className="flex flex-col items-center">
+                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
+                                                            <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
+                                                                {/* We use the currently uploaded photos as mock for all evaluations */}
+                                                                {photos[photoType] ? (
+                                                                    <Image src={photos[photoType]!} alt={`Foto para ${ev.date}`} layout="fill" objectFit="contain" />
+                                                                ) : (
+                                                                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem foto</div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </CarouselItem>
+                                            ))}
+                                        </CarouselContent>
+                                        <CarouselPrevious className="ml-14" />
+                                        <CarouselNext className="mr-14" />
+                                    </Carousel>
                                 </div>
                             ))}
                         </CardContent>
