@@ -146,18 +146,20 @@ export default function DashboardPage() {
                 setFormState(prev => {
                     const newState = { ...prev };
                     const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
-                    if (!newState.bodyComposition) newState.bodyComposition = {};
                     
+                    const updateEvaluations = (currentEvals: Evaluation[]) => {
+                      if (!selectedEvaluationId) return currentEvals;
+                      return currentEvals.map(ev => 
+                          ev.id === selectedEvaluationId 
+                          ? { ...ev, bodyComposition: { ...ev.bodyComposition, bodyFatPercentage: newFatPercentage } }
+                          : ev
+                      );
+                    };
+
+                    if (!newState.bodyComposition) newState.bodyComposition = {};
                     if (newState.bodyComposition.bodyFatPercentage !== newFatPercentage) {
                         newState.bodyComposition.bodyFatPercentage = newFatPercentage;
-                         // Also update allEvaluations if this is an existing evaluation
-                        if (selectedEvaluationId) {
-                             setAllEvaluations(currentEvals => currentEvals.map(ev => 
-                                ev.id === selectedEvaluationId 
-                                ? { ...ev, bodyComposition: { ...ev.bodyComposition, bodyFatPercentage: newFatPercentage } }
-                                : ev
-                            ));
-                        }
+                        setAllEvaluations(updateEvaluations);
                     }
                     return newState;
                 });
@@ -184,7 +186,7 @@ export default function DashboardPage() {
 
             if (selectedEvaluationId) {
                 setAllEvaluations(prevEvals => prevEvals.map(ev => 
-                    ev.id === selectedEvaluationId ? newState : ev
+                    ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev
                 ));
             }
             return newState;
