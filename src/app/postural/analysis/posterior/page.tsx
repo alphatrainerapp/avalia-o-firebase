@@ -35,7 +35,7 @@ export default function PosturalAnalysisPosteriorPage() {
 
     useEffect(() => {
         const today = new Date();
-        setCurrentDate(today.toLocaleDateString('pt-BR', { timeZone: 'UTC' }));
+        setCurrentDate(today.toLocaleDateString('pt-BR'));
     }, []);
 
 

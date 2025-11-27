@@ -390,7 +390,7 @@ export default function BioimpedancePage() {
                                         >
                                             <CardHeader className="p-4 relative">
                                                  <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                                    {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                                                    {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="p-4 pt-0">
@@ -423,7 +423,7 @@ export default function BioimpedancePage() {
                                                 <TableHead className="min-w-[250px]">Parâmetro</TableHead>
                                                 {comparedEvaluations.map(ev => (
                                                     <TableHead key={ev.id} className="text-center min-w-[150px]">
-                                                        {new Date(ev.date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                                        {new Date(ev.date).toLocaleDateString('pt-BR')}
                                                     </TableHead>
                                                 ))}
                                             </TableRow>

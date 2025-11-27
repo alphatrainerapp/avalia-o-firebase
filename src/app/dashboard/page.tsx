@@ -99,7 +99,7 @@ export default function DashboardPage() {
         setRequiredSkinfolds(currentRequired);
     }, [formState.protocol, formState.gender]);
     
-    useEffect(() => {
+     useEffect(() => {
         const { skinFolds, age, gender, protocol } = formState;
 
         if (!skinFolds || !age || !gender || !protocol) return;
@@ -135,7 +135,7 @@ export default function DashboardPage() {
             const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
              if (fatPercentage > 0 && fatPercentage < 100) {
                 setFormState(prev => {
-                    const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+                    const newState = { ...prev };
                     const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
                     if (!newState.bodyComposition) newState.bodyComposition = {};
                     
@@ -143,14 +143,14 @@ export default function DashboardPage() {
                         newState.bodyComposition.bodyFatPercentage = newFatPercentage;
                          // Also update allEvaluations if this is an existing evaluation
                         if (selectedEvaluationId) {
-                            setAllEvaluations(currentEvals => currentEvals.map(ev => 
-                                ev.id === selectedEvaluationId ? newState : ev
+                             setAllEvaluations(currentEvals => currentEvals.map(ev => 
+                                ev.id === selectedEvaluationId 
+                                ? { ...ev, bodyComposition: { ...ev.bodyComposition, bodyFatPercentage: newFatPercentage } }
+                                : ev
                             ));
                         }
-                        return newState;
                     }
-                    
-                    return prev;
+                    return newState;
                 });
             }
         }
@@ -295,7 +295,7 @@ export default function DashboardPage() {
             
             const today = new Date();
             const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
             const day = String(today.getDate()).padStart(2, '0');
             const localDateString = `${year}-${month}-${day}`;
 
@@ -481,7 +481,7 @@ export default function DashboardPage() {
                         <div className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.map(e => e.id).indexOf(selectedEvaluationId) + 1 : clientEvaluations.length + 1}</CardTitle>
-                                <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : ''}</CardDescription>
+                                <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR') : ''}</CardDescription>
                             </div>
                              <Button 
                                 onClick={handleNewEvaluation} 
@@ -573,7 +573,7 @@ export default function DashboardPage() {
                                 <div className="flex flex-wrap gap-2">
                                     {comparedEvaluations.map(ev => (
                                         <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
-                                            <span>{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</span>
+                                            <span>{new Date(ev.date).toLocaleDateString('pt-BR')}</span>
                                             <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
                                                 <X className="size-4" />
                                             </button>
@@ -602,7 +602,7 @@ export default function DashboardPage() {
                                 >
                                     <CardHeader className="p-4 relative">
                                         <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })}
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
@@ -786,7 +786,7 @@ export default function DashboardPage() {
                     <CardHeader className="pb-2">
                          <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">GORDURA</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>}
+                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR')}</p>}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -798,7 +798,7 @@ export default function DashboardPage() {
                     <CardHeader className="pb-2">
                          <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">MUSCULAR</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>}
+                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR')}</p>}
                         </div>
                     </CardHeader>
                     <CardContent>

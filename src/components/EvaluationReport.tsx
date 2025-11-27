@@ -36,7 +36,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
     const evolutionChartData = evaluationsToDisplay.map(ev => {
         const masses = calculateBodyComposition(ev, client);
         return {
-            date: new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}),
+            date: new Date(ev.date).toLocaleDateString('pt-BR'),
             'Gordura (kg)': masses.fatMassKg,
             'Músculo (kg)': masses.muscleMassKg,
         }
@@ -60,7 +60,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                     <div><strong>Nome:</strong> {client.name}</div>
                     <div><strong>Idade:</strong> {client.age}</div>
                     <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data da avaliação:</strong> {mainEvaluation ? new Date(mainEvaluation.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'N/A'}</div>
+                    <div><strong>Data da avaliação:</strong> {mainEvaluation ? new Date(mainEvaluation.date).toLocaleDateString('pt-BR') : 'N/A'}</div>
                 </div>
             </section>
             
@@ -71,7 +71,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
                             {evaluationsToDisplay.map(ev => (
-                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</TableHead>
+                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR')}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
@@ -196,7 +196,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
                             {evaluationsToDisplay.map(ev => (
-                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</TableHead>
+                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR')}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>

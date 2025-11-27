@@ -122,7 +122,7 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
                         <div><strong>Nome:</strong> {client.name}</div>
                         <div><strong>Idade:</strong> {client.age}</div>
                         <div><strong>Sexo:</strong> {client.gender}</div>
-                        <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>
+                        <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR')}</div>
                     </div>
                 </section>
                 
@@ -193,7 +193,7 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
                     <div><strong>Nome:</strong> {client.name}</div>
                     <div><strong>Idade:</strong> {client.age}</div>
                     <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>
+                    <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR')}</div>
                 </div>
             </section>
 

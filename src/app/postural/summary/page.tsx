@@ -208,7 +208,7 @@ export default function PosturalSummaryPage() {
                                 >
                                     <CardHeader className="p-4 relative">
                                             <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric', timeZone: 'UTC' })}
+                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
@@ -247,7 +247,7 @@ export default function PosturalSummaryPage() {
                                                 <CarouselItem key={`${ev.id}-${photoType}`} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
                                                     <div className="p-1">
                                                         <div className="flex flex-col items-center">
-                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</p>
+                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR')}</p>
                                                             <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
                                                                 {/* We use the currently uploaded photos as mock for all evaluations */}
                                                                 {photos[photoType] ? (

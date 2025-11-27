@@ -17,7 +17,7 @@ export default function ComparisonCharts({ evaluations, client }: ComparisonChar
     const chartData = evaluations.map(ev => {
         const masses = calculateBodyComposition(ev, client);
         return {
-            date: new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric', timeZone: 'UTC' }),
+            date: new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
             'Massa Gorda (kg)': parseFloat(masses.fatMassKg.toFixed(1)),
             'Massa Muscular (kg)': parseFloat(masses.muscleMassKg.toFixed(1)),
             'Massa Residual (kg)': parseFloat(masses.residualMassKg.toFixed(1)),
