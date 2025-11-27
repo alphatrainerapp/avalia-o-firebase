@@ -34,8 +34,8 @@ export default function PosturalAnalysisSidePage() {
     const analysisSections = posturalDeviations[viewKey];
 
     useEffect(() => {
-        const today = new Date();
-        setCurrentDate(today.toLocaleDateString('pt-BR'));
+        // This effect runs only on the client
+        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
     }, []);
 
 
@@ -271,3 +271,5 @@ export default function PosturalAnalysisSidePage() {
         </div>
     );
 }
+
+    

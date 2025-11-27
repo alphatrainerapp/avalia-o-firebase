@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import type { Evaluation, Client, BioimpedanceScale } from '@/lib/data';
 import { calculateBodyComposition } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -18,8 +18,14 @@ type EvaluationReportProps = {
 const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ client, evaluation, comparedEvaluations, perimetriaFields }, ref) => {
     
     const evaluationsToDisplay = comparedEvaluations.length > 0 ? comparedEvaluations : (evaluation ? [evaluation] : []);
-
     const mainEvaluation = evaluationsToDisplay[0];
+    const [evalDate, setEvalDate] = useState('');
+
+    useEffect(() => {
+        if (mainEvaluation?.date) {
+            setEvalDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
+        }
+    }, [mainEvaluation]);
 
     const { fatMassKg, muscleMassKg, residualMassKg, boneMassKg } = mainEvaluation ? calculateBodyComposition(mainEvaluation, client) : { fatMassKg: 0, muscleMassKg: 0, residualMassKg: 0, boneMassKg: 0 };
     
@@ -60,7 +66,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                     <div><strong>Nome:</strong> {client.name}</div>
                     <div><strong>Idade:</strong> {client.age}</div>
                     <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data da avaliação:</strong> {mainEvaluation ? new Date(mainEvaluation.date).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                    <div><strong>Data da avaliação:</strong> {evalDate}</div>
                 </div>
             </section>
             
@@ -218,3 +224,5 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
 
 EvaluationReport.displayName = "EvaluationReport";
 export default EvaluationReport;
+
+    

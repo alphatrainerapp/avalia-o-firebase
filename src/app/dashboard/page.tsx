@@ -41,6 +41,7 @@ export default function DashboardPage() {
     const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const reportRef = useRef<HTMLDivElement>(null);
     const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros'>('perimetria');
+    const [formattedDate, setFormattedDate] = useState('');
 
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
@@ -86,6 +87,12 @@ export default function DashboardPage() {
         setFormState(initialState);
 
     }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
+
+    useEffect(() => {
+        if(formState.date){
+            setFormattedDate(new Date(formState.date).toLocaleDateString('pt-BR'));
+        }
+    }, [formState.date]);
 
 
     useEffect(() => {
@@ -164,7 +171,7 @@ export default function DashboardPage() {
         
         const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
 
-        const updateState = (prev: any) => {
+        setFormState(prev => {
             const newState = JSON.parse(JSON.stringify(prev));
             let current: any = newState;
             for (let i = 0; i < keys.length - 1; i++) {
@@ -172,16 +179,14 @@ export default function DashboardPage() {
                 current = current[keys[i]];
             }
             current[keys[keys.length - 1]] = parsedValue;
+
+            if (selectedEvaluationId) {
+                setAllEvaluations(prevEvals => prevEvals.map(ev => 
+                    ev.id === selectedEvaluationId ? newState : ev
+                ));
+            }
             return newState;
-        };
-        
-        setFormState(updateState);
-        
-        if (selectedEvaluationId) {
-            setAllEvaluations(prevEvals => prevEvals.map(ev => 
-                ev.id === selectedEvaluationId ? updateState(ev) : ev
-            ));
-        }
+        });
     };
 
     const handleSelectChange = (name: string, value: string) => {
@@ -381,6 +386,11 @@ export default function DashboardPage() {
         setCompareMode(checked);
         if (!checked) {
             setSelectedEvalIdsForCompare([]);
+        } else {
+            // Keep current eval in comparison list
+            if (evaluation && !selectedEvalIdsForCompare.includes(evaluation.id)) {
+                setSelectedEvalIdsForCompare([evaluation.id]);
+            }
         }
     }
 
@@ -448,6 +458,46 @@ export default function DashboardPage() {
         { name: 'bicondilarFemur', label: 'Bicondilar do Fêmur (cm)' },
     ];
 
+    const EvalCard = ({ ev, index }: { ev: Evaluation; index: number }) => {
+        const [date, setDate] = useState('');
+        const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
+        const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
+
+        useEffect(() => {
+            setDate(new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+        }, [ev.date]);
+
+        return (
+            <Card 
+                key={ev.id} 
+                className={cn(
+                    "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
+                    isCompareMode 
+                        ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
+                        : isSelected ? 'border-2 border-primary' : 'bg-card',
+                    !isCompareMode && 'hover:bg-accent'
+                )}
+                onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
+            >
+                <CardHeader className="p-4 relative">
+                    <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
+                        {date}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                     {isCompareMode ? (
+                        <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
+                     ) : (
+                        <>
+                            <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage?.toFixed(0) ?? 'N/A'}<span className="text-lg">%</span></p>
+                            <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
+                        </>
+                     )}
+                </CardContent>
+            </Card>
+        );
+    };
+
 
   return (
     <>
@@ -481,7 +531,7 @@ export default function DashboardPage() {
                         <div className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.map(e => e.id).indexOf(selectedEvaluationId) + 1 : clientEvaluations.length + 1}</CardTitle>
-                                <CardDescription>{formState.date ? new Date(formState.date).toLocaleDateString('pt-BR') : ''}</CardDescription>
+                                <CardDescription>{formattedDate}</CardDescription>
                             </div>
                              <Button 
                                 onClick={handleNewEvaluation} 
@@ -584,40 +634,9 @@ export default function DashboardPage() {
                         )}
                     </CardHeader>
                     <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.map((ev, index) => {
-                            const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
-                            const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
-                            
-                            return (
-                                <Card 
-                                    key={ev.id} 
-                                    className={cn(
-                                        "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
-                                        isCompareMode 
-                                            ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
-                                            : isSelected ? 'border-2 border-primary' : 'bg-card',
-                                        !isCompareMode && 'hover:bg-accent'
-                                    )}
-                                    onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
-                                >
-                                    <CardHeader className="p-4 relative">
-                                        <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                         {isCompareMode ? (
-                                            <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                                         ) : (
-                                            <>
-                                                <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage?.toFixed(0) ?? 'N/A'}<span className="text-lg">%</span></p>
-                                                <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
-                                            </>
-                                         )}
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
+                        {clientEvaluations.map((ev, index) => (
+                           <EvalCard ev={ev} index={index} key={ev.id}/>
+                        ))}
                     </CardContent>
                 </Card>
                 
@@ -872,3 +891,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    

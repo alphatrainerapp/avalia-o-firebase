@@ -25,8 +25,8 @@ export default function PosturalPage() {
     const [currentDate, setCurrentDate] = useState('');
 
     useEffect(() => {
+        // This effect runs only on the client
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-        // Clear previous analysis data when starting a new one
         clearDeviations();
     }, [clearDeviations]);
 
@@ -131,3 +131,5 @@ export default function PosturalPage() {
         </div>
     );
 }
+
+    

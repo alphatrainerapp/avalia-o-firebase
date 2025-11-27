@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import type { Evaluation, Client, BioimpedanceScale, BioimpedanceInBody, BioimpedanceOmron } from '@/lib/data';
 import { User, BarChart, Activity, Droplet, Bone, Scale, Zap, HeartPulse, Percent, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
@@ -35,6 +35,13 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
     
     const mainEvaluation = evaluations[evaluations.length - 1]; // Use the latest evaluation for main data
     const historyEvaluations = evaluations.slice(-5); // Get last 5 for history
+    const [examDate, setExamDate] = useState('');
+
+    useEffect(() => {
+        if(mainEvaluation?.date) {
+            setExamDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
+        }
+    }, [mainEvaluation]);
 
     const getInBodyData = (evaluation: Evaluation, key: keyof BioimpedanceInBody) => {
         return evaluation.bioimpedance.inbody?.[key] ?? '-';
@@ -122,7 +129,7 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
                         <div><strong>Nome:</strong> {client.name}</div>
                         <div><strong>Idade:</strong> {client.age}</div>
                         <div><strong>Sexo:</strong> {client.gender}</div>
-                        <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR')}</div>
+                        <div><strong>Data do exame:</strong> {examDate}</div>
                     </div>
                 </section>
                 
@@ -193,7 +200,7 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
                     <div><strong>Nome:</strong> {client.name}</div>
                     <div><strong>Idade:</strong> {client.age}</div>
                     <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data do exame:</strong> {new Date(mainEvaluation.date).toLocaleDateString('pt-BR')}</div>
+                    <div><strong>Data do exame:</strong> {examDate}</div>
                 </div>
             </section>
 
@@ -345,3 +352,5 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
 
 BioimpedanceReport.displayName = "BioimpedanceReport";
 export default BioimpedanceReport;
+
+    
