@@ -27,7 +27,8 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
             setEvalDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
         }
         if (evaluationsToDisplay.length > 0) {
-            setHeaderDates(evaluationsToDisplay.map(ev => new Date(ev.date).toLocaleDateString('pt-BR')));
+            const dates = evaluationsToDisplay.map(ev => new Date(ev.date).toLocaleDateString('pt-BR'));
+            setHeaderDates(dates);
         }
     }, [mainEvaluation, evaluationsToDisplay]);
 
@@ -82,7 +83,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
                             {headerDates.map((date, index) => (
-                                <TableHead key={evaluationsToDisplay[index].id} className="text-center font-bold">{date}</TableHead>
+                                <TableHead key={index} className="text-center font-bold">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
@@ -207,7 +208,7 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
                             {headerDates.map((date, index) => (
-                                <TableHead key={evaluationsToDisplay[index].id} className="text-center font-bold">{date}</TableHead>
+                                <TableHead key={index} className="text-center font-bold">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
