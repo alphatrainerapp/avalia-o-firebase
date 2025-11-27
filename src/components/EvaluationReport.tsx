@@ -20,12 +20,17 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
     const evaluationsToDisplay = comparedEvaluations.length > 0 ? comparedEvaluations : (evaluation ? [evaluation] : []);
     const mainEvaluation = evaluationsToDisplay[0];
     const [evalDate, setEvalDate] = useState('');
+    const [headerDates, setHeaderDates] = useState<string[]>([]);
 
     useEffect(() => {
         if (mainEvaluation?.date) {
             setEvalDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
         }
-    }, [mainEvaluation]);
+        if (evaluationsToDisplay.length > 0) {
+            setHeaderDates(evaluationsToDisplay.map(ev => new Date(ev.date).toLocaleDateString('pt-BR')));
+        }
+    }, [mainEvaluation, evaluationsToDisplay]);
+
 
     const { fatMassKg, muscleMassKg, residualMassKg, boneMassKg } = mainEvaluation ? calculateBodyComposition(mainEvaluation, client) : { fatMassKg: 0, muscleMassKg: 0, residualMassKg: 0, boneMassKg: 0 };
     
@@ -76,8 +81,8 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                     <TableHeader>
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
-                            {evaluationsToDisplay.map(ev => (
-                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR')}</TableHead>
+                            {headerDates.map((date, index) => (
+                                <TableHead key={evaluationsToDisplay[index].id} className="text-center font-bold">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
@@ -201,8 +206,8 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                     <TableHeader>
                         <TableRow>
                             <TableHead className="font-bold">Medida</TableHead>
-                            {evaluationsToDisplay.map(ev => (
-                                <TableHead key={ev.id} className="text-center font-bold">{new Date(ev.date).toLocaleDateString('pt-BR')}</TableHead>
+                            {headerDates.map((date, index) => (
+                                <TableHead key={evaluationsToDisplay[index].id} className="text-center font-bold">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
@@ -224,5 +229,3 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
 
 EvaluationReport.displayName = "EvaluationReport";
 export default EvaluationReport;
-
-    
