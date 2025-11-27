@@ -135,15 +135,18 @@ export default function DashboardPage() {
             const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
              if (fatPercentage > 0 && fatPercentage < 100) {
                 setFormState(prev => {
-                    const newState = JSON.parse(JSON.stringify(prev)); // Deep copy to avoid mutation issues
+                    const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+                    const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
                     if (!newState.bodyComposition) newState.bodyComposition = {};
                     
-                    const currentFatPercentage = newState.bodyComposition.bodyFatPercentage;
-                    const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
-                    
-                    // Only update if the value has changed to prevent infinite loops
-                    if (currentFatPercentage !== newFatPercentage) {
+                    if (newState.bodyComposition.bodyFatPercentage !== newFatPercentage) {
                         newState.bodyComposition.bodyFatPercentage = newFatPercentage;
+                         // Also update allEvaluations if this is an existing evaluation
+                        if (selectedEvaluationId) {
+                            setAllEvaluations(currentEvals => currentEvals.map(ev => 
+                                ev.id === selectedEvaluationId ? newState : ev
+                            ));
+                        }
                         return newState;
                     }
                     
@@ -152,7 +155,7 @@ export default function DashboardPage() {
             }
         }
 
-    }, [formState.skinFolds, formState.age, formState.gender, formState.protocol]);
+    }, [formState.skinFolds, formState.age, formState.gender, formState.protocol, selectedEvaluationId]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -289,11 +292,18 @@ export default function DashboardPage() {
     const handleNewEvaluation = () => {
         if(client){
             const newEvalId = `eval_${allEvaluations.length + 1}`;
+            
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const localDateString = `${year}-${month}-${day}`;
+
             const newEvaluation: Evaluation = {
                 id: newEvalId,
                 clientId: client.id,
                 clientName: client.name,
-                date: new Date().toISOString().split('T')[0],
+                date: localDateString,
                 protocol: availableProtocols[0],
                 bodyMeasurements: {
                     weight: 0,
@@ -392,10 +402,13 @@ export default function DashboardPage() {
     }
 
     const comparedEvaluations = useMemo(() => {
+        if (!isCompareMode) {
+             return evaluation ? [evaluation] : [];
+        }
         return clientEvaluations
             .filter(e => selectedEvalIdsForCompare.includes(e.id))
             .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [selectedEvalIdsForCompare, clientEvaluations]);
+    }, [selectedEvalIdsForCompare, clientEvaluations, isCompareMode, evaluation]);
 
     const skinfoldFields: { name: SkinfoldKeys; label: string }[] = [
         { name: 'subscapular', label: 'Subscapular (mm)' },
@@ -846,7 +859,7 @@ export default function DashboardPage() {
         <Toaster />
     </div>
     <div className="fixed -left-[2000px] -top-[2000px] w-[800px] bg-white" >
-      {client && (evaluation || comparedEvaluations) && (
+      {client && (evaluation || comparedEvaluations.length > 0) && (
         <EvaluationReport 
             ref={reportRef}
             client={client}
@@ -859,5 +872,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
