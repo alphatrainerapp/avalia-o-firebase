@@ -89,8 +89,10 @@ export default function DashboardPage() {
     }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
 
     useEffect(() => {
-        if(formState.date){
-            setFormattedDate(new Date(formState.date).toLocaleDateString('pt-BR'));
+        if (formState.date) {
+            // Using replace to avoid timezone issues with new Date()
+            const date = new Date(formState.date.replace(/-/g, '/'));
+            setFormattedDate(date.toLocaleDateString('pt-BR'));
         }
     }, [formState.date]);
 
@@ -464,7 +466,9 @@ export default function DashboardPage() {
         const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
 
         useEffect(() => {
-            setDate(new Date(ev.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+            // Using replace to avoid timezone issues with new Date() constructor
+            const localDate = new Date(ev.date.replace(/-/g, '/'));
+            setDate(localDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
         }, [ev.date]);
 
         return (
@@ -891,5 +895,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
