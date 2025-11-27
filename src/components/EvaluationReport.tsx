@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef, useState, useEffect } from 'react';
+import React, { forwardRef, useState, useEffect, useMemo } from 'react';
 import type { Evaluation, Client, BioimpedanceScale } from '@/lib/data';
 import { calculateBodyComposition } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -17,7 +17,11 @@ type EvaluationReportProps = {
 
 const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ client, evaluation, comparedEvaluations, perimetriaFields }, ref) => {
     
-    const evaluationsToDisplay = comparedEvaluations.length > 0 ? comparedEvaluations : (evaluation ? [evaluation] : []);
+    const evaluationsToDisplay = useMemo(() => 
+        comparedEvaluations.length > 0 ? comparedEvaluations : (evaluation ? [evaluation] : []),
+        [comparedEvaluations, evaluation]
+    );
+
     const mainEvaluation = evaluationsToDisplay[0];
     const [evalDate, setEvalDate] = useState('');
     const [headerDates, setHeaderDates] = useState<string[]>([]);
