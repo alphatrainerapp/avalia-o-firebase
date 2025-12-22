@@ -90,7 +90,6 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (formState.date) {
-            // This now runs only on the client, avoiding hydration mismatch
             setFormattedDate(new Date(formState.date.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
         }
     }, [formState.date]);
@@ -359,54 +358,55 @@ export default function DashboardPage() {
             toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível gerar o PDF.' });
             return;
         }
-
+    
         toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
-
+    
         const canvas = await html2canvas(reportElement, {
-            scale: 2, // Higher scale for better quality
+            scale: 2,
             useCORS: true,
             logging: true,
             allowTaint: true,
-            width: 800, // Set a fixed width for the canvas
-            windowWidth: 800
         });
-
+    
         const imgData = canvas.toDataURL('image/png');
-        
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'px',
             format: 'a4',
         });
-
+    
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
-        
-        const ratio = imgWidth / imgHeight;
-        
-        let finalWidth = pdfWidth;
-        let finalHeight = finalWidth / ratio;
-        
-        if (finalHeight > pdfHeight) {
-            finalHeight = pdfHeight;
-            finalWidth = finalHeight * ratio;
+        const imgRatio = canvas.width / canvas.height;
+        const pdfRatio = pdfWidth / pdfHeight;
+    
+        let finalImgWidth, finalImgHeight;
+    
+        if (imgRatio > pdfRatio) {
+            finalImgWidth = pdfWidth;
+            finalImgHeight = pdfWidth / imgRatio;
+        } else {
+            finalImgHeight = pdfHeight;
+            finalImgWidth = pdfHeight * imgRatio;
         }
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
-        
-        const pageCount = Math.ceil(imgHeight / (imgWidth * (pdfHeight / pdfWidth)));
-        if(pageCount > 1) {
-            for(let i = 1; i < pageCount; i++){
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, -(finalHeight * i), finalWidth, finalHeight);
-            }
-        }
-        
-        pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
+        const x = (pdfWidth - finalImgWidth) / 2;
+        
+        let position = 0;
+        let remainingHeight = canvas.height;
+        const pageHeightOnCanvas = (pdfHeight * canvas.width) / finalImgWidth;
+    
+        pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
+        remainingHeight -= pageHeightOnCanvas;
+    
+        while (remainingHeight > 0) {
+            position -= pdfHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
+            remainingHeight -= pageHeightOnCanvas;
+        }
+    
+        pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
     };
 
@@ -909,7 +909,7 @@ export default function DashboardPage() {
         </div>
         <Toaster />
     </div>
-    <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white" >
+    <div className="fixed -left-[9999px] -top-[9999px] bg-white" >
       {client && (evaluation || comparedEvaluations.length > 0) && (
         <EvaluationReport 
             ref={reportRef}
