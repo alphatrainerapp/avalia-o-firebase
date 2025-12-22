@@ -168,7 +168,7 @@ export default function BioimpedancePage() {
         const imgData = canvas.toDataURL('image/png');
         
         const pdf = new jsPDF({
-            orientation: 'portrait',
+            orientation: 'p',
             unit: 'px',
             format: 'a4',
         });
@@ -188,9 +188,22 @@ export default function BioimpedancePage() {
         }
         
         const x = (pdfWidth - finalWidth) / 2;
-        const y = 0;
+        let y = 0;
+        let remainingHeight = imgHeight;
+        const pageHeightOnCanvas = (pdfHeight * imgWidth) / finalWidth;
 
-        pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+
+        pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
+        remainingHeight -= pageHeightOnCanvas;
+        
+        while (remainingHeight > 0) {
+            y -= pdfHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST');
+            remainingHeight -= pageHeightOnCanvas;
+        }
+
+
         pdf.save(`relatorio_bioimpedancia_${client.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório de bioimpedância foi salvo com sucesso.' });
@@ -390,7 +403,7 @@ export default function BioimpedancePage() {
                                         >
                                             <CardHeader className="p-4 relative">
                                                  <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                                    {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
+                                                    {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="p-4 pt-0">
@@ -423,7 +436,7 @@ export default function BioimpedancePage() {
                                                 <TableHead className="min-w-[250px]">Parâmetro</TableHead>
                                                 {comparedEvaluations.map(ev => (
                                                     <TableHead key={ev.id} className="text-center min-w-[150px]">
-                                                        {new Date(ev.date).toLocaleDateString('pt-BR')}
+                                                        {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                                                     </TableHead>
                                                 ))}
                                             </TableRow>
@@ -439,7 +452,7 @@ export default function BioimpedancePage() {
 
                 </div>
             </div>
-            <div className="fixed -left-[2000px] -top-[2000px] w-[800px] bg-white" >
+            <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white" >
               {client && comparedEvaluations.length > 0 && selectedScale && (
                 <BioimpedanceReport 
                     ref={reportRef}

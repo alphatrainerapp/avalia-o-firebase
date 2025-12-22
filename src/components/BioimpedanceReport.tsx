@@ -1,9 +1,12 @@
 'use client';
 import React, { forwardRef, useState, useEffect } from 'react';
 import type { Evaluation, Client, BioimpedanceScale, BioimpedanceInBody, BioimpedanceOmron } from '@/lib/data';
-import { User, BarChart, Activity, Droplet, Bone, Scale, Zap, HeartPulse, Percent, TrendingUp, TrendingDown, Target } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { User, BarChart, Activity, Droplet, Bone, Scale, Zap, HeartPulse, Percent, TrendingUp, TrendingDown, Target, PieChartIcon } from 'lucide-react';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, PieChart as RechartsPieChart, Pie, Cell, Bar as RechartsBar, BarChart as RechartsBarChart } from 'recharts';
 import { calculateBodyComposition } from '@/lib/data';
+import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { getPlaceholderImage } from '@/lib/placeholder-images';
 
 type BioimpedanceReportProps = {
     client: Client;
@@ -13,21 +16,14 @@ type BioimpedanceReportProps = {
     omronFields: { key: keyof BioimpedanceOmron; label: string; unit: string }[];
 };
 
-const SectionTitle = ({ title, icon: Icon, className }: { title: string, icon: React.ElementType, className?: string }) => (
-    <div className={`flex items-center gap-2 bg-gray-200 p-2 rounded-t-md ${className}`}>
-        <Icon className="text-gray-600" size={20} />
-        <h2 className="font-bold text-gray-700 text-sm uppercase">{title}</h2>
-    </div>
-);
-
-const InfoBox = ({ label, value, unit, icon: Icon }: { label: string, value: any, unit: string, icon: React.ElementType }) => (
-    <div className="flex items-center justify-between text-sm py-1">
-        <div className="flex items-center gap-2">
-            <Icon className="text-blue-500" size={16}/>
-            <span>{label}</span>
+const Section = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
+    <section className="mt-4 break-inside-avoid">
+        <div className="flex items-center gap-2 mb-2 pb-1 border-b border-gray-300">
+            {icon}
+            <h2 className="font-bold text-gray-700 uppercase tracking-wide text-sm">{title}</h2>
         </div>
-        <span className="font-bold">{value} <span className="text-gray-500">{unit}</span></span>
-    </div>
+        {children}
+    </section>
 );
 
 
@@ -36,27 +32,22 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
     const mainEvaluation = evaluations[evaluations.length - 1]; // Use the latest evaluation for main data
     const historyEvaluations = evaluations.slice(-5); // Get last 5 for history
     const [examDate, setExamDate] = useState('');
+    const logo = getPlaceholderImage('alpha-trainer-logo');
+
 
     useEffect(() => {
         if(mainEvaluation?.date) {
-            setExamDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
+            const dateStr = mainEvaluation.date;
+            setExamDate(new Date(dateStr.includes('/') ? dateStr : dateStr.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
         }
     }, [mainEvaluation]);
 
-    const getInBodyData = (evaluation: Evaluation, key: keyof BioimpedanceInBody) => {
-        return evaluation.bioimpedance.inbody?.[key] ?? '-';
-    };
-
-    const getOmronData = (evaluation: Evaluation, key: keyof BioimpedanceOmron) => {
-        return evaluation.bioimpedance.omron?.[key] ?? '-';
-    };
-    
     const getData = (evaluation: Evaluation, key: string) => {
         if (scaleType === 'inbody' && evaluation.bioimpedance.inbody) {
-            return getInBodyData(evaluation, key as keyof BioimpedanceInBody);
+            return (evaluation.bioimpedance.inbody as any)[key] ?? '-';
         }
         if (scaleType === 'omron' && evaluation.bioimpedance.omron) {
-            return getOmronData(evaluation, key as keyof BioimpedanceOmron);
+             return (evaluation.bioimpedance.omron as any)[key] ?? '-';
         }
         return '-';
     };
@@ -91,260 +82,149 @@ const BioimpedanceReport = forwardRef<HTMLDivElement, BioimpedanceReportProps>((
         }
     };
     
-    const chartData = (key: string, isPercentage = false) => {
-        return historyEvaluations.map((ev, i) => {
-            const data = scaleType === 'inbody' ? ev.bioimpedance?.inbody : ev.bioimpedance?.omron;
-            let value = (data as any)?.[key] as number ?? 0;
-            
-            // Special case for lean mass % for omron
-            if(scaleType === 'omron' && key === 'leanBodyMass' && isPercentage) {
-                const weight = ev.bioimpedance.omron?.weight || 1;
-                const leanMass = ev.bioimpedance.omron?.leanBodyMass || 0;
-                value = (leanMass / weight) * 100;
-            }
+    const evolutionChartData = historyEvaluations.map((ev) => {
+        const weight = getData(ev, scaleType === 'inbody' ? 'totalBodyWeight' : 'weight');
+        const fatMass = getData(ev, 'bodyFatMass');
+        const muscleMass = getData(ev, scaleType === 'inbody' ? 'skeletalMuscleMass' : 'leanBodyMass'); // Note: Omron uses leanBodyMass as proxy
 
-            return {
-                name: `${i+1}`,
-                value: parseFloat(value.toFixed(1))
-            }
-        });
-    }
+        return {
+            date: new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', {month: 'short', day: '2-digit'}),
+            'Peso (kg)': typeof weight === 'number' ? weight : 0,
+            'Massa Gorda (kg)': typeof fatMass === 'number' ? fatMass : 0,
+            'Massa Muscular (kg)': typeof muscleMass === 'number' ? muscleMass : 0,
+        }
+    });
 
-    // --- OMRON-SPECIFIC REPORT ---
-    if (scaleType === 'omron') {
-        const { idealWeight } = calculateBodyComposition(mainEvaluation, client);
+    const bodyModelImage = getPlaceholderImage('body-model');
 
+    const renderTable = (fields: { key: string, label: string, unit: string}[], title: string, icon: React.ElementType) => {
         return (
-            <div ref={ref} className="p-10 font-sans bg-white text-gray-800 text-xs">
-                <header className="text-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-700">RELATÓRIO DE BIOIMPEDÂNCIA</h1>
-                </header>
-
-                <section className="border border-gray-300 rounded-md p-3 mb-4">
-                     <div className="flex items-center gap-2 p-2">
-                        <User className="text-gray-600" size={20} />
-                        <h2 className="font-bold text-gray-700 text-sm uppercase">Dados Pessoais</h2>
-                    </div>
-                     <div className="grid grid-cols-4 gap-4 p-3 text-sm">
-                        <div><strong>Nome:</strong> {client.name}</div>
-                        <div><strong>Idade:</strong> {client.age}</div>
-                        <div><strong>Sexo:</strong> {client.gender}</div>
-                        <div><strong>Data do exame:</strong> {examDate}</div>
-                    </div>
-                </section>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="border border-gray-300 rounded-md p-3">
-                         <SectionTitle title="Análise da Composição Corporal" icon={BarChart} className="bg-transparent p-0"/>
-                         <div className="p-2 space-y-1 mt-2">
-                             <InfoBox label="Peso Total" value={getData(mainEvaluation, 'weight')} unit="kg" icon={Scale} />
-                             <InfoBox label="Massa Muscular" value={getData(mainEvaluation, 'skeletalMusclePercentage')} unit="%" icon={Activity} />
-                             <InfoBox label="Massa Gorda" value={getData(mainEvaluation, 'bodyFatPercentage')} unit="%" icon={Zap} />
-                             <InfoBox label="Peso Ideal" value={idealWeight > 0 ? idealWeight.toFixed(1) : '-'} unit="kg" icon={Target} />
-                         </div>
-                    </div>
-                    <div className="border border-gray-300 rounded-md p-3">
-                        <SectionTitle title="Análise de Metabolismo" icon={HeartPulse} className="bg-transparent p-0"/>
-                        <div className="p-2 mt-2 space-y-2 text-center">
-                            <div className="text-sm"><p className="text-gray-600">Idade Metabólica</p><p className="font-bold text-lg">{getData(mainEvaluation, 'metabolicAge')} <span className="text-sm font-normal">anos</span></p></div>
-                            <div className="text-sm"><p className="text-gray-600">Gordura Visceral</p><p className="font-bold text-lg">{getData(mainEvaluation, 'visceralFatLevel')} <span className="text-sm font-normal">nível</span></p></div>
-                            <div className="text-sm"><p className="text-gray-600">Gasto Calórico Total</p><p className="font-bold text-lg">{getData(mainEvaluation, 'basalMetabolicRate')} <span className="text-sm font-normal">kcal</span></p></div>
-                        </div>
-                    </div>
-                </div>
-
-                <section className="border border-gray-300 rounded-md p-3 mb-4">
-                    <SectionTitle title="Análise de Músculo e Gordura" icon={Activity} />
-                    <div className="flex justify-around p-4">
-                        <div className="text-center"><p className="text-gray-600">MASSA MAGRA (KG)</p><p className="font-bold text-xl">{getData(mainEvaluation, 'leanBodyMass')}</p></div>
-                        <div className="text-center"><p className="text-gray-600">MASSA GORDA (KG)</p><p className="font-bold text-xl">{getData(mainEvaluation, 'bodyFatMass')}</p></div>
-                        <div className="text-center"><p className="text-gray-600">PESO (KG)</p><p className="font-bold text-xl">{getData(mainEvaluation, 'weight')}</p></div>
-                    </div>
-                </section>
-
-                <section className="border border-gray-300 rounded-md p-3 mb-4">
-                    <SectionTitle title="Análise de Obesidade" icon={Percent} />
-                    <table className="w-full mt-2">
-                        <thead>
-                            <tr className="text-left"><th className="font-normal text-gray-600 p-2 w-1/3"></th><th className="font-normal text-gray-600 p-2 w-1/3 text-center">VALOR</th><th className="font-normal text-gray-600 p-2 w-1/3 text-center">CLASSIFICAÇÃO</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr className="border-t"><td className="p-2 font-bold">IMC</td><td className="p-2 text-center font-bold border rounded-md m-1 bg-blue-100 text-blue-800">{typeof bmi === 'number' ? bmi.toFixed(2) : bmi}</td><td className="p-2 text-center font-bold">{getBmiClassification(bmi as number)}</td></tr>
-                            <tr className="border-t"><td className="p-2 font-bold">PERCENTUAL DE GORDURA</td><td className="p-2 text-center font-bold border rounded-md m-1 bg-blue-100 text-blue-800">{typeof fatPercentage === 'number' ? fatPercentage.toFixed(2) : fatPercentage}%</td><td className="p-2 text-center font-bold">{getFatClassification(fatPercentage as number)}</td></tr>
-                        </tbody>
-                    </table>
-                </section>
-                
-                 <section className="space-y-4">
-                    <div className="border border-gray-300 rounded-md p-3"><h3 className="font-bold text-center mb-2">PESO (KG)</h3><ResponsiveContainer width="100%" height={100}><LineChart data={chartData('weight')}><XAxis dataKey="name" stroke="#888888" fontSize={12} /><YAxis stroke="#888888" fontSize={12} domain={['dataMin - 1', 'dataMax + 1']}/><Tooltip /><Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
-                    <div className="border border-gray-300 rounded-md p-3"><h3 className="font-bold text-center mb-2">MASSA MAGRA (%)</h3><ResponsiveContainer width="100%" height={100}><LineChart data={chartData('leanBodyMass', true)}><XAxis dataKey="name" stroke="#888888" fontSize={12} /><YAxis stroke="#888888" fontSize={12} domain={['dataMin - 1', 'dataMax + 1']} /><Tooltip /><Line type="monotone" dataKey="value" stroke="#84cc16" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
-                    <div className="border border-gray-300 rounded-md p-3"><h3 className="font-bold text-center mb-2">MASSA GORDA (%)</h3><ResponsiveContainer width="100%" height={100}><LineChart data={chartData('bodyFatPercentage')}><XAxis dataKey="name" stroke="#888888" fontSize={12} /><YAxis stroke="#888888" fontSize={12} domain={['dataMin - 1', 'dataMax + 1']} /><Tooltip /><Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
-                </section>
-
-                <footer className="mt-8 text-center text-xs text-gray-500">Relatório gerado por Alpha Trainer - {new Date().toLocaleDateString('pt-BR')}</footer>
-            </div>
-        );
-    }
-    
-
-    // --- INBODY REPORT (Existing) ---
-    return (
-        <div ref={ref} className="p-10 font-sans bg-white text-gray-800 text-xs">
-            <header className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-700">RELATÓRIO DE BIOIMPEDÂNCIA</h1>
-            </header>
-
-            <section className="border border-gray-300 rounded-md p-3 mb-4">
-                 <SectionTitle title="Dados Pessoais" icon={User} />
-                 <div className="grid grid-cols-4 gap-4 p-3 text-sm">
-                    <div><strong>Nome:</strong> {client.name}</div>
-                    <div><strong>Idade:</strong> {client.age}</div>
-                    <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data do exame:</strong> {examDate}</div>
-                </div>
-            </section>
-
-             <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="col-span-2 border border-gray-300 rounded-md p-3">
-                    <SectionTitle title="Análise da Composição Corporal" icon={BarChart} />
-                    <div className="p-2 space-y-1">
-                        <InfoBox label="Peso Total" value={getData(mainEvaluation, 'totalBodyWeight') || getData(mainEvaluation, 'weight')} unit="kg" icon={Scale} />
-                        <InfoBox label="Massa Muscular" value={getData(mainEvaluation, 'skeletalMuscleMass')} unit="kg" icon={Activity} />
-                        <InfoBox label="Massa Gorda" value={getData(mainEvaluation, 'bodyFatMass')} unit="kg" icon={Zap} />
-                        <InfoBox label="Peso Ósseo" value={getData(mainEvaluation, 'bodyMinerals')} unit="kg" icon={Bone} />
-                        <InfoBox label="Quantidade de Água Total" value={getData(mainEvaluation, 'totalBodyWater')} unit="kg" icon={Droplet} />
-                    </div>
-                </div>
-                 <div className="col-span-1 border border-gray-300 rounded-md p-3">
-                    <SectionTitle title="Informações Adicionais" icon={HeartPulse} />
-                    <div className="p-2 space-y-2 text-center">
-                         <div className="text-sm">
-                            <p className="text-gray-600">Idade Metabólica</p>
-                            <p className="font-bold text-lg">{getData(mainEvaluation, 'metabolicAge') || 'N/A'} <span className="text-sm font-normal">anos</span></p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="text-gray-600">Gordura Visceral</p>
-                            <p className="font-bold text-lg">{getData(mainEvaluation, 'visceralFatLevel') || getData(mainEvaluation, 'visceralFatArea')} <span className="text-sm font-normal">{getData(mainEvaluation, 'visceralFatLevel') ? 'nível' : 'cm²'}</span></p>
-                        </div>
-                        <div className="text-sm">
-                            <p className="text-gray-600">Gasto Calórico Total</p>
-                            <p className="font-bold text-lg">{getData(mainEvaluation, 'basalMetabolicRate')} <span className="text-sm font-normal">kcal</span></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <section className="border border-gray-300 rounded-md p-3 mb-4">
-                <SectionTitle title="Análise de Músculo e Gordura" icon={Activity} />
-                <div className="flex justify-around p-4">
-                     <div className="text-center">
-                        <p className="text-gray-600">PESO (KG)</p>
-                        <p className="font-bold text-xl">{getData(mainEvaluation, 'totalBodyWeight') || getData(mainEvaluation, 'weight')}</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-gray-600">MASSA MAGRA (KG)</p>
-                        <p className="font-bold text-xl">{getData(mainEvaluation, 'fatFreeMass') || getData(mainEvaluation, 'leanBodyMass')}</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-gray-600">MASSA GORDA (KG)</p>
-                        <p className="font-bold text-xl">{getData(mainEvaluation, 'bodyFatMass')}</p>
-                    </div>
-                </div>
-            </section>
-
-             <section className="border border-gray-300 rounded-md p-3 mb-4">
-                <SectionTitle title="Análise de Obesidade" icon={Percent} />
-                <table className="w-full mt-2">
+             <Section title={title} icon={React.createElement(icon, { size: 14, className: "text-gray-600"})}>
+                <table className="w-full text-xs mt-1">
                     <thead>
-                        <tr className="text-left">
-                            <th className="font-normal text-gray-600 p-2 w-1/3"></th>
-                            <th className="font-normal text-gray-600 p-2 w-1/3 text-center">VALOR</th>
-                            <th className="font-normal text-gray-600 p-2 w-1/3 text-center">CLASSIFICAÇÃO</th>
+                        <tr className="bg-gray-100">
+                            <th className="p-1.5 text-left font-bold text-gray-600">Medida</th>
+                            {historyEvaluations.map(ev => (
+                                <th key={ev.id} className="p-1.5 text-center font-bold text-gray-600 w-1/6">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})}</th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="border-t">
-                            <td className="p-2 font-bold">IMC</td>
-                            <td className="p-2 text-center font-bold border rounded-md m-1 bg-blue-100 text-blue-800">{typeof bmi === 'number' ? bmi.toFixed(2) : bmi}</td>
-                            <td className="p-2 text-center font-bold">{getBmiClassification(bmi as number)}</td>
-                        </tr>
-                        <tr className="border-t">
-                            <td className="p-2 font-bold">PERCENTUAL DE GORDURA</td>
-                            <td className="p-2 text-center font-bold border rounded-md m-1 bg-blue-100 text-blue-800">{typeof fatPercentage === 'number' ? fatPercentage.toFixed(2) : fatPercentage}%</td>
-                            <td className="p-2 text-center font-bold">{getFatClassification(fatPercentage as number)}</td>
-                        </tr>
+                        {fields.map(field => (
+                             <tr key={field.key} className="border-t">
+                                <td className="p-1.5 font-medium">{field.label} ({field.unit})</td>
+                                {historyEvaluations.map(ev => (
+                                    <td key={ev.id} className="p-1.5 text-center">{getData(ev, field.key)}</td>
+                                ))}
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
-            </section>
-            
-            {scaleType === 'inbody' && (
-            <section className="border border-gray-300 rounded-md p-3 mb-4">
-                 <SectionTitle title="Distribuição dos Tecidos" icon={BarChart} />
-                 <div className="grid grid-cols-2 gap-4 pt-4">
+            </Section>
+        )
+    }
+
+    if (!mainEvaluation) return <div ref={ref}></div>;
+
+    return (
+        <div ref={ref} className="p-6 font-sans bg-white text-gray-900 text-xs w-[800px]">
+            <header className="flex items-start justify-between pb-3 border-b-2 border-gray-900">
+                <div className="flex items-center gap-4">
+                     {logo && <Image src={logo.imageUrl} alt="Logo" width={140} height={35} className="object-contain" />}
+                </div>
+                <div className="text-right">
+                    <h1 className="text-lg font-bold text-gray-800">Relatório de Bioimpedância</h1>
+                    <p className="text-sm text-gray-600">Marcelo Prado</p>
+                </div>
+            </header>
+
+            <Section title="Dados do Cliente" icon={<User size={14} className="text-gray-600"/>}>
+                 <div className="flex items-center gap-4 mt-2">
+                    <Avatar className="h-14 w-14">
+                        <AvatarImage src={client.avatarUrl} alt={client.name} />
+                        <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="grid grid-cols-4 gap-x-4 gap-y-1 text-sm flex-1">
+                        <div><strong className="block text-gray-500 text-xs">Nome:</strong> {client.name}</div>
+                        <div><strong className="block text-gray-500 text-xs">Idade:</strong> {client.age}</div>
+                        <div><strong className="block text-gray-500 text-xs">Sexo:</strong> {client.gender}</div>
+                        <div><strong className="block text-gray-500 text-xs">Data:</strong> {examDate}</div>
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Resultados da Composição Corporal" icon={<PieChartIcon size={14} className="text-gray-600"/>}>
+                <div className="grid grid-cols-2 gap-6 mt-2">
                     <div className="text-center">
-                        <h3 className="font-bold mb-2">ANÁLISE MASSA MAGRA SEGMENTAR %</h3>
-                         <div className="relative w-24 h-48 mx-auto">
-                            <img src="https://firebasestudio.ai/public-hosting/projects/2654/assets/4042/body-model.png" alt="Body model" className="w-full h-full object-contain" />
-                            <div className="absolute top-[15%] left-[50%]" style={{transform: 'translateX(-50%)'}}>{getInBodyData(mainEvaluation, 'trunkLeanMass')}kg</div>
-                            <div className="absolute top-[25%] left-0">{getInBodyData(mainEvaluation, 'leftArmLeanMass')}kg</div>
-                            <div className="absolute top-[25%] right-0">{getInBodyData(mainEvaluation, 'rightArmLeanMass')}kg</div>
-                            <div className="absolute top-[60%] left-[20%]">{getInBodyData(mainEvaluation, 'leftLegLeanMass')}kg</div>
-                            <div className="absolute top-[60%] right-[20%]">{getInBodyData(mainEvaluation, 'rightLegLeanMass')}kg</div>
-                         </div>
+                        <h3 className="font-semibold text-xs mb-1">Análise de Obesidade</h3>
+                        <div className="p-2 bg-gray-50 rounded-md">
+                            <div className="flex justify-between py-1 border-b"><span>IMC:</span> <span className="font-bold">{typeof bmi === 'number' ? bmi.toFixed(1) : bmi}</span></div>
+                            <div className="flex justify-between py-1"><span>Classificação:</span> <span className="font-bold">{getBmiClassification(bmi as number)}</span></div>
+                        </div>
+                         <div className="p-2 bg-gray-50 rounded-md mt-2">
+                            <div className="flex justify-between py-1 border-b"><span>% Gordura:</span> <span className="font-bold">{typeof fatPercentage === 'number' ? fatPercentage.toFixed(1) : fatPercentage}%</span></div>
+                            <div className="flex justify-between py-1"><span>Classificação:</span> <span className="font-bold">{getFatClassification(fatPercentage as number)}</span></div>
+                        </div>
                     </div>
-                     <div className="text-center">
-                        <h3 className="font-bold mb-2">ANÁLISE MASSA GORDA SEGMENTAR %</h3>
-                         <div className="relative w-24 h-48 mx-auto">
-                            <img src="https://firebasestudio.ai/public-hosting/projects/2654/assets/4042/body-model.png" alt="Body model" className="w-full h-full object-contain" />
-                            <div className="absolute top-[15%] left-[50%]" style={{transform: 'translateX(-50%)'}}>{getInBodyData(mainEvaluation, 'trunkFat')}kg</div>
-                            <div className="absolute top-[25%] left-0">{getInBodyData(mainEvaluation, 'leftArmFat')}kg</div>
-                            <div className="absolute top-[25%] right-0">{getInBodyData(mainEvaluation, 'rightArmFat')}kg</div>
-                            <div className="absolute top-[60%] left-[20%]">{getInBodyData(mainEvaluation, 'leftLegFat')}kg</div>
-                            <div className="absolute top-[60%] right-[20%]">{getInBodyData(mainEvaluation, 'rightLegFat')}kg</div>
-                         </div>
+                    <div className="text-center">
+                         <h3 className="font-semibold text-xs mb-1">Evolução dos Componentes</h3>
+                        <ResponsiveContainer width="100%" height={120}>
+                            <RechartsBarChart data={evolutionChartData}>
+                                <XAxis dataKey="date" fontSize={9} tick={{ fill: '#374151' }} />
+                                <YAxis fontSize={9} tick={{ fill: '#374151' }} />
+                                <Tooltip wrapperClassName="text-xs" />
+                                <Legend wrapperStyle={{ fontSize: '9px' }} iconSize={8}/>
+                                <RechartsBar dataKey="Peso (kg)" fill="#a3a3a3" radius={[4, 4, 0, 0]} />
+                                <RechartsBar dataKey="Massa Gorda (kg)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                <RechartsBar dataKey="Massa Muscular (kg)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            </RechartsBarChart>
+                        </ResponsiveContainer>
                     </div>
-                 </div>
-            </section>
+                </div>
+            </Section>
+
+            {scaleType === 'omron' && renderTable(omronFields, 'Análise Geral (Omron)', BarChart)}
+
+            {scaleType === 'inbody' && (
+                <>
+                    {inbodyFields.map(block => renderTable(block.fields, block.block, BarChart))}
+                    
+                    <Section title="Distribuição dos Tecidos" icon={<BarChart size={14} className="text-gray-600"/>}>
+                         <div className="grid grid-cols-2 gap-4 pt-4">
+                            <div className="text-center">
+                                <h3 className="font-bold mb-2">ANÁLISE MASSA MAGRA SEGMENTAR (KG)</h3>
+                                {bodyModelImage ? (
+                                    <div className="relative w-24 h-48 mx-auto">
+                                        <Image src={bodyModelImage.imageUrl} alt="Body model" className="w-full h-full object-contain" layout="fill" />
+                                        <div className="absolute top-[15%] left-[50%]" style={{transform: 'translateX(-50%)'}}>{getData(mainEvaluation, 'trunkLeanMass')}kg</div>
+                                        <div className="absolute top-[25%] -left-4">{getData(mainEvaluation, 'leftArmLeanMass')}kg</div>
+                                        <div className="absolute top-[25%] -right-4">{getData(mainEvaluation, 'rightArmLeanMass')}kg</div>
+                                        <div className="absolute top-[60%] left-[15%]">{getData(mainEvaluation, 'leftLegLeanMass')}kg</div>
+                                        <div className="absolute top-[60%] right-[15%]">{getData(mainEvaluation, 'rightLegLeanMass')}kg</div>
+                                    </div>
+                                ): <p>Body model image not found.</p>}
+                            </div>
+                            <div className="text-center">
+                                <h3 className="font-bold mb-2">ANÁLISE MASSA GORDA SEGMENTAR (KG)</h3>
+                                {bodyModelImage ? (
+                                     <div className="relative w-24 h-48 mx-auto">
+                                        <Image src={bodyModelImage.imageUrl} alt="Body model" className="w-full h-full object-contain" layout="fill" />
+                                        <div className="absolute top-[15%] left-[50%]" style={{transform: 'translateX(-50%)'}}>{getData(mainEvaluation, 'trunkFat')}kg</div>
+                                        <div className="absolute top-[25%] -left-4">{getData(mainEvaluation, 'leftArmFat')}kg</div>
+                                        <div className="absolute top-[25%] -right-4">{getData(mainEvaluation, 'rightArmFat')}kg</div>
+                                        <div className="absolute top-[60%] left-[15%]">{getData(mainEvaluation, 'leftLegFat')}kg</div>
+                                        <div className="absolute top-[60%] right-[15%]">{getData(mainEvaluation, 'rightLegFat')}kg</div>
+                                    </div>
+                                ): <p>Body model image not found.</p>}
+                            </div>
+                         </div>
+                    </Section>
+                </>
             )}
 
-            <section className="space-y-4">
-                <div className="border border-gray-300 rounded-md p-3">
-                    <h3 className="font-bold text-center mb-2">PESO (KG)</h3>
-                    <ResponsiveContainer width="100%" height={100}>
-                        <LineChart data={chartData(scaleType === 'inbody' ? 'totalBodyWeight' : 'weight')}>
-                            <XAxis dataKey="name" stroke="#888888" fontSize={12} />
-                            <YAxis stroke="#888888" fontSize={12} />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-                 <div className="border border-gray-300 rounded-md p-3">
-                    <h3 className="font-bold text-center mb-2">MASSA MAGRA (KG)</h3>
-                     <ResponsiveContainer width="100%" height={100}>
-                        <LineChart data={chartData(scaleType === 'inbody' ? 'fatFreeMass' : 'leanBodyMass')}>
-                            <XAxis dataKey="name" stroke="#888888" fontSize={12} />
-                            <YAxis stroke="#888888" fontSize={12} />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="value" stroke="#84cc16" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-                 <div className="border border-gray-300 rounded-md p-3">
-                    <h3 className="font-bold text-center mb-2">MASSA GORDA (%)</h3>
-                    <ResponsiveContainer width="100%" height={100}>
-                        <LineChart data={chartData('bodyFatPercentage')}>
-                            <XAxis dataKey="name" stroke="#888888" fontSize={12} />
-                            <YAxis stroke="#888888" fontSize={12} />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-            </section>
-
-             <footer className="mt-8 text-center text-xs text-gray-500">
-                Relatório gerado por Alpha Trainer - {new Date().toLocaleDateString('pt-BR')}
+            <footer className="mt-6 pt-3 border-t border-gray-300 text-center text-[10px] text-gray-500">
+                <p>Este é um relatório gerado automaticamente. Os resultados devem ser interpretados por um profissional qualificado.</p>
+                <p>Relatório gerado por Alpha Trainer &copy; {new Date().getFullYear()}</p>
             </footer>
         </div>
     );

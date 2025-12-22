@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
@@ -13,6 +13,8 @@ import { clients, evaluations } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +26,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import PosturalReport from '@/components/PosturalReport';
 
 
 const viewTitles: { [key: string]: string } = {
@@ -47,12 +50,15 @@ export default function PosturalSummaryPage() {
     const { photos, deviations, clearDeviations, isSaved, saveAnalysis } = usePosturalContext();
     const { toast } = useToast();
     const router = useRouter();
+    const reportRef = useRef<HTMLDivElement>(null);
     
     // Mocking postural evaluations being linked to general evaluations
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
     const [showSaveAlert, setShowSaveAlert] = useState(false);
     
+    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
+
     const clientEvaluations = useMemo(() => {
         return evaluations
             .filter(e => e.clientId === selectedClientId)
@@ -137,6 +143,49 @@ export default function PosturalSummaryPage() {
         router.push('/dashboard');
     };
 
+    const handleExportPdf = async () => {
+        const reportElement = reportRef.current;
+        if (!reportElement || !client) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Selecione um cliente para gerar o PDF.' });
+            return;
+        }
+
+        toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
+
+        const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'p', unit: 'px', format: 'a4' });
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgRatio = canvas.width / canvas.height;
+        let finalImgWidth, finalImgHeight;
+
+        if (canvas.width / pdfWidth > canvas.height / pdfHeight) {
+            finalImgWidth = pdfWidth;
+            finalImgHeight = pdfWidth / imgRatio;
+        } else {
+            finalImgHeight = pdfHeight;
+            finalImgWidth = pdfHeight * imgRatio;
+        }
+
+        let position = 0;
+        let remainingHeight = canvas.height;
+        const pageHeightOnCanvas = (pdfHeight * canvas.width) / finalImgWidth;
+
+        while (remainingHeight > 0) {
+            pdf.addImage(imgData, 'PNG', 0, -position, finalImgWidth, finalImgHeight);
+            remainingHeight -= pageHeightOnCanvas;
+            if (remainingHeight > 0) {
+                pdf.addPage();
+                position += pageHeightOnCanvas;
+            }
+        }
+        
+        pdf.save(`relatorio_postural_${client.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+        toast({ title: 'PDF Exportado!', description: 'O relatório postural foi salvo com sucesso.' });
+    };
+
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -169,6 +218,7 @@ export default function PosturalSummaryPage() {
                     </div>
                 </div>
                  <div className="flex items-center gap-2">
+                    <Button onClick={handleExportPdf}><Download className="mr-2" /> Gerar Relatório PDF</Button>
                     <Button onClick={handleBackToEvaluation} variant="outline">
                         <ArrowLeft className="mr-2"/>
                         Voltar ao Dashboard
@@ -208,7 +258,7 @@ export default function PosturalSummaryPage() {
                                 >
                                     <CardHeader className="p-4 relative">
                                             <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
+                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-4 pt-0">
@@ -247,7 +297,7 @@ export default function PosturalSummaryPage() {
                                                 <CarouselItem key={`${ev.id}-${photoType}`} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
                                                     <div className="p-1">
                                                         <div className="flex flex-col items-center">
-                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date).toLocaleDateString('pt-BR')}</p>
+                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>
                                                             <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
                                                                 {/* We use the currently uploaded photos as mock for all evaluations */}
                                                                 {photos[photoType] ? (
@@ -273,7 +323,7 @@ export default function PosturalSummaryPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Resumo dos Desvios Encontrados</CardTitle>
+                        <CardTitle>Resumo dos Desvios Encontrados (Avaliação Atual)</CardTitle>
                     </CardHeader>
                     <CardContent>
                         {Object.keys(deviations).map(viewKey => {
@@ -300,7 +350,7 @@ export default function PosturalSummaryPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular por Desvio</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular por Desvio (Avaliação Atual)</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                          {Object.keys(groupedMuscleAnalysis).length > 0 ? (
@@ -343,6 +393,21 @@ export default function PosturalSummaryPage() {
                     Salvar e Finalizar
                 </Button>
             </div>
+            <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white">
+                {client && (
+                    <PosturalReport
+                        ref={reportRef}
+                        client={client}
+                        photos={photos}
+                        deviations={deviations}
+                        muscleAnalysis={groupedMuscleAnalysis}
+                        comparedEvaluations={comparedEvaluations}
+                        viewTitles={viewTitles}
+                    />
+                )}
+            </div>
         </div>
     );
 }
+
+    
