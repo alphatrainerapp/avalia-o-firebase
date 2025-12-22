@@ -449,15 +449,15 @@ export default function DashboardPage() {
     }, [selectedEvalIdsForCompare, clientEvaluations, isCompareMode, evaluation]);
 
     const skinfoldFields: { name: SkinfoldKeys; label: string }[] = [
-        { name: 'subscapular', label: 'Subscapular (mm)' },
-        { name: 'tricipital', label: 'Tricipital (mm)' },
-        { name: 'bicipital', label: 'Bicipital (mm)' },
-        { name: 'peitoral', label: 'Peitoral (mm)' },
-        { name: 'axilarMedia', label: 'Axilar-média (mm)' },
-        { name: 'supraIliaca', label: 'Supra-ilíaca (mm)' },
-        { name: 'abdominal', label: 'Abdominal (mm)' },
-        { name: 'coxa', label: 'Coxa (mm)' },
-        { name: 'panturrilha', label: 'Panturrilha (mm)' },
+        { name: 'subscapular', label: 'Subscapular' },
+        { name: 'tricipital', label: 'Tricipital' },
+        { name: 'bicipital', label: 'Bicipital' },
+        { name: 'peitoral', label: 'Peitoral' },
+        { name: 'axilarMedia', label: 'Axilar-média' },
+        { name: 'supraIliaca', label: 'Supra-ilíaca' },
+        { name: 'abdominal', label: 'Abdominal' },
+        { name: 'coxa', label: 'Coxa' },
+        { name: 'panturrilha', label: 'Panturrilha' },
     ];
     
     const perimetriaFields = [
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                                 <div className="flex flex-wrap gap-2">
                                     {comparedEvaluations.map(ev => (
                                         <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
-                                            <span>{new Date(ev.date).toLocaleDateString('pt-BR')}</span>
+                                            <span>{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span>
                                             <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
                                                 <X className="size-4" />
                                             </button>
@@ -770,7 +770,7 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                         {skinfoldFields.map(field => (
                                             <div key={field.name}>
-                                                <Label>{field.label}</Label>
+                                                <Label>{field.label} (mm)</Label>
                                                 <Input 
                                                     type="number" 
                                                     placeholder="0.0" 
@@ -837,7 +837,7 @@ export default function DashboardPage() {
                     <CardHeader className="pb-2">
                          <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">GORDURA</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR')}</p>}
+                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -849,7 +849,7 @@ export default function DashboardPage() {
                     <CardHeader className="pb-2">
                          <div className="flex items-center justify-between">
                             <CardTitle className="text-sm font-medium">MUSCULAR</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date).toLocaleDateString('pt-BR')}</p>}
+                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -917,6 +917,7 @@ export default function DashboardPage() {
             evaluation={evaluation}
             comparedEvaluations={isCompareMode ? comparedEvaluations : []}
             perimetriaFields={perimetriaFields}
+            skinfoldFields={skinfoldFields}
         />
       )}
     </div>
