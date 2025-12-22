@@ -90,9 +90,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (formState.date) {
-            // Using replace to avoid timezone issues with new Date()
-            const date = new Date(formState.date.replace(/-/g, '/'));
-            setFormattedDate(date.toLocaleDateString('pt-BR'));
+            // This now runs only on the client, avoiding hydration mismatch
+            setFormattedDate(new Date(formState.date.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
         }
     }, [formState.date]);
 
@@ -108,65 +107,74 @@ export default function DashboardPage() {
         setRequiredSkinfolds(currentRequired);
     }, [formState.protocol, formState.gender]);
     
-     useEffect(() => {
-        const { skinFolds, age, gender, protocol } = formState;
+    useEffect(() => {
+    const { skinFolds, age, gender, protocol } = formState;
 
-        if (!skinFolds || !age || !gender || !protocol) return;
+    if (!skinFolds || !age || !gender || !protocol) return;
 
-        const getSkinfoldSum = (keys: SkinfoldKeys[]) => {
-            return keys.reduce((sum, key) => sum + (skinFolds[key] || 0), 0);
-        };
-        
-        let bodyDensity = 0;
-        
-        if (protocol.includes('Pollock 7 dobras')) {
-            const sum7 = getSkinfoldSum(protocolSkinfolds['Pollock 7 dobras']);
-            if (sum7 > 0) {
-                 if (gender === 'Masculino') {
-                    bodyDensity = 1.112 - (0.00043499 * sum7) + (0.00000055 * sum7 * sum7) - (0.00028826 * age);
-                } else {
-                    bodyDensity = 1.097 - (0.00046971 * sum7) + (0.00000056 * sum7 * sum7) - (0.00012828 * age);
-                }
-            }
-        } else if (protocol.includes('Pollock 3 dobras')) {
-            const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
-            const sum3 = getSkinfoldSum(skinfoldKeys);
-             if (sum3 > 0) {
-                 if (gender === 'Masculino') {
-                    bodyDensity = 1.10938 - (0.0008267 * sum3) + (0.0000016 * sum3 * sum3) - (0.0002574 * age);
-                } else {
-                    bodyDensity = 1.0994921 - (0.0009929 * sum3) + (0.0000023 * sum3 * sum3) - (0.0001392 * age);
-                }
-            }
+    const getSkinfoldSum = (keys: SkinfoldKeys[]) => {
+      return keys.reduce((sum, key) => sum + (skinFolds[key] || 0), 0);
+    };
+
+    let bodyDensity = 0;
+
+    if (protocol.includes('Pollock 7 dobras')) {
+      const sum7 = getSkinfoldSum(protocolSkinfolds['Pollock 7 dobras']);
+      if (sum7 > 0) {
+        if (gender === 'Masculino') {
+          bodyDensity = 1.112 - 0.00043499 * sum7 + 0.00000055 * sum7 * sum7 - 0.00028826 * age;
+        } else {
+          bodyDensity = 1.097 - 0.00046971 * sum7 + 0.00000056 * sum7 * sum7 - 0.00012828 * age;
         }
-        
-        if (bodyDensity > 0) {
-            const fatPercentage = ((4.95 / bodyDensity) - 4.5) * 100;
-             if (fatPercentage > 0 && fatPercentage < 100) {
-                setFormState(prev => {
-                    const newState = { ...prev };
-                    const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
-                    
-                    const updateEvaluations = (currentEvals: Evaluation[]) => {
-                      if (!selectedEvaluationId) return currentEvals;
-                      return currentEvals.map(ev => 
-                          ev.id === selectedEvaluationId 
-                          ? { ...ev, bodyComposition: { ...ev.bodyComposition, bodyFatPercentage: newFatPercentage } }
-                          : ev
-                      );
-                    };
+      }
+    } else if (protocol.includes('Pollock 3 dobras')) {
+      const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
+      const sum3 = getSkinfoldSum(skinfoldKeys);
+      if (sum3 > 0) {
+        if (gender === 'Masculino') {
+          bodyDensity = 1.10938 - 0.0008267 * sum3 + 0.0000016 * sum3 * sum3 - 0.0002574 * age;
+        } else {
+          bodyDensity = 1.0994921 - 0.0009929 * sum3 + 0.0000023 * sum3 * sum3 - 0.0001392 * age;
+        }
+      }
+    }
 
-                    if (!newState.bodyComposition) newState.bodyComposition = {};
-                    if (newState.bodyComposition.bodyFatPercentage !== newFatPercentage) {
-                        newState.bodyComposition.bodyFatPercentage = newFatPercentage;
-                        setAllEvaluations(updateEvaluations);
+    if (bodyDensity > 0) {
+      const fatPercentage = (4.95 / bodyDensity - 4.5) * 100;
+      if (fatPercentage > 0 && fatPercentage < 100) {
+        const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
+        
+        // Update formState only if the value has changed
+        if (formState.bodyComposition?.bodyFatPercentage !== newFatPercentage) {
+          setFormState(prev => ({
+            ...prev,
+            bodyComposition: {
+              ...prev.bodyComposition,
+              bodyFatPercentage: newFatPercentage,
+            },
+          }));
+
+          // Also update the master evaluations list if an evaluation is selected
+          if (selectedEvaluationId) {
+            setAllEvaluations(currentEvals =>
+              currentEvals.map(ev =>
+                ev.id === selectedEvaluationId
+                  ? {
+                      ...ev,
+                      bodyComposition: {
+                        ...ev.bodyComposition,
+                        bodyFatPercentage: newFatPercentage,
+                      },
                     }
-                    return newState;
-                });
-            }
+                  : ev
+              )
+            );
+          }
         }
-
-    }, [formState.skinFolds, formState.age, formState.gender, formState.protocol, selectedEvaluationId]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formState.skinFolds, formState.age, formState.gender, formState.protocol, selectedEvaluationId]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -359,6 +367,8 @@ export default function DashboardPage() {
             useCORS: true,
             logging: true,
             allowTaint: true,
+            width: 800, // Set a fixed width for the canvas
+            windowWidth: 800
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -371,16 +381,30 @@ export default function DashboardPage() {
 
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
+        
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
+        
         const ratio = imgWidth / imgHeight;
+        
         let finalWidth = pdfWidth;
         let finalHeight = finalWidth / ratio;
+        
         if (finalHeight > pdfHeight) {
             finalHeight = pdfHeight;
             finalWidth = finalHeight * ratio;
         }
+        
         pdf.addImage(imgData, 'PNG', 0, 0, finalWidth, finalHeight);
+        
+        const pageCount = Math.ceil(imgHeight / (imgWidth * (pdfHeight / pdfWidth)));
+        if(pageCount > 1) {
+            for(let i = 1; i < pageCount; i++){
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, -(finalHeight * i), finalWidth, finalHeight);
+            }
+        }
+        
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
 
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
@@ -468,9 +492,11 @@ export default function DashboardPage() {
         const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
 
         useEffect(() => {
-            // Using replace to avoid timezone issues with new Date() constructor
-            const localDate = new Date(ev.date.replace(/-/g, '/'));
-            setDate(localDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+            if(ev.date) {
+                // Fix for timezone issue: replace '-' with '/'
+                const localDate = new Date(ev.date.replace(/-/g, '/'));
+                setDate(localDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+            }
         }, [ev.date]);
 
         return (
@@ -883,7 +909,7 @@ export default function DashboardPage() {
         </div>
         <Toaster />
     </div>
-    <div className="fixed -left-[2000px] -top-[2000px] w-[800px] bg-white" >
+    <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white" >
       {client && (evaluation || comparedEvaluations.length > 0) && (
         <EvaluationReport 
             ref={reportRef}

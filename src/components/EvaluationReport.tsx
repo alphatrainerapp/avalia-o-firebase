@@ -1,12 +1,13 @@
 'use client';
 import React, { forwardRef, useState, useEffect, useMemo } from 'react';
-import type { Evaluation, Client, BioimpedanceScale } from '@/lib/data';
+import Image from 'next/image';
+import type { Evaluation, Client } from '@/lib/data';
 import { calculateBodyComposition } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { BarChart, PieChart, User } from 'lucide-react';
-import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart as RechartsBarChart } from 'recharts';
+import { User, BarChart, PieChart as PieChartIcon, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { getPlaceholderImage } from '@/lib/placeholder-images';
+import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Bar, XAxis, YAxis, Tooltip, BarChart as RechartsBarChart, Legend } from 'recharts';
 
 type EvaluationReportProps = {
     client: Client;
@@ -15,6 +16,17 @@ type EvaluationReportProps = {
     perimetriaFields: { key: string, label: string }[];
 };
 
+const Section = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
+    <section className="mt-6">
+        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-300">
+            {icon}
+            <h2 className="font-bold text-gray-700 uppercase tracking-wide text-sm">{title}</h2>
+        </div>
+        {children}
+    </section>
+);
+
+
 const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ client, evaluation, comparedEvaluations, perimetriaFields }, ref) => {
     
     const evaluationsToDisplay = useMemo(() => 
@@ -22,204 +34,166 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
         [comparedEvaluations, evaluation]
     );
 
-    const mainEvaluation = evaluationsToDisplay[0];
-    const [evalDate, setEvalDate] = useState('');
+    const mainEvaluation = useMemo(() => evaluationsToDisplay[evaluationsToDisplay.length - 1], [evaluationsToDisplay]);
+    
     const [headerDates, setHeaderDates] = useState<string[]>([]);
 
     useEffect(() => {
-        if (mainEvaluation?.date) {
-            setEvalDate(new Date(mainEvaluation.date).toLocaleDateString('pt-BR'));
-        }
         if (evaluationsToDisplay.length > 0) {
-            const dates = evaluationsToDisplay.map(ev => new Date(ev.date).toLocaleDateString('pt-BR'));
+            const dates = evaluationsToDisplay.map(ev => new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
             setHeaderDates(dates);
         }
-    }, [mainEvaluation, evaluationsToDisplay]);
+    }, [evaluationsToDisplay]);
 
 
-    const { fatMassKg, muscleMassKg, residualMassKg, boneMassKg } = mainEvaluation ? calculateBodyComposition(mainEvaluation, client) : { fatMassKg: 0, muscleMassKg: 0, residualMassKg: 0, boneMassKg: 0 };
+    const { fatMassKg, muscleMassKg, boneMassKg, leanMassKg, residualMassKg, idealWeight, fatLossNeeded } = mainEvaluation ? calculateBodyComposition(mainEvaluation, client) : { fatMassKg: 0, muscleMassKg: 0, boneMassKg: 0, leanMassKg: 0, residualMassKg: 0, idealWeight: 0, fatLossNeeded: 0 };
     
-    const bmi = mainEvaluation && mainEvaluation.bodyMeasurements.weight && mainEvaluation.bodyMeasurements.height
-        ? (mainEvaluation.bodyMeasurements.weight / ((mainEvaluation.bodyMeasurements.height / 100) ** 2)).toFixed(1)
-        : 'N/A';
-
-    const chartData = [
-        { name: 'Massa Gorda (kg)', value: parseFloat(fatMassKg.toFixed(2)), fill: '#f87171' },
-        { name: 'Massa Muscular (kg)', value: parseFloat(muscleMassKg.toFixed(2)), fill: '#60a5fa' },
-        { name: 'Massa Residual (kg)', value: parseFloat(residualMassKg.toFixed(2)), fill: '#a3a3a3' },
+    const pieChartData = [
+        { name: 'Massa Gorda', value: parseFloat(fatMassKg.toFixed(2)), fill: '#ef4444' }, // red-500
+        { name: 'Massa Muscular', value: parseFloat(muscleMassKg.toFixed(2)), fill: '#3b82f6' }, // blue-500
+        { name: 'Massa Óssea', value: parseFloat(boneMassKg.toFixed(2)), fill: '#eab308' }, // yellow-500
+        { name: 'Massa Residual', value: parseFloat(residualMassKg.toFixed(2)), fill: '#a3a3a3' }, // neutral-400
     ];
     
     const evolutionChartData = evaluationsToDisplay.map(ev => {
         const masses = calculateBodyComposition(ev, client);
         return {
-            date: new Date(ev.date).toLocaleDateString('pt-BR'),
+            date: new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', {month: 'short', day: '2-digit'}),
             'Gordura (kg)': masses.fatMassKg,
             'Músculo (kg)': masses.muscleMassKg,
         }
     });
 
+    const logo = getPlaceholderImage('alpha-trainer-logo');
+
+    if (!mainEvaluation) return <div ref={ref}></div>;
+
     return (
-        <div ref={ref} className="p-8 font-sans bg-white text-gray-800">
-            <header className="flex items-center justify-between pb-4 border-b-2 border-gray-700">
-                <div className="flex items-center">
-                    <div className="p-2 bg-gray-700 text-white font-bold text-2xl tracking-wider">SMART</div>
-                    <div className="p-2 bg-blue-500 text-white font-bold text-2xl tracking-wider">EVOLUTION</div>
+        <div ref={ref} className="p-8 font-sans bg-white text-gray-900 text-xs w-[800px]">
+            {/* Header */}
+            <header className="flex items-start justify-between pb-4 border-b-2 border-gray-900">
+                <div className="flex items-center gap-4">
+                     {logo && <Image src={logo.imageUrl} alt="Logo" width={150} height={40} className="object-contain" />}
                 </div>
                 <div className="text-right">
-                    <h1 className="text-2xl font-bold text-gray-700">RELATÓRIO DE AVALIAÇÃO FÍSICA</h1>
+                    <h1 className="text-xl font-bold text-gray-800">Relatório de Avaliação Física</h1>
+                    <p className="text-sm text-gray-600">Marcelo Prado</p>
                 </div>
             </header>
 
-            <section className="mt-4 border border-gray-400 p-2">
-                <h2 className="font-bold flex items-center gap-2"><User size={16} /> DADOS PESSOAIS</h2>
-                <div className="grid grid-cols-3 gap-4 mt-2 text-sm">
-                    <div><strong>Nome:</strong> {client.name}</div>
-                    <div><strong>Idade:</strong> {client.age}</div>
-                    <div><strong>Sexo:</strong> {client.gender}</div>
-                    <div><strong>Data da avaliação:</strong> {evalDate}</div>
+            {/* Client Info */}
+            <Section title="Dados do Cliente" icon={<User size={16} className="text-gray-600"/>}>
+                 <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                        <AvatarImage src={client.avatarUrl} alt={client.name} />
+                        <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="grid grid-cols-4 gap-x-6 gap-y-2 text-sm flex-1">
+                        <div><strong className="block text-gray-500">Nome:</strong> {client.name}</div>
+                        <div><strong className="block text-gray-500">Idade:</strong> {client.age}</div>
+                        <div><strong className="block text-gray-500">Sexo:</strong> {client.gender}</div>
+                        <div><strong className="block text-gray-500">Altura:</strong> {(mainEvaluation.bodyMeasurements.height / 100).toFixed(2)} m</div>
+                    </div>
                 </div>
-            </section>
-            
-            <section className="mt-4 border border-gray-400 p-2">
-                <h2 className="font-bold flex items-center gap-2"><BarChart size={16}/> DADOS DA AVALIAÇÃO</h2>
+            </Section>
+
+            {/* Main Results Table */}
+            <Section title="Resultados Principais" icon={<BarChart size={16} className="text-gray-600"/>}>
                  <Table className="mt-2 text-xs">
                     <TableHeader>
-                        <TableRow>
-                            <TableHead className="font-bold">Medida</TableHead>
+                        <TableRow className="bg-gray-100">
+                            <TableHead className="font-bold text-gray-600">Medida</TableHead>
                             {headerDates.map((date, index) => (
-                                <TableHead key={index} className="text-center font-bold">{date}</TableHead>
+                                <TableHead key={index} className="text-center font-bold text-gray-600">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow>
-                            <TableCell>Peso (kg)</TableCell>
-                            {evaluationsToDisplay.map(ev => <TableCell key={ev.id} className="text-center">{ev.bodyMeasurements.weight.toFixed(1)}</TableCell>)}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Altura (m)</TableCell>
-                            {evaluationsToDisplay.map(ev => <TableCell key={ev.id} className="text-center">{(ev.bodyMeasurements.height / 100).toFixed(2)}</TableCell>)}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>IMC</TableCell>
-                             {evaluationsToDisplay.map(ev => {
-                                 const currentBmi = ev.bodyMeasurements.weight && ev.bodyMeasurements.height
-                                    ? (ev.bodyMeasurements.weight / ((ev.bodyMeasurements.height / 100) ** 2)).toFixed(1)
-                                    : 'N/A';
-                                return <TableCell key={ev.id} className="text-center">{currentBmi}</TableCell>
-                            })}
-                        </TableRow>
-                         <TableRow>
-                            <TableCell>% Gordura Corporal</TableCell>
-                            {evaluationsToDisplay.map(ev => <TableCell key={ev.id} className="text-center">{ev.bodyComposition.bodyFatPercentage.toFixed(1)}%</TableCell>)}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Massa Gorda (kg)</TableCell>
-                             {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateBodyComposition(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.fatMassKg.toFixed(2)}</TableCell>
-                            })}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Massa Muscular (kg)</TableCell>
-                             {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateBodyComposition(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.muscleMassKg.toFixed(2)}</TableCell>
-                            })}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Massa Residual (kg)</TableCell>
-                             {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateBodyComposition(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.residualMassKg.toFixed(2)}</TableCell>
-                            })}
-                        </TableRow>
-                        <TableRow>
-                            <TableCell>Massa Óssea (kg)</TableCell>
-                            {evaluationsToDisplay.map(ev => {
-                                 const masses = calculateBodyComposition(ev, client);
-                                return <TableCell key={ev.id} className="text-center">{masses.boneMassKg.toFixed(2)}</TableCell>
-                            })}
-                        </TableRow>
+                        {[
+                            { label: 'Peso (kg)', key: 'weight', format: (val: number) => val.toFixed(1) },
+                            { label: '% Gordura Corporal', key: 'bodyFatPercentage', format: (val: number) => `${val.toFixed(1)}%` },
+                            { label: 'Massa Gorda (kg)', key: 'fatMassKg', format: (val: number) => val.toFixed(2) },
+                            { label: 'Massa Magra (kg)', key: 'leanMassKg', format: (val: number) => val.toFixed(2) },
+                            { label: 'Massa Muscular (kg)', key: 'muscleMassKg', format: (val: number) => val.toFixed(2) },
+                            { label: 'Massa Óssea (kg)', key: 'boneMassKg', format: (val: number) => val.toFixed(2) },
+                        ].map(metric => (
+                            <TableRow key={metric.key}>
+                                <TableCell className="font-medium">{metric.label}</TableCell>
+                                {evaluationsToDisplay.map(ev => {
+                                    const masses = calculateBodyComposition(ev, client);
+                                    let value;
+                                    if(metric.key === 'weight') value = ev.bodyMeasurements.weight;
+                                    else if(metric.key === 'bodyFatPercentage') value = ev.bodyComposition.bodyFatPercentage;
+                                    else value = masses[metric.key as keyof typeof masses];
+
+                                    return <TableCell key={ev.id} className="text-center">{typeof value === 'number' ? metric.format(value) : '-'}</TableCell>
+                                })}
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
-            </section>
-            
-            <section className="mt-4">
-                <h2 className="font-bold text-center mb-2">EVOLUÇÃO DURANTE O PERÍODO</h2>
-                <div className="grid grid-cols-3 gap-4 items-end">
-                    <Card className="col-span-1">
-                        <CardHeader className="p-2 bg-blue-500 text-white text-center rounded-t-lg"><CardTitle className="text-sm">GORDURA (KG)</CardTitle></CardHeader>
-                        <CardContent className="p-2">
-                             <ResponsiveContainer width="100%" height={150}>
-                                <RechartsBarChart data={evolutionChartData}>
-                                    <XAxis dataKey="date" fontSize={10} />
-                                    <YAxis fontSize={10} />
-                                    <Tooltip wrapperClassName="text-xs" />
-                                    <Bar dataKey="Gordura (kg)" fill="#f87171" />
-                                </RechartsBarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                    <Card className="col-span-1">
-                         <CardHeader className="p-2 bg-blue-500 text-white text-center rounded-t-lg"><CardTitle className="text-sm">MASSA MUSCULAR (KG)</CardTitle></CardHeader>
-                        <CardContent className="p-2">
-                            <ResponsiveContainer width="100%" height={150}>
-                                <RechartsBarChart data={evolutionChartData}>
-                                    <XAxis dataKey="date" fontSize={10} />
-                                    <YAxis fontSize={10} />
-                                    <Tooltip wrapperClassName="text-xs" />
-                                    <Bar dataKey="Músculo (kg)" fill="#60a5fa" />
-                                </RechartsBarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                    <div className="col-span-1 text-center">
-                        <h3 className="font-bold">Distribuição Corporal</h3>
-                        <ResponsiveContainer width="100%" height={150}>
+            </Section>
+
+            {/* Body Composition Charts */}
+            <Section title="Composição Corporal" icon={<PieChartIcon size={16} className="text-gray-600"/>}>
+                <div className="grid grid-cols-2 gap-8 mt-4">
+                    <div className="text-center">
+                        <h3 className="font-semibold text-sm mb-2">Distribuição da Última Avaliação ({headerDates[headerDates.length - 1]})</h3>
+                        <ResponsiveContainer width="100%" height={180}>
                             <RechartsPieChart>
-                                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                                    const radius = innerRadius + (outerRadius - innerRadius) * 1.2;
-                                    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
-                                    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
-                                    return (
-                                        <text x={x} y={y} fill="black" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={10}>
-                                            {`${(percent * 100).toFixed(0)}%`}
-                                        </text>
-                                    );
-                                }}>
-                                    {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                                <Pie data={pieChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                                    {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                                 </Pie>
-                                <Tooltip wrapperClassName="text-xs"/>
+                                <Tooltip formatter={(value, name) => [`${value} kg`, name]} wrapperClassName="text-xs" />
                             </RechartsPieChart>
                         </ResponsiveContainer>
-                        <div className="flex justify-center flex-wrap text-xs gap-x-4">
-                           {chartData.map(item => (
-                               <div key={item.name} className="flex items-center gap-1">
-                                   <div className="w-2 h-2" style={{backgroundColor: item.fill}}></div>
-                                   <span>{item.name}</span>
-                               </div>
-                           ))}
-                        </div>
+                    </div>
+                    <div className="text-center">
+                         <h3 className="font-semibold text-sm mb-2">Evolução da Composição</h3>
+                        <ResponsiveContainer width="100%" height={180}>
+                            <RechartsBarChart data={evolutionChartData}>
+                                <XAxis dataKey="date" fontSize={10} tick={{ fill: '#374151' }} />
+                                <YAxis fontSize={10} tick={{ fill: '#374151' }} />
+                                <Tooltip wrapperClassName="text-xs" />
+                                <Legend wrapperStyle={{ fontSize: '10px' }} iconSize={10}/>
+                                <Bar dataKey="Gordura (kg)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="Músculo (kg)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            </RechartsBarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
-            </section>
-            
-            <section className="mt-4">
-                 <h2 className="font-bold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ruler"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0L21.3 15.3z"/><path d="m9.4 12.6 6-6"/><path d="m3 21 2.6-2.6"/><path d="m18.4 5.6 2.6-2.6"/><path d="m21 3-3.4 3.4"/><path d="m3 21 3.4-3.4"/></svg> PERIMETRIA CORPORAL</h2>
+            </Section>
+
+            {/* Goals */}
+            <Section title="Metas e Objetivos" icon={<Target size={16} className="text-gray-600"/>}>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div className="bg-gray-100 p-3 rounded-lg text-center">
+                        <h4 className="font-semibold text-sm text-gray-600">Peso Ideal Estimado</h4>
+                        <p className="text-2xl font-bold text-gray-800">{idealWeight > 0 ? idealWeight.toFixed(1) : '-'} kg</p>
+                    </div>
+                     <div className="bg-gray-100 p-3 rounded-lg text-center">
+                        <h4 className="font-semibold text-sm text-gray-600">Necessidade de Perda de Gordura</h4>
+                         <p className={`text-2xl font-bold ${fatLossNeeded > 0 ? 'text-red-500' : 'text-green-600'}`}>{fatLossNeeded.toFixed(1)} kg</p>
+                    </div>
+                </div>
+            </Section>
+
+
+            {/* Perimetria */}
+            <Section title="Perimetria Corporal (cm)" icon={<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ruler"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0L21.3 15.3z"/><path d="m9.4 12.6 6-6"/><path d="m3 21 2.6-2.6"/><path d="m18.4 5.6 2.6-2.6"/><path d="m21 3-3.4 3.4"/><path d="m3 21 3.4-3.4"/></svg>}>
                 <Table className="mt-2 text-xs">
                     <TableHeader>
-                        <TableRow>
-                            <TableHead className="font-bold">Medida</TableHead>
-                            {headerDates.map((date, index) => (
-                                <TableHead key={index} className="text-center font-bold">{date}</TableHead>
+                        <TableRow className="bg-gray-100">
+                            <TableHead className="font-bold text-gray-600">Medida</TableHead>
+                             {headerDates.map((date, index) => (
+                                <TableHead key={index} className="text-center font-bold text-gray-600">{date}</TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {perimetriaFields.map(field => (
                              <TableRow key={field.key}>
-                                <TableCell>{field.label}</TableCell>
+                                <TableCell className="font-medium">{field.label}</TableCell>
                                 {evaluationsToDisplay.map(ev => (
                                     <TableCell key={ev.id} className="text-center">{ev.perimetria?.[field.key]?.toFixed(1) || '-'}</TableCell>
                                 ))}
@@ -227,7 +201,13 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         ))}
                     </TableBody>
                 </Table>
-            </section>
+            </Section>
+
+            {/* Footer */}
+            <footer className="mt-8 text-center text-xs text-gray-500">
+                <p>Este é um relatório gerado automaticamente. Os resultados devem ser interpretados por um profissional qualificado.</p>
+                <p>Relatório gerado por Alpha Trainer &copy; {new Date().getFullYear()}</p>
+            </footer>
         </div>
     );
 });
