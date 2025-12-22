@@ -302,7 +302,7 @@ export default function PosturalSummaryPage() {
 
                 {Object.entries(photoViewMapping).map(([photoType, { title, viewKey }]) => {
                     const viewDeviations = deviations[viewKey] || [];
-                    const photoSrc = photos[photoType];
+                    const photoSrc = photos[photoType as PhotoType];
 
                     if (viewDeviations.length === 0 && !photoSrc) return null;
 
