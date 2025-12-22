@@ -27,22 +27,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import PosturalReport from '@/components/PosturalReport';
+import { Separator } from '@/components/ui/separator';
 
 
 const viewTitles: { [key: string]: string } = {
-    anterior: 'Visão Anterior',
-    posterior: 'Visão Posterior',
-    lateral_direita: 'Visão Lateral Direita',
-    lateral_esquerda: 'Visão Lateral Esquerda',
+    anterior: 'Foto Frente',
+    posterior: 'Foto Costas',
+    lateral_direita: 'Foto Lado Direito',
+    lateral_esquerda: 'Foto Lado Esquerdo',
 };
 
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof typeof viewTitles } } = {
-    front: { title: 'Visão Frontal', viewKey: 'anterior' },
-    back: { title: 'Visão Posterior', viewKey: 'posterior' },
-    right: { title: 'Visão Lateral Direita', viewKey: 'lateral_direita' },
-    left: { title: 'Visão Lateral Esquerda', viewKey: 'lateral_esquerda' },
+    front: { title: 'Foto Frente', viewKey: 'anterior' },
+    back: { title: 'Foto Costas', viewKey: 'posterior' },
+    right: { title: 'Foto Lado Direito', viewKey: 'lateral_direita' },
+    left: { title: 'Foto Lado Esquerdo', viewKey: 'lateral_esquerda' },
 };
 
 
@@ -187,6 +188,43 @@ export default function PosturalSummaryPage() {
     };
 
 
+    const renderMuscleAnalysisForView = (viewKey: keyof typeof viewTitles) => {
+        const viewDeviations = deviations[viewKey] || [];
+        if (viewDeviations.length === 0) return null;
+
+        return (
+            <div className="mt-4 space-y-4">
+                <Separator />
+                <h4 className="font-semibold text-base">Análise Muscular</h4>
+                {viewDeviations.map(deviationName => {
+                    const analysis = groupedMuscleAnalysis[deviationName];
+                    if (!analysis) return null;
+
+                    return (
+                        <div key={deviationName}>
+                            <h5 className="font-medium text-primary mb-2">{deviationName}</h5>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p className="text-red-500 font-semibold mb-1">Encurtados:</p>
+                                    <ul className="list-disc pl-5">
+                                        {analysis.shortened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <p className="text-green-500 font-semibold mb-1">Alongados:</p>
+                                    <ul className="list-disc pl-5">
+                                        {analysis.lengthened.map(muscle => <li key={muscle}>{muscle}</li>)}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+
     return (
         <div className="min-h-screen bg-background text-foreground">
             <AlertDialog open={showSaveAlert} onOpenChange={setShowSaveAlert}>
@@ -229,22 +267,7 @@ export default function PosturalSummaryPage() {
 
             <div className="space-y-6">
                 <Card>
-                    <CardHeader>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="sm:col-span-2">
-                                <label htmlFor="name" className="text-sm font-medium">Nome</label>
-                                <Select value={selectedClientId} onValueChange={handleClientChange}>
-                                    <SelectTrigger id="name">
-                                        <SelectValue placeholder="Selecione um cliente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                    <CardContent className="pt-6 flex gap-4 overflow-x-auto pb-4">
                         {clientEvaluations.map((ev, index) => {
                             const isSelectedForCompare = selectedEvalIds.includes(ev.id);
                             return (
@@ -268,7 +291,7 @@ export default function PosturalSummaryPage() {
                             )
                         })}
                     </CardContent>
-                    {selectedEvalIds.length > 0 && (
+                    {clientEvaluations.length > 0 && (
                         <CardFooter>
                                 <p className="text-sm text-muted-foreground">
                                 {selectedEvalIds.length}/{clientEvaluations.length} avaliações selecionadas para comparação.
@@ -277,114 +300,42 @@ export default function PosturalSummaryPage() {
                     )}
                 </Card>
 
-                {comparedEvaluations.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><Camera /> Comparativo de Fotos</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            {Object.keys(photoViewMapping).map((photoType) => (
-                                <div key={photoType}>
-                                    <h3 className="font-semibold mb-2 text-lg">{photoViewMapping[photoType as PhotoType].title}</h3>
-                                    <Carousel
-                                        opts={{
-                                            align: "start",
-                                        }}
-                                        className="w-full"
-                                    >
-                                        <CarouselContent>
-                                            {comparedEvaluations.map((ev, index) => (
-                                                <CarouselItem key={`${ev.id}-${photoType}`} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
-                                                    <div className="p-1">
-                                                        <div className="flex flex-col items-center">
-                                                            <p className="text-sm font-medium mb-2">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>
-                                                            <div className="w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden relative">
-                                                                {/* We use the currently uploaded photos as mock for all evaluations */}
-                                                                {photos[photoType] ? (
-                                                                    <Image src={photos[photoType]!} alt={`Foto para ${ev.date}`} layout="fill" objectFit="contain" />
-                                                                ) : (
-                                                                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">Sem foto</div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CarouselItem>
-                                            ))}
-                                        </CarouselContent>
-                                        <CarouselPrevious className="ml-14" />
-                                        <CarouselNext className="mr-14" />
-                                    </Carousel>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                )}
+                {Object.entries(photoViewMapping).map(([photoType, { title, viewKey }]) => {
+                    const viewDeviations = deviations[viewKey] || [];
+                    const photoSrc = photos[photoType];
 
+                    if (viewDeviations.length === 0 && !photoSrc) return null;
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Resumo dos Desvios Encontrados (Avaliação Atual)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {Object.keys(deviations).map(viewKey => {
-                            const selected = deviations[viewKey] || [];
-                            if (selected.length === 0) return null;
-
-                            return (
-                                <div key={viewKey} className="mb-6">
-                                    <h3 className="font-bold text-lg mb-2 border-b pb-1">{viewTitles[viewKey]}</h3>
-                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                        {selected.map(deviationName => (
-                                            <li key={deviationName}>{deviationName}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            );
-                        })}
-
-                        {Object.values(deviations).flat().length === 0 && (
-                            <p className="text-center text-muted-foreground">Nenhum desvio postural foi selecionado na avaliação atual.</p>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Dumbbell /> Análise Muscular por Desvio (Avaliação Atual)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                         {Object.keys(groupedMuscleAnalysis).length > 0 ? (
-                            Object.entries(groupedMuscleAnalysis).map(([deviation, muscles]) => (
-                                <Card key={deviation} className="bg-muted/30">
-                                    <CardHeader className="pb-2 pt-4">
-                                        <CardTitle className="text-base">{deviation}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                                        <div>
-                                            <h4 className="font-semibold text-red-600 mb-2">Músculos Encurtados/Superativos</h4>
-                                            {muscles.shortened.length > 0 ? (
-                                                <ul className="list-disc pl-5 space-y-1 text-sm">
-                                                    {muscles.shortened.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                                </ul>
-                                            ) : <p className="text-sm text-muted-foreground">Nenhum</p>}
+                    return (
+                        <Card key={viewKey}>
+                            <CardContent className="pt-6">
+                                <div className="flex items-start gap-4">
+                                     <div className="w-24 shrink-0">
+                                        <div className="w-24 h-32 bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
+                                            {photoSrc ? (
+                                                <Image src={photoSrc} alt={title} layout="fill" objectFit="contain" />
+                                            ) : (
+                                                <Camera className="w-8 h-8 text-muted-foreground" />
+                                            )}
                                         </div>
-                                        <div>
-                                            <h4 className="font-semibold text-blue-600 mb-2">Músculos Alongados/Inibidos</h4>
-                                            {muscles.lengthened.length > 0 ? (
-                                                <ul className="list-disc pl-5 space-y-1 text-sm">
-                                                    {muscles.lengthened.map(muscle => <li key={muscle}>{muscle}</li>)}
-                                                </ul>
-                                            ) : <p className="text-sm text-muted-foreground">Nenhum</p>}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        ) : (
-                             <p className="text-center text-muted-foreground py-4">Nenhuma análise muscular gerada. Selecione os desvios posturais para ver os resultados.</p>
-                        )}
-                    </CardContent>
-                </Card>
-                
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-lg">{title}</h3>
+                                        {viewDeviations.length > 0 ? (
+                                            <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
+                                                {viewDeviations.map(d => <li key={d}>{d}</li>)}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground mt-1">Nenhum desvio selecionado para esta vista.</p>
+                                        )}
+                                    </div>
+                                </div>
+                                {renderMuscleAnalysisForView(viewKey)}
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+
             </div>
 
             <div className="flex justify-end gap-4 mt-8">
@@ -409,5 +360,3 @@ export default function PosturalSummaryPage() {
         </div>
     );
 }
-
-    
