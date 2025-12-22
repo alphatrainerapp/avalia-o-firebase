@@ -135,32 +135,36 @@ export default function PosturalAnalysisPage() {
         }
 
         return (
-            <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full">
+             <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full space-y-4">
                 {analysisSections.map((section) => (
-                    <AccordionItem value={section.title} key={section.title}>
-                        <AccordionTrigger className="text-base font-semibold">{section.title}</AccordionTrigger>
-                        <AccordionContent>
-                            <div className="space-y-4 pl-2">
-                                {section.items.map(item => (
-                                    <div key={item.subtitle}>
-                                        <Label className="font-medium text-sm">{item.subtitle}</Label>
-                                        <div className="grid gap-2 mt-2">
-                                            {item.options.map(option => (
-                                                <div key={option} className="flex items-center space-x-2">
-                                                    <Checkbox 
-                                                        id={`${section.title}-${item.subtitle}-${option}`} 
-                                                        checked={deviations[viewKey]?.includes(option)}
-                                                        onCheckedChange={() => toggleDeviation(viewKey, option)}
-                                                    />
-                                                    <Label htmlFor={`${section.title}-${item.subtitle}-${option}`} className="font-normal text-sm">{option}</Label>
+                    <Card key={section.title} className="overflow-hidden">
+                        <AccordionItem value={section.title} className="border-b-0">
+                                <AccordionTrigger className="text-base font-semibold px-6 py-4 bg-muted/30 hover:bg-muted/50">
+                                    {section.title}
+                                </AccordionTrigger>
+                                <AccordionContent className="p-6 pt-2">
+                                    <div className="space-y-4 pl-2">
+                                        {section.items.map(item => (
+                                            <div key={item.subtitle}>
+                                                <Label className="font-medium text-sm">{item.subtitle}</Label>
+                                                <div className="grid gap-2 mt-2">
+                                                    {item.options.map(option => (
+                                                        <div key={option} className="flex items-center space-x-2">
+                                                            <Checkbox 
+                                                                id={`${section.title}-${item.subtitle}-${option}`} 
+                                                                checked={deviations[viewKey]?.includes(option)}
+                                                                onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                            />
+                                                            <Label htmlFor={`${section.title}-${item.subtitle}-${option}`} className="font-normal text-sm">{option}</Label>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                                </AccordionContent>
+                        </AccordionItem>
+                    </Card>
                 ))}
             </Accordion>
         );
@@ -272,5 +276,3 @@ export default function PosturalAnalysisPage() {
         </div>
     );
 }
-
-    
