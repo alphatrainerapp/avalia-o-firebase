@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, FileText, X } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, FileText, X, Camera } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -358,54 +358,56 @@ export default function DashboardPage() {
             toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível gerar o PDF.' });
             return;
         }
-    
+
         toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
-    
+
         const canvas = await html2canvas(reportElement, {
             scale: 2,
             useCORS: true,
-            logging: true,
-            allowTaint: true,
         });
-    
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'px',
             format: 'a4',
         });
-    
+
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgRatio = canvas.width / canvas.height;
-        const pdfRatio = pdfWidth / pdfHeight;
-    
-        let finalImgWidth, finalImgHeight;
-    
-        if (imgRatio > pdfRatio) {
-            finalImgWidth = pdfWidth;
-            finalImgHeight = pdfWidth / imgRatio;
-        } else {
-            finalImgHeight = pdfHeight;
-            finalImgWidth = pdfHeight * imgRatio;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+
+        const pageWidthInPixels = pdf.internal.pageSize.getWidth();
+        const pageHeightInPixels = pdf.internal.pageSize.getHeight();
+        
+        let imgHeight = canvasHeight;
+        let imgWidth = canvasWidth;
+        
+        let remainingHeight = imgHeight;
+        let yPosition = 0;
+        
+        while (remainingHeight > 0) {
+            const pageCanvas = document.createElement('canvas');
+            pageCanvas.width = imgWidth;
+            pageCanvas.height = Math.min(remainingHeight, (imgWidth / pageWidthInPixels) * pageHeightInPixels);
+
+            const pageCtx = pageCanvas.getContext('2d');
+            if (pageCtx) {
+                 pageCtx.drawImage(canvas, 0, yPosition, imgWidth, pageCanvas.height, 0, 0, imgWidth, pageCanvas.height);
+                
+                if (yPosition > 0) {
+                    pdf.addPage();
+                }
+                
+                pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidthInPixels, pageHeightInPixels);
+            }
+
+            yPosition += pageCanvas.height;
+            remainingHeight -= pageCanvas.height;
         }
 
-        const x = (pdfWidth - finalImgWidth) / 2;
-        
-        let position = 0;
-        let remainingHeight = canvas.height;
-        const pageHeightOnCanvas = (pdfHeight * canvas.width) / finalImgWidth;
-    
-        pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
-        remainingHeight -= pageHeightOnCanvas;
-    
-        while (remainingHeight > 0) {
-            position -= pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
-            remainingHeight -= pageHeightOnCanvas;
-        }
-    
         pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
         toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
     };
@@ -573,31 +575,26 @@ export default function DashboardPage() {
                             </Button>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="flex items-center gap-4">
-                            {client && (
-                                <Avatar className="h-16 w-16">
-                                    <AvatarImage src={client.avatarUrl} alt={client.name} />
-                                    <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                </Avatar>
-                            )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                                <div className="sm:col-span-2">
-                                    <Label htmlFor="name">Nome</Label>
-                                    <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
-                                        <SelectTrigger id="name">
-                                            <SelectValue placeholder="Selecione um cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="age">Idade</Label>
-                                    <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
-                                </div>
-                                <div>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <Label htmlFor="name">Nome</Label>
+                            <div className="flex items-center gap-2">
+                                <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-full">
+                                    <Camera className="h-5 w-5" />
+                                    <span className="sr-only">Upload de foto</span>
+                                </Button>
+                                <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
+                                    <SelectTrigger id="name">
+                                        <SelectValue placeholder="Nome completo" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
                                 <Label htmlFor="gender">Sexo</Label>
                                 <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
                                     <SelectTrigger id="gender">
@@ -609,9 +606,12 @@ export default function DashboardPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div>
+                                <Label htmlFor="age">Idade</Label>
+                                <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label htmlFor="height">Altura (cm)</Label>
                                 <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} />
@@ -621,7 +621,7 @@ export default function DashboardPage() {
                                 <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} />
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4">
                             <div>
                                 <Label>IMC</Label>
                                 <div className="font-bold text-lg">{bmi}</div>
