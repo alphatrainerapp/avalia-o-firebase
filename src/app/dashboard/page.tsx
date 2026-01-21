@@ -575,50 +575,54 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-4">
-                            {client && (
-                                <Avatar className="h-16 w-16">
-                                    <AvatarImage src={client.avatarUrl} alt={client.name} />
-                                    <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                </Avatar>
-                            )}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
-                                <div className="sm:col-span-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                                <div className="md:col-span-2">
                                     <Label htmlFor="name">Nome</Label>
-                                    <Select value={selectedClientId} onValueChange={(value) => handleSelectChange('clientId', value)}>
-                                        <SelectTrigger id="name">
-                                            <SelectValue placeholder="Selecione um cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        {client && (
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage src={client.avatarUrl} alt={client.name} />
+                                                <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                            </Avatar>
+                                        )}
+                                        <Select value={selectedClientId} onValueChange={(value: string) => handleSelectChange('clientId', value)} className="flex-1">
+                                            <SelectTrigger id="name">
+                                                <SelectValue placeholder="Selecione um cliente" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input id="email" name="email" type="email" placeholder="cliente@example.com" value={formState.email || ''} onChange={handleInputChange} />
                                 </div>
                                 <div>
                                     <Label htmlFor="age">Idade</Label>
                                     <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
                                 </div>
                                 <div>
-                                <Label htmlFor="gender">Sexo</Label>
-                                <Select value={formState.gender || ''} onValueChange={(value) => handleSelectChange('gender', value)}>
-                                    <SelectTrigger id="gender">
-                                        <SelectValue placeholder="Selecione o sexo" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Masculino">Masculino</SelectItem>
-                                        <SelectItem value="Feminino">Feminino</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <Label htmlFor="height">Altura (cm)</Label>
-                                <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} />
-                            </div>
-                            <div>
-                                <Label htmlFor="weight">Peso (kg)</Label>
-                                <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} />
+                                    <Label htmlFor="gender">Sexo</Label>
+                                    <Select value={formState.gender || ''} onValueChange={(value: string) => handleSelectChange('gender', value)}>
+                                        <SelectTrigger id="gender">
+                                            <SelectValue placeholder="Selecione o sexo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Masculino">Masculino</SelectItem>
+                                            <SelectItem value="Feminino">Feminino</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="height">Altura (cm)</Label>
+                                    <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} />
+                                </div>
+                                <div>
+                                    <Label htmlFor="weight">Peso (kg)</Label>
+                                    <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} />
+                                </div>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -692,7 +696,7 @@ export default function DashboardPage() {
                         <CardTitle>Registros de Dados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="perimetria" onValueChange={(value) => setActiveTab(value as any)}>
+                        <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
                                 <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
@@ -750,7 +754,7 @@ export default function DashboardPage() {
                                             </div>
                                             <div>
                                                 <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
-                                                <Select value={formState.protocol || ''} onValueChange={(value) => handleSelectChange('protocol', value)}>
+                                                <Select value={formState.protocol || ''} onValueChange={(value: string) => handleSelectChange('protocol', value)}>
                                                     <SelectTrigger id="protocolo">
                                                         <SelectValue placeholder="Selecione o protocolo" />
                                                     </SelectTrigger>
