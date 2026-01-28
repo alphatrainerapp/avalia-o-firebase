@@ -131,7 +131,7 @@ export const evaluations: Evaluation[] = [
         id: 'eval_1',
         clientId: 'cli_1',
         clientName: 'João da Silva',
-        date: '2024-09-25',
+        date: '2023-09-25',
         protocol: 'Pollock 7 dobras',
         observations: 'Cliente focado em hipertrofia.',
         bodyMeasurements: {
@@ -179,7 +179,7 @@ export const evaluations: Evaluation[] = [
         id: 'eval_2',
         clientId: 'cli_1',
         clientName: 'João da Silva',
-        date: '2024-10-25',
+        date: '2023-10-25',
         protocol: 'Pollock 7 dobras',
         observations: 'Aumento da força notado.',
         bodyMeasurements: {
@@ -225,7 +225,7 @@ export const evaluations: Evaluation[] = [
         id: 'eval_3',
         clientId: 'cli_1',
         clientName: 'João da Silva',
-        date: '2024-11-25',
+        date: '2023-11-25',
         protocol: 'Pollock 7 dobras',
         observations: 'Melhora na resistência cardiovascular.',
         bodyMeasurements: {
@@ -246,7 +246,7 @@ export const evaluations: Evaluation[] = [
         id: 'eval_4',
         clientId: 'cli_2',
         clientName: 'Maria Oliveira',
-        date: '2024-11-01',
+        date: '2023-11-01',
         protocol: 'YMCA',
         observations: 'Iniciando programa de perda de peso.',
         bodyMeasurements: {
@@ -276,7 +276,7 @@ export const evaluations: Evaluation[] = [
         id: 'eval_5',
         clientId: 'cli_3',
         clientName: 'Pedro Santos',
-        date: '2024-11-15',
+        date: '2023-11-15',
         protocol: 'Guedes',
         observations: 'Manutenção do condicionamento físico.',
         bodyMeasurements: {
