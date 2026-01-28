@@ -9,7 +9,8 @@ type PosturalContextType = {
   setPhoto: (type: string, url: string) => void;
   deviations: Deviations;
   toggleDeviation: (view: string, deviation: string) => void;
-  clearDeviations: () => void;
+  clearPosturalData: () => void;
+  loadPosturalData: (data: { photos: { [key: string]: string | undefined }, deviations: Deviations }) => void;
   isSaved: boolean;
   saveAnalysis: () => void;
 };
@@ -44,8 +45,15 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
     setIsSaved(false);
   }, []);
 
-  const clearDeviations = useCallback(() => {
+  const clearPosturalData = useCallback(() => {
+    setPhotos({});
     setDeviations({});
+    setIsSaved(true);
+  }, []);
+  
+  const loadPosturalData = useCallback((data: { photos: { [key: string]: string | undefined }, deviations: Deviations }) => {
+    setPhotos(data.photos || {});
+    setDeviations(data.deviations || {});
     setIsSaved(true);
   }, []);
 
@@ -56,7 +64,7 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
   }, [photos, deviations]);
 
   return (
-    <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearDeviations, isSaved, saveAnalysis }}>
+    <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearPosturalData, loadPosturalData, isSaved, saveAnalysis }}>
       {children}
     </PosturalContext.Provider>
   );

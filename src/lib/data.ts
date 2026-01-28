@@ -1,3 +1,4 @@
+'use client';
 import { getPlaceholderImage } from './placeholder-images';
 
 export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitoral' | 'axilarMedia' | 'supraIliaca' | 'abdominal' | 'coxa' | 'panturrilha';
@@ -90,7 +91,9 @@ export type Evaluation = {
       scaleType: BioimpedanceScale;
       omron?: BioimpedanceOmron;
       inbody?: BioimpedanceInBody;
-    }
+    };
+    posturalPhotos?: { [key: string]: string | undefined };
+    posturalDeviations?: { [key: string]: string[] };
 };
 
 export type Client = {
@@ -159,6 +162,17 @@ export const evaluations: Evaluation[] = [
                 rightLegLeanMass: 9.8,
                 leftLegLeanMass: 9.7,
             }
+        },
+        posturalPhotos: {
+            front: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
+            back: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
+            right: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
+            left: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
+        },
+        posturalDeviations: {
+            anterior: ['Ombro elevado', 'Geno valgo'],
+            posterior: ['Escápula alada D'],
+            lateral_direita: ['Cabeça projetada', 'Hipercifose torácica']
         }
     },
     {
@@ -196,6 +210,15 @@ export const evaluations: Evaluation[] = [
                 rightLegLeanMass: 10.1,
                 leftLegLeanMass: 10.0,
             }
+        },
+        posturalPhotos: {
+            front: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl,
+            back: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl,
+        },
+        posturalDeviations: {
+            anterior: ['Ombro elevado'],
+            posterior: [],
+            lateral_direita: ['Cabeça projetada']
         }
     },
     {

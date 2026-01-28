@@ -18,7 +18,7 @@ import { clients, evaluations as initialEvaluations, type Evaluation } from '@/l
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
-    const { photos, setPhoto, clearDeviations } = usePosturalContext();
+    const { photos, setPhoto, deviations, clearPosturalData, loadPosturalData } = usePosturalContext();
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
         back: useRef<HTMLInputElement>(null),
@@ -38,8 +38,8 @@ export default function PosturalPage() {
     useEffect(() => {
         // This effect runs only on the client
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-        clearDeviations();
-    }, [clearDeviations]);
+        clearPosturalData();
+    }, [clearPosturalData]);
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: PhotoType) => {
         const file = e.target.files?.[0];
@@ -58,29 +58,53 @@ export default function PosturalPage() {
     };
 
     const handleSave = () => {
-        // Logic to save the photos
-        console.log('Saving photos:', photos, 'for eval:', selectedEvaluationId);
-        toast({
-            title: 'Fotos Salvas',
-            description: 'As fotos da avaliação postural foram salvas com sucesso.',
-        });
+        if (selectedEvaluationId) {
+            setAllEvaluations(prevEvals =>
+                prevEvals.map(ev =>
+                    ev.id === selectedEvaluationId
+                        ? { ...ev, posturalPhotos: photos, posturalDeviations: deviations }
+                        : ev
+                )
+            );
+            const evalDate = new Date(allEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            toast({
+                title: 'Análise Salva',
+                description: `A análise postural foi salva na avaliação de ${evalDate}.`,
+            });
+        } else {
+             toast({
+                title: 'Análise Salva (Avulsa)',
+                description: 'A análise postural avulsa foi salva localmente.',
+            });
+        }
+        console.log('Saving analysis:', { photos, deviations }, 'for eval:', selectedEvaluationId);
     };
     
     const handleClientChange = (clientId: string) => {
         setSelectedClientId(clientId);
         setSelectedEvaluationId(null);
+        clearPosturalData();
     };
 
     const handleNewEvaluation = () => {
       setSelectedEvaluationId(null);
+      clearPosturalData();
       toast({ title: "Nova Avaliação Postural", description: "As fotos enviadas não serão associadas a uma avaliação física existente." });
     }
 
     const handleSelectEvaluation = (evalId: string) => {
       if (selectedEvaluationId === evalId) {
         setSelectedEvaluationId(null);
+        clearPosturalData();
       } else {
-        setSelectedEvaluationId(evalId);
+        const evaluation = allEvaluations.find(e => e.id === evalId);
+        if (evaluation) {
+            loadPosturalData({
+                photos: evaluation.posturalPhotos || {},
+                deviations: evaluation.posturalDeviations || {}
+            });
+            setSelectedEvaluationId(evalId);
+        }
       }
     }
 
