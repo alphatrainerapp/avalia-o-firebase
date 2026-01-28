@@ -73,11 +73,17 @@ export default function DashboardPage() {
             const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(currentEval.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
         } else if (client) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const localDateString = `${year}-${month}-${day}`;
+
              initialState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
-                date: new Date().toISOString().split('T')[0],
+                date: localDateString,
                 protocol: availableProtocols[0],
                 bodyMeasurements: { height: client.height },
                 perimetria: {},
@@ -928,3 +934,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    

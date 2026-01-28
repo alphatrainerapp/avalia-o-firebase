@@ -92,7 +92,7 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                                     <TableHead>Medida</TableHead>
                                     {evaluations.map(ev => (
                                         <TableHead key={ev.id} className="text-center">
-                                            {new Date(ev.date).toLocaleDateString('pt-BR')}
+                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                                             <p className="text-xs font-normal text-muted-foreground">(cm)</p>
                                         </TableHead>
                                     ))}
@@ -110,7 +110,7 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                                     <TableHead>Medida</TableHead>
                                     {evaluations.map(ev => (
                                         <TableHead key={ev.id} className="text-center">
-                                            {new Date(ev.date).toLocaleDateString('pt-BR')}
+                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                                             <p className="text-xs font-normal text-muted-foreground">(mm)</p>
                                         </TableHead>
                                     ))}
@@ -128,7 +128,7 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
                                     <TableHead>Medida</TableHead>
                                     {evaluations.map(ev => (
                                         <TableHead key={ev.id} className="text-center">
-                                            {new Date(ev.date).toLocaleDateString('pt-BR')}
+                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                                             <p className="text-xs font-normal text-muted-foreground">(cm)</p>
                                         </TableHead>
                                     ))}
@@ -144,3 +144,5 @@ export function ComparisonTable({ evaluations, perimetriaFields, skinfoldFields,
         </Card>
     );
 }
+
+    
