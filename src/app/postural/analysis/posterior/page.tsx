@@ -275,3 +275,5 @@ export default function PosturalAnalysisPosteriorPage() {
         </div>
     );
 }
+
+    

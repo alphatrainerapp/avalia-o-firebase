@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { usePosturalContext } from '../context';
+import { usePosturalContext } from '../../context';
 import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { posturalDeviations } from '@/lib/postural-data';
