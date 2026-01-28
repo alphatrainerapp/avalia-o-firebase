@@ -48,7 +48,7 @@ const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof ty
 
 
 export default function PosturalSummaryPage() {
-    const { photos, deviations, clearDeviations, isSaved, saveAnalysis } = usePosturalContext();
+    const { photos, deviations, clearPosturalData, isSaved, saveAnalysis } = usePosturalContext();
     const { toast } = useToast();
     const router = useRouter();
     const reportRef = useRef<HTMLDivElement>(null);
@@ -66,11 +66,29 @@ export default function PosturalSummaryPage() {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [selectedClientId]);
 
+    const comparedEvaluations = useMemo(() => {
+        return clientEvaluations
+            .filter(e => selectedEvalIds.includes(e.id))
+            .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [selectedEvalIds, clientEvaluations]);
+
+    const analysisData = useMemo(() => {
+      if (comparedEvaluations.length === 1) {
+          return {
+              photos: comparedEvaluations[0].posturalPhotos || {},
+              deviations: comparedEvaluations[0].posturalDeviations || {},
+          }
+      }
+      return { photos, deviations };
+    }, [comparedEvaluations, photos, deviations]);
+
+
     const groupedMuscleAnalysis = useMemo(() => {
         const analysis: { [deviation: string]: { shortened: string[], lengthened: string[] } } = {};
+        const sourceDeviations = analysisData.deviations;
 
-        Object.keys(deviations).forEach(view => {
-            deviations[view].forEach(deviationName => {
+        Object.keys(sourceDeviations).forEach(view => {
+            sourceDeviations[view].forEach(deviationName => {
                 const mapping = muscleMappings[deviationName];
                 if (mapping) {
                     if (!analysis[deviationName]) {
@@ -89,7 +107,7 @@ export default function PosturalSummaryPage() {
         }
 
         return analysis;
-    }, [deviations]);
+    }, [analysisData.deviations]);
 
     
     const handleClientChange = (clientId: string) => {
@@ -114,17 +132,10 @@ export default function PosturalSummaryPage() {
         });
     };
 
-    const comparedEvaluations = useMemo(() => {
-        return clientEvaluations
-            .filter(e => selectedEvalIds.includes(e.id))
-            .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [selectedEvalIds, clientEvaluations]);
-
-
     const handleFinish = () => {
         saveAnalysis();
         toast({ title: 'Análise Salva', description: 'A análise postural foi finalizada e salva.' });
-        clearDeviations();
+        clearPosturalData();
         router.push('/dashboard');
     };
     
@@ -189,7 +200,7 @@ export default function PosturalSummaryPage() {
 
 
     const renderMuscleAnalysisForView = (viewKey: keyof typeof viewTitles) => {
-        const viewDeviations = deviations[viewKey] || [];
+        const viewDeviations = analysisData.deviations[viewKey] || [];
         if (viewDeviations.length === 0) return null;
 
         return (
@@ -248,7 +259,7 @@ export default function PosturalSummaryPage() {
 
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis/left')}><ArrowLeft /></Button>
+                    <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis')}><ArrowLeft /></Button>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Resumo da Avaliação Postural</h1>
@@ -300,42 +311,86 @@ export default function PosturalSummaryPage() {
                     )}
                 </Card>
 
-                {Object.entries(photoViewMapping).map(([photoType, { title, viewKey }]) => {
-                    const viewDeviations = deviations[viewKey] || [];
-                    const photoSrc = photos[photoType as PhotoType];
+                {comparedEvaluations.length > 1 ? (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-primary">
+                                <Camera />
+                                Comparativo de Fotos
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-8">
+                            {Object.entries(photoViewMapping).map(([photoType, { title }]) => {
+                                const hasPhotosForView = comparedEvaluations.some(ev => ev.posturalPhotos?.[photoType as PhotoType]);
+                                if (!hasPhotosForView) return null;
 
-                    if (viewDeviations.length === 0 && !photoSrc) return null;
-
-                    return (
-                        <Card key={viewKey}>
-                            <CardContent className="pt-6">
-                                <div className="flex items-start gap-4">
-                                     <div className="w-24 shrink-0">
-                                        <div className="w-24 h-32 bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
-                                            {photoSrc ? (
-                                                <Image src={photoSrc} alt={title} layout="fill" objectFit="contain" />
-                                            ) : (
-                                                <Camera className="w-8 h-8 text-muted-foreground" />
-                                            )}
+                                return (
+                                    <div key={photoType}>
+                                        <h3 className="font-semibold text-xl mb-4">{title}</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {comparedEvaluations.map(ev => {
+                                                const photoSrc = ev.posturalPhotos?.[photoType as PhotoType];
+                                                return (
+                                                    <div key={ev.id}>
+                                                        <p className="text-sm text-muted-foreground text-center mb-1">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>
+                                                        <div className="w-full aspect-[3/4] bg-muted rounded-md flex items-center justify-center relative overflow-hidden text-muted-foreground">
+                                                            {photoSrc ? (
+                                                                <Image src={photoSrc} alt={`${title} - ${ev.date}`} layout="fill" objectFit="contain" />
+                                                            ) : (
+                                                                <div className="flex flex-col items-center">
+                                                                    <Camera className="h-8 w-8" />
+                                                                    <p className="text-xs mt-1">Sem foto</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-lg">{title}</h3>
-                                        {viewDeviations.length > 0 ? (
-                                            <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                                {viewDeviations.map(d => <li key={d}>{d}</li>)}
-                                            </ul>
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground mt-1">Nenhum desvio selecionado para esta vista.</p>
-                                        )}
-                                    </div>
-                                </div>
-                                {renderMuscleAnalysisForView(viewKey)}
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+                                );
+                            })}
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <>
+                        {Object.entries(photoViewMapping).map(([photoType, { title, viewKey }]) => {
+                            const viewDeviations = analysisData.deviations[viewKey] || [];
+                            const photoSrc = analysisData.photos[photoType as PhotoType];
 
+                            if (viewDeviations.length === 0 && !photoSrc) return null;
+
+                            return (
+                                <Card key={viewKey}>
+                                    <CardContent className="pt-6">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-24 shrink-0">
+                                                <div className="w-24 h-32 bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
+                                                    {photoSrc ? (
+                                                        <Image src={photoSrc} alt={title} layout="fill" objectFit="contain" />
+                                                    ) : (
+                                                        <Camera className="w-8 h-8 text-muted-foreground" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-lg">{title}</h3>
+                                                {viewDeviations.length > 0 ? (
+                                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
+                                                        {viewDeviations.map(d => <li key={d}>{d}</li>)}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground mt-1">Nenhum desvio selecionado para esta vista.</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {renderMuscleAnalysisForView(viewKey)}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </>
+                )}
             </div>
 
             <div className="flex justify-end gap-4 mt-8">
