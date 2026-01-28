@@ -21,8 +21,9 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
     if (!client) throw new Error("Client not found");
 
     const today = new Date();
-    const dateStringPTBR = today.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-    const [day, month, year] = dateStringPTBR.split('/');
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
     const localDateString = `${year}-${month}-${day}`;
 
     // Check if an evaluation for this client on this day already exists.
@@ -51,7 +52,7 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
     };
 
     setAllEvaluations(prevEvals => 
-      [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime())
     );
 
     return newEvaluation;
