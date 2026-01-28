@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, UploadCloud, Save, ArrowRight, User, Plus } from 'lucide-react';
@@ -35,12 +35,6 @@ export default function PosturalPage() {
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [selectedClientId, allEvaluations]);
 
-    useEffect(() => {
-        // This effect runs only on the client
-        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-        clearPosturalData();
-    }, [clearPosturalData]);
-
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: PhotoType) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -56,7 +50,86 @@ export default function PosturalPage() {
     const triggerFileInput = (type: PhotoType) => {
         fileInputRefs[type].current?.click();
     };
+    
+    const handleClientChange = (clientId: string) => {
+        setSelectedClientId(clientId);
+        // The useEffect will handle selecting the latest evaluation for the new client
+    };
+    
+    const handleSelectEvaluation = useCallback((evalId: string | null) => {
+        setSelectedEvaluationId(evalId);
+        if (!evalId) {
+            clearPosturalData();
+            return;
+        }
+        const evaluation = allEvaluations.find(e => e.id === evalId);
+        if (evaluation) {
+            loadPosturalData({
+                photos: evaluation.posturalPhotos || {},
+                deviations: evaluation.posturalDeviations || {}
+            });
+        } else {
+             clearPosturalData();
+        }
+    }, [allEvaluations, clearPosturalData, loadPosturalData]);
 
+    const handleManualSelectEvaluation = (evalId: string) => {
+        if (selectedEvaluationId === evalId) {
+            handleSelectEvaluation(null); // Deselect
+        } else {
+            handleSelectEvaluation(evalId); // Select
+        }
+    }
+
+    useEffect(() => {
+        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
+    }, []);
+
+    useEffect(() => {
+        const mostRecentEval = clientEvaluations.at(-1);
+        if (mostRecentEval) {
+            handleSelectEvaluation(mostRecentEval.id);
+        } else {
+            handleSelectEvaluation(null);
+        }
+    }, [clientEvaluations, handleSelectEvaluation]);
+
+    const handleNewEvaluation = () => {
+      if (client) {
+            const newEvalId = `eval_${allEvaluations.length + 1}_${Date.now()}`;
+            
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const localDateString = `${year}-${month}-${day}`;
+
+            const todaysEval = clientEvaluations.find(e => e.date === localDateString);
+            if (todaysEval) {
+                handleSelectEvaluation(todaysEval.id);
+                toast({ title: "Avaliação já existente", description: "Uma avaliação para a data de hoje já existe e foi selecionada." });
+                return;
+            }
+
+            const newEvaluation: Evaluation = {
+                id: newEvalId,
+                clientId: client.id,
+                clientName: client.name,
+                date: localDateString,
+                protocol: '',
+                bodyMeasurements: { weight: 0, height: client.height, waistCircumference: 0, hipCircumference: 0 },
+                bodyComposition: { bodyFatPercentage: 0 },
+                bioimpedance: { scaleType: null },
+                posturalPhotos: {},
+                posturalDeviations: {}
+            };
+            
+            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+            handleSelectEvaluation(newEvalId);
+            toast({ title: "Nova Avaliação Postural", description: "Um novo registro de avaliação foi criado para hoje." });
+        }
+    };
+    
     const handleSave = () => {
         if (selectedEvaluationId) {
             setAllEvaluations(prevEvals =>
@@ -66,47 +139,20 @@ export default function PosturalPage() {
                         : ev
                 )
             );
-            const evalDate = new Date(allEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/')).toLocaleDateString('pt-BR');
+            const evalDate = allEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/');
+            const formattedDate = new Date(evalDate).toLocaleDateString('pt-BR');
             toast({
                 title: 'Análise Salva',
-                description: `A análise postural foi salva na avaliação de ${evalDate}.`,
+                description: `A análise postural foi salva na avaliação de ${formattedDate}.`,
             });
         } else {
              toast({
-                title: 'Análise Salva (Avulsa)',
-                description: 'A análise postural avulsa foi salva localmente.',
+                variant: 'destructive',
+                title: 'Nenhuma avaliação selecionada',
+                description: 'Crie uma nova avaliação ou selecione uma existente para salvar.',
             });
         }
-        console.log('Saving analysis:', { photos, deviations }, 'for eval:', selectedEvaluationId);
     };
-    
-    const handleClientChange = (clientId: string) => {
-        setSelectedClientId(clientId);
-        setSelectedEvaluationId(null);
-        clearPosturalData();
-    };
-
-    const handleNewEvaluation = () => {
-      setSelectedEvaluationId(null);
-      clearPosturalData();
-      toast({ title: "Nova Avaliação Postural", description: "As fotos enviadas não serão associadas a uma avaliação física existente." });
-    }
-
-    const handleSelectEvaluation = (evalId: string) => {
-      if (selectedEvaluationId === evalId) {
-        setSelectedEvaluationId(null);
-        clearPosturalData();
-      } else {
-        const evaluation = allEvaluations.find(e => e.id === evalId);
-        if (evaluation) {
-            loadPosturalData({
-                photos: evaluation.posturalPhotos || {},
-                deviations: evaluation.posturalDeviations || {}
-            });
-            setSelectedEvaluationId(evalId);
-        }
-      }
-    }
 
     const PhotoUploadCard = ({ type, title }: { type: PhotoType, title: string }) => (
         <Card className="shadow-lg">
@@ -171,13 +217,13 @@ export default function PosturalPage() {
                                 </Select>
                             </div>
                             <Button onClick={handleNewEvaluation} variant="outline" className="w-full sm:w-auto">
-                                <Plus className="mr-2" /> Avaliação Avulsa
+                                <Plus className="mr-2" /> Nova Avaliação
                             </Button>
                         </div>
                     </CardHeader>
                      <CardContent>
                         <p className="text-sm text-muted-foreground mb-4">
-                          Selecione uma avaliação física existente para vincular esta análise postural, ou crie uma avaliação avulsa.
+                          Selecione uma avaliação física existente para vincular esta análise postural, ou crie uma nova.
                         </p>
                         <div className="flex gap-4 overflow-x-auto pb-4">
                             {clientEvaluations.map((ev, index) => {
@@ -189,7 +235,7 @@ export default function PosturalPage() {
                                             "shrink-0 w-36 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                                             isSelected ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
                                         )}
-                                        onClick={() => handleSelectEvaluation(ev.id)}
+                                        onClick={() => handleManualSelectEvaluation(ev.id)}
                                     >
                                         <CardHeader className="p-4 relative">
                                                 <CardTitle className={cn("text-sm font-normal capitalize", isSelected ? "text-primary-foreground" : "text-card-foreground")}>
@@ -211,7 +257,7 @@ export default function PosturalPage() {
                     <CardHeader>
                         <CardTitle>Upload de Fotos</CardTitle>
                         <CardDescription>
-                            {selectedEvaluationId ? `Anexando fotos à avaliação de ${clientEvaluations.find(e => e.id === selectedEvaluationId)?.date ? new Date(clientEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : ''}.` : 'Criando uma nova avaliação postural avulsa.'}
+                            {selectedEvaluationId ? `Anexando fotos à avaliação de ${clientEvaluations.find(e => e.id === selectedEvaluationId)?.date ? new Date(clientEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : ''}.` : 'Nenhuma avaliação selecionada. Crie uma nova avaliação.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
