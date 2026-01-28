@@ -90,7 +90,7 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
 ];
 
 export default function BioimpedancePage() {
-    const { clients, allEvaluations, setAllEvaluations } = useEvaluationContext();
+    const { clients, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
     const [isModalOpen, setModalOpen] = useState(true);
@@ -103,8 +103,9 @@ export default function BioimpedancePage() {
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => {
+        if (!selectedScale) return [];
         return allEvaluations
-            .filter(e => e.clientId === selectedClientId && e.bioimpedance.scaleType === selectedScale)
+            .filter(e => e.clientId === selectedClientId && (e.bioimpedance.scaleType === selectedScale || e.bioimpedance.scaleType === null))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [selectedClientId, allEvaluations, selectedScale]);
 
@@ -211,20 +212,34 @@ export default function BioimpedancePage() {
     };
 
     const handleInputChange = (evalId: string, block: 'omron' | 'inbody', field: string, value: string) => {
-        setAllEvaluations(prevEvals => prevEvals.map(ev => {
+        setAllEvaluations(prevEvals =>
+          prevEvals.map(ev => {
             if (ev.id === evalId) {
-                const updatedEval = { ...ev };
-                if (!updatedEval.bioimpedance) {
-                    updatedEval.bioimpedance = { scaleType: selectedScale };
-                }
-                if (!updatedEval.bioimpedance[block]) {
-                    (updatedEval.bioimpedance as any)[block] = {};
-                }
-                (updatedEval.bioimpedance[block] as any)[field] = value ? parseFloat(value) : undefined;
-                return updatedEval;
+              const updatedEval = { ...ev };
+              updatedEval.bioimpedance = { ...updatedEval.bioimpedance };
+    
+              // Set scale type if it's the first input for this evaluation
+              if (updatedEval.bioimpedance.scaleType === null) {
+                updatedEval.bioimpedance.scaleType = selectedScale;
+              }
+    
+              const scaleData = { ...(updatedEval.bioimpedance[block] || {}) };
+              (scaleData as any)[field] = value ? parseFloat(value) : undefined;
+              
+              updatedEval.bioimpedance[block] = scaleData as any;
+    
+              return updatedEval;
             }
             return ev;
-        }));
+          })
+        );
+      };
+
+    const handleNewEvaluation = () => {
+        if (client) {
+            const newEvaluation = addEvaluation(client.id);
+            toast({ title: "Nova Avaliação", description: "Um novo registro de avaliação foi criado para hoje." });
+        }
     };
 
     const renderComparisonRows = () => {
@@ -383,7 +398,10 @@ export default function BioimpedancePage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="flex items-end">
+                                <div className="flex items-end gap-2">
+                                     <Button onClick={handleNewEvaluation} variant="outline">
+                                        <Plus className="mr-2" /> Nova Avaliação
+                                    </Button>
                                     <Button onClick={() => { setModalOpen(true); setSelectedEvalIds([]); }}>Trocar Balança</Button>
                                 </div>
                             </div>
@@ -468,5 +486,3 @@ export default function BioimpedancePage() {
         </>
     );
 }
-
-    
