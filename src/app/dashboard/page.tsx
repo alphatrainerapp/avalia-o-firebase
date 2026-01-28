@@ -73,17 +73,14 @@ export default function DashboardPage() {
             const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(currentEval.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
         } else if (client) {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const localDateString = `${year}-${month}-${day}`;
+             const now = new Date();
+             const evaluationDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
              initialState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
-                date: localDateString,
+                date: evaluationDate.toISOString(),
                 protocol: availableProtocols[0],
                 bodyMeasurements: { height: client.height },
                 perimetria: {},
@@ -501,7 +498,7 @@ export default function DashboardPage() {
             if(ev.date) {
                 // Fix for timezone issue: replace '-' with '/'
                 const localDate = new Date(ev.date.replace(/-/g, '/'));
-                setDate(localDate.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }));
+                setDate(localDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: '2-digit' }));
             }
         }, [ev.date]);
 
