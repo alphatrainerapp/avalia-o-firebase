@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation, type Client, type BioimpedanceScale, BioimpedanceInBody, BioimpedanceOmron } from '@/lib/data';
+import { type Evaluation, type Client, type BioimpedanceScale, BioimpedanceInBody, BioimpedanceOmron } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -24,6 +24,7 @@ import { getPlaceholderImage } from '@/lib/placeholder-images';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import BioimpedanceReport from '@/components/BioimpedanceReport';
+import { useEvaluationContext } from '@/context/EvaluationContext';
 
 
 const omronFields: { key: keyof BioimpedanceOmron; label: string; unit: string }[] = [
@@ -89,9 +90,9 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
 ];
 
 export default function BioimpedancePage() {
+    const { clients, allEvaluations, setAllEvaluations } = useEvaluationContext();
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
-    const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const [isModalOpen, setModalOpen] = useState(true);
     const [selectedScale, setSelectedScale] = useState<BioimpedanceScale>(null);
     const { toast } = useToast();
@@ -100,7 +101,7 @@ export default function BioimpedancePage() {
     const simpleScaleImage = getPlaceholderImage('simple-scale-omron');
     const completeScaleImage = getPlaceholderImage('complete-bioimpedance-inbody');
 
-    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
+    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => {
         return allEvaluations
             .filter(e => e.clientId === selectedClientId && e.bioimpedance.scaleType === selectedScale)

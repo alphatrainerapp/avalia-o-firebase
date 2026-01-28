@@ -12,13 +12,16 @@ import { useToast } from '@/hooks/use-toast';
 import { usePosturalContext } from './context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation } from '@/lib/data';
+import { type Evaluation } from '@/lib/data';
+import { useEvaluationContext } from '@/context/EvaluationContext';
 
 
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
     const { photos, setPhoto, deviations, clearPosturalData, loadPosturalData } = usePosturalContext();
+    const { clients, allEvaluations, addEvaluation, setAllEvaluations } = useEvaluationContext();
+
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
         back: useRef<HTMLInputElement>(null),
@@ -28,11 +31,10 @@ export default function PosturalPage() {
     const { toast } = useToast();
     const [currentDate, setCurrentDate] = useState('');
     
-    const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
 
-    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
+    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [selectedClientId, allEvaluations]);
 
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: PhotoType) => {
@@ -53,7 +55,6 @@ export default function PosturalPage() {
     
     const handleClientChange = (clientId: string) => {
         setSelectedClientId(clientId);
-        // The useEffect will handle selecting the latest evaluation for the new client
     };
     
     const handleSelectEvaluation = useCallback((evalId: string | null) => {
@@ -95,37 +96,22 @@ export default function PosturalPage() {
     }, [clientEvaluations, handleSelectEvaluation]);
 
     const handleNewEvaluation = () => {
-      if (client) {
-            const newEvalId = `eval_${allEvaluations.length + 1}_${Date.now()}`;
-            
+        if (client) {
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const localDateString = `${year}-${month}-${day}`;
 
-            const todaysEval = clientEvaluations.find(e => e.date === localDateString);
+            const todaysEval = clientEvaluations.find(e => e.date === localDateString && e.clientId === client.id);
             if (todaysEval) {
                 handleSelectEvaluation(todaysEval.id);
                 toast({ title: "Avaliação já existente", description: "Uma avaliação para a data de hoje já existe e foi selecionada." });
                 return;
             }
-
-            const newEvaluation: Evaluation = {
-                id: newEvalId,
-                clientId: client.id,
-                clientName: client.name,
-                date: localDateString,
-                protocol: '',
-                bodyMeasurements: { weight: 0, height: client.height, waistCircumference: 0, hipCircumference: 0 },
-                bodyComposition: { bodyFatPercentage: 0 },
-                bioimpedance: { scaleType: null },
-                posturalPhotos: {},
-                posturalDeviations: {}
-            };
             
-            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
-            handleSelectEvaluation(newEvalId);
+            const newEvaluation = addEvaluation(client.id);
+            handleSelectEvaluation(newEvaluation.id);
             toast({ title: "Nova Avaliação Postural", description: "Um novo registro de avaliação foi criado para hoje." });
         }
     };

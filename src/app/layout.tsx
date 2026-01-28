@@ -5,6 +5,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { EvaluationProvider } from '@/context/EvaluationContext';
 
 export const metadata: Metadata = {
   title: 'Alpha Insights',
@@ -25,17 +26,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-body antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Header />
-          <main>{children}</main>
-          <Toaster />
-          <ThemeToggle />
-        </ThemeProvider>
+        <EvaluationProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Header />
+            <main>{children}</main>
+            <Toaster />
+            <ThemeToggle />
+          </ThemeProvider>
+        </EvaluationProvider>
       </body>
     </html>
   );
