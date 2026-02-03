@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { clients, evaluations as initialEvaluations, type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, calculateBodyComposition, type BodyComposition } from '@/lib/data';
+import { type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, calculateBodyComposition, type BodyComposition } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,9 +28,11 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useEvaluationContext } from '@/context/EvaluationContext';
 
 
 export default function DashboardPage() {
+    const { clients, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
     const [isCompareMode, setCompareMode] = useState(false);
@@ -38,20 +40,19 @@ export default function DashboardPage() {
     const { toast } = useToast();
     const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
-    const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
     const reportRef = useRef<HTMLDivElement>(null);
     const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros'>('perimetria');
     const [formattedDate, setFormattedDate] = useState('');
 
 
-    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
-    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [selectedClientId, allEvaluations]);
+    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
+    const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime()), [selectedClientId, allEvaluations]);
     
     const evaluation = useMemo(() => {
         if (selectedEvaluationId) {
             return clientEvaluations.find(e => e.id === selectedEvaluationId);
         }
-        return clientEvaluations[0];
+        return clientEvaluations[clientEvaluations.length - 1];
     }, [clientEvaluations, selectedEvaluationId]);
 
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
@@ -59,7 +60,7 @@ export default function DashboardPage() {
     const availableProtocols = audienceProtocols[selectedAudience] || [];
 
     useEffect(() => {
-        const currentEval = clientEvaluations.find(e => e.id === selectedEvaluationId);
+        const currentEval = evaluation;
         let initialState: Partial<Evaluation & Client & any> = {};
 
         if (client && currentEval) {
@@ -73,14 +74,14 @@ export default function DashboardPage() {
             const audience = Object.keys(audienceProtocols).find(key => audienceProtocols[key].includes(currentEval.protocol || '')) || selectedAudience;
             setSelectedAudience(audience);
         } else if (client) {
-             const now = new Date();
-             const evaluationDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+             const agora = new Date();
+             const localDate = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
 
              initialState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
-                date: evaluationDate.toISOString(),
+                date: `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`,
                 protocol: availableProtocols[0],
                 bodyMeasurements: { height: client.height },
                 perimetria: {},
@@ -89,7 +90,7 @@ export default function DashboardPage() {
         }
         setFormState(initialState);
 
-    }, [client, selectedEvaluationId, clientEvaluations, availableProtocols, selectedAudience]);
+    }, [client, evaluation, availableProtocols, selectedAudience]);
 
     useEffect(() => {
         if (formState.date) {
@@ -146,7 +147,6 @@ export default function DashboardPage() {
       if (fatPercentage > 0 && fatPercentage < 100) {
         const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
         
-        // Update formState only if the value has changed
         if (formState.bodyComposition?.bodyFatPercentage !== newFatPercentage) {
           setFormState(prev => ({
             ...prev,
@@ -156,7 +156,6 @@ export default function DashboardPage() {
             },
           }));
 
-          // Also update the master evaluations list if an evaluation is selected
           if (selectedEvaluationId) {
             setAllEvaluations(currentEvals =>
               currentEvals.map(ev =>
@@ -175,8 +174,7 @@ export default function DashboardPage() {
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formState.skinFolds, formState.age, formState.gender, formState.protocol, selectedEvaluationId]);
+  }, [formState.skinFolds, formState.age, formState.gender, formState.protocol, selectedEvaluationId, setAllEvaluations, formState.bodyComposition?.bodyFatPercentage]);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -310,44 +308,12 @@ export default function DashboardPage() {
     
     const handleNewEvaluation = () => {
         if(client){
-            const newEvalId = `eval_${allEvaluations.length + 1}`;
-            
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-            const day = String(today.getDate()).padStart(2, '0');
-            const localDateString = `${year}-${month}-${day}`;
-
-            const newEvaluation: Evaluation = {
-                id: newEvalId,
-                clientId: client.id,
-                clientName: client.name,
-                date: localDateString,
-                protocol: availableProtocols[0],
-                bodyMeasurements: {
-                    weight: 0,
-                    height: client.height,
-                    waistCircumference: 0,
-                    hipCircumference: 0,
-                },
-                bodyComposition: {
-                    bodyFatPercentage: 0,
-                },
-                perimetria: {},
-                skinFolds: {},
-                boneDiameters: {},
-                bioimpedance: {
-                    scaleType: null
-                },
-                observations: '',
-            };
-            
-            setAllEvaluations(prevEvals => [...prevEvals, newEvaluation].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
-            setSelectedEvaluationId(newEvalId);
+            const newEval = addEvaluation(client.id);
+            setSelectedEvaluationId(newEval.id);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
+            toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação criada hoje." });
         }
-        toast({ title: "Nova Avaliação", description: "Preencha os dados para a nova avaliação." });
     };
     
     const handleSave = () => {
@@ -418,7 +384,6 @@ export default function DashboardPage() {
         if (!checked) {
             setSelectedEvalIdsForCompare([]);
         } else {
-            // Keep current eval in comparison list
             if (evaluation && !selectedEvalIdsForCompare.includes(evaluation.id)) {
                 setSelectedEvalIdsForCompare([evaluation.id]);
             }
@@ -496,9 +461,8 @@ export default function DashboardPage() {
 
         useEffect(() => {
             if(ev.date) {
-                // Fix for timezone issue: replace '-' with '/'
                 const localDate = new Date(ev.date.replace(/-/g, '/'));
-                setDate(localDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: '2-digit' }));
+                setDate(localDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }));
             }
         }, [ev.date]);
 
@@ -506,7 +470,7 @@ export default function DashboardPage() {
             <Card 
                 key={ev.id} 
                 className={cn(
-                    "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
+                    "shrink-0 w-44 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                     isCompareMode 
                         ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
                         : isSelected ? 'border-2 border-primary' : 'bg-card',
@@ -558,14 +522,13 @@ export default function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
                 
                 <Card>
                     <CardHeader>
                         <div className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>Avaliação {evaluation && selectedEvaluationId ? clientEvaluations.map(e => e.id).indexOf(selectedEvaluationId) + 1 : clientEvaluations.length + 1}</CardTitle>
+                                <CardTitle>Avaliação {evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}</CardTitle>
                                 <CardDescription>{formattedDate}</CardDescription>
                             </div>
                              <Button 
@@ -838,7 +801,6 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
-            {/* Right Column */}
             <div className="lg:col-span-1 space-y-6">
                 <Card>
                     <CardHeader className="pb-2">
@@ -931,5 +893,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    

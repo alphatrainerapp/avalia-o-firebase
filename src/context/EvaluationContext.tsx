@@ -20,10 +20,16 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) throw new Error("Client not found");
 
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const agora = new Date();
+    const dataSemHora = new Date(
+      agora.getFullYear(),
+      agora.getMonth(),
+      agora.getDate()
+    );
+
+    const year = dataSemHora.getFullYear();
+    const month = String(dataSemHora.getMonth() + 1).padStart(2, '0');
+    const day = String(dataSemHora.getDate()).padStart(2, '0');
     const localDateString = `${year}-${month}-${day}`;
 
     // Check if an evaluation for this client on this day already exists.
