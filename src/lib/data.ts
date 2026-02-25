@@ -300,7 +300,7 @@ export type ProtocolMap = {
 };
 
 export const audienceProtocols: ProtocolMap = {
-  'Adultos Saudáveis': ['Pollock 3 dobras', 'Pollock 4 dobras', 'Pollock 7 dobras', 'Jackson & Pollock', 'Faulkner', 'Guedes', 'YMCA'],
+  'Adultos Saudáveis': ['Pollock 3 dobras', 'Pollock 4 dobras', 'Pollock 7 dobras', 'Jackson & Pollock', 'Faulkner', 'Guedes', 'YMCA', 'ISAK'],
   'Crianças e Adolescentes': ['Slaughter-Lohman', 'Guedes'],
   'Idosos': ['Pollock 4 dobras', 'Durnin & Womersley'],
   'Obesos': ['Pollock 3 dobras', 'Faulkner', 'YMCA', 'Guedes'],
@@ -317,6 +317,7 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     'YMCA': ['abdominal'],
     'Slaughter-Lohman': ['tricipital', 'panturrilha'],
     'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
+    'ISAK': ['tricipital', 'subscapular', 'bicipital', 'supraIliaca', 'abdominal', 'coxa', 'panturrilha'],
 };
     
 export function calculateBodyComposition(evaluation: Evaluation, client: Client): BodyComposition {
