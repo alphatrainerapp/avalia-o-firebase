@@ -24,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import ComparisonCharts from '@/components/ComparisonCharts';
-import jsPDF from 'jspdf';
+import jspdf from 'jspdf';
 import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (formState.date) {
-            setFormattedDate(new Date(formState.date.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
+            setFormattedDate(new Date(formState.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }));
         }
     }, [formState.date]);
 
@@ -338,7 +338,7 @@ export default function DashboardPage() {
         });
     
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
+        const pdf = new jspdf({
             orientation: 'portrait',
             unit: 'px',
             format: 'a4',
@@ -423,6 +423,7 @@ export default function DashboardPage() {
         { name: 'peitoral', label: 'Peitoral' },
         { name: 'axilarMedia', label: 'Axilar-média' },
         { name: 'supraIliaca', label: 'Supra-ilíaca' },
+        { name: 'supraspinale', label: 'Supraespinal' },
         { name: 'abdominal', label: 'Abdominal' },
         { name: 'coxa', label: 'Coxa' },
         { name: 'panturrilha', label: 'Panturrilha' },

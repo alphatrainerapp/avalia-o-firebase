@@ -1,7 +1,7 @@
 'use client';
 import { getPlaceholderImage } from './placeholder-images';
 
-export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitoral' | 'axilarMedia' | 'supraIliaca' | 'abdominal' | 'coxa' | 'panturrilha';
+export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitoral' | 'axilarMedia' | 'supraIliaca' | 'supraspinale' | 'abdominal' | 'coxa' | 'panturrilha';
 
 export type BoneDiameterKeys = 'biestiloidal' | 'bicondilarFemur' | 'bicondilarUmero';
 
@@ -317,7 +317,7 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     'YMCA': ['abdominal'],
     'Slaughter-Lohman': ['tricipital', 'panturrilha'],
     'Durnin & Womersley': ['bicipital', 'tricipital', 'subscapular', 'supraIliaca'],
-    'ISAK': ['tricipital', 'subscapular', 'bicipital', 'supraIliaca', 'abdominal', 'coxa', 'panturrilha'],
+    'ISAK': ['tricipital', 'subscapular', 'bicipital', 'supraIliaca', 'supraspinale', 'abdominal', 'coxa', 'panturrilha'],
 };
     
 export function calculateBodyComposition(evaluation: Evaluation, client: Client): BodyComposition {
