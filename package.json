@@ -1,7 +1,12 @@
+
 {
-  "name": "nextn",
+  "name": "alpha-trainer-avalia-o-firebase",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alphatrainerapp/avalia-o-firebase.git"
+  },
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",

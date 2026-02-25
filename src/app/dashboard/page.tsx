@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -24,7 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import ComparisonCharts from '@/components/ComparisonCharts';
-import jspdf from 'jspdf';
+import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -338,7 +339,7 @@ export default function DashboardPage() {
         });
     
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jspdf({
+        const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'px',
             format: 'a4',

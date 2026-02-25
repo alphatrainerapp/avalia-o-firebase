@@ -1,7 +1,8 @@
+
 'use client';
 
 import React from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, ChevronDown, Github } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -35,9 +36,21 @@ const Header = () => {
                         className="w-full rounded-full border-0 bg-white pl-10 text-black placeholder:text-gray-500"
                     />
                 </div>
+                
+                <a 
+                    href="https://github.com/alphatrainerapp/avalia-o-firebase" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    title="Ver no GitHub"
+                >
+                    <Github className="h-6 w-6" />
+                </a>
+
                 <button className="relative rounded-full p-2 hover:bg-white/10">
                     <Bell className="h-6 w-6" />
                 </button>
+                
                 <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
                         <Avatar className="h-9 w-9">
