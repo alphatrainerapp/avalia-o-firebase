@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut, FileText } from 'lucide-react';
@@ -55,6 +55,17 @@ export default function PosturalAnalysisPage() {
     const { photoKey, title } = viewConfig[viewKey];
     const imageToDisplay = photos[photoKey];
     const analysisSections = posturalDeviations[viewKey];
+
+    // Flatten sections and items for mobile carousel
+    const flattenedMobileItems = useMemo(() => {
+        if (!analysisSections) return [];
+        return analysisSections.flatMap(section => 
+            section.items.map(item => ({
+                sectionTitle: section.title,
+                ...item
+            }))
+        );
+    }, [analysisSections]);
 
     useEffect(() => {
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
@@ -130,33 +141,30 @@ export default function PosturalAnalysisPage() {
                 <div className="px-4 pb-8">
                     <Carousel className="w-full max-w-xs mx-auto">
                         <CarouselContent>
-                            {analysisSections.map((section, index) => (
+                            {flattenedMobileItems.map((item, index) => (
                                 <CarouselItem key={index}>
                                     <Card className="border-primary/20 shadow-sm">
                                         <CardHeader className="bg-primary/5 py-3">
-                                            <CardTitle className="text-base text-primary">{section.title}</CardTitle>
+                                            <CardTitle className="text-sm text-primary uppercase font-bold">
+                                                {item.sectionTitle} {item.subtitle ? `• ${item.subtitle}` : ''}
+                                            </CardTitle>
                                         </CardHeader>
-                                        <CardContent className="pt-4 space-y-4 min-h-[200px]">
-                                            {section.items.map((item, itemIndex) => (
-                                                <div key={itemIndex}>
-                                                    {item.subtitle && <Label className="font-bold text-xs uppercase text-muted-foreground mb-2 block">{item.subtitle}</Label>}
-                                                    <div className="grid gap-3">
-                                                        {item.options.map(option => (
-                                                            <div key={option} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
-                                                                <Checkbox 
-                                                                    id={`mobile-${section.title}-${itemIndex}-${option}`}
-                                                                    checked={deviations[viewKey]?.includes(option)}
-                                                                    onCheckedChange={() => toggleDeviation(viewKey, option)}
-                                                                    className="size-5"
-                                                                />
-                                                                <Label htmlFor={`mobile-${section.title}-${itemIndex}-${option}`} className="font-medium text-sm leading-none cursor-pointer">
-                                                                    {option}
-                                                                </Label>
-                                                            </div>
-                                                        ))}
+                                        <CardContent className="pt-4 space-y-4 min-h-[160px]">
+                                            <div className="grid gap-3">
+                                                {item.options.map(option => (
+                                                    <div key={option} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                                                        <Checkbox 
+                                                            id={`mobile-${item.sectionTitle}-${index}-${option}`}
+                                                            checked={deviations[viewKey]?.includes(option)}
+                                                            onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                            className="size-5"
+                                                        />
+                                                        <Label htmlFor={`mobile-${item.sectionTitle}-${index}-${option}`} className="font-medium text-sm leading-none cursor-pointer">
+                                                            {option}
+                                                        </Label>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </CarouselItem>
