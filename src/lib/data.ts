@@ -129,7 +129,47 @@ export const clients: Client[] = [
     { id: 'cli_3', name: 'Pedro Santos', email: 'pedro.santos@example.com', avatarUrl: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl || '', age: 45, gender: 'Masculino', height: 190, bodyMeasurements: { weight: 95 } },
 ];
 
-export const evaluations: Evaluation[] = []; // Inicia vazio conforme solicitado
+export const evaluations: Evaluation[] = [
+    {
+        id: 'eval_maria_1',
+        clientId: 'cli_2',
+        clientName: 'Maria Oliveira',
+        date: '2023-11-10',
+        protocol: 'Pollock 3 dobras',
+        bodyMeasurements: { weight: 72.5, height: 165, waistCircumference: 84, hipCircumference: 105 },
+        bodyComposition: { bodyFatPercentage: 32.4 },
+        perimetria: { ombro: 102, torax: 94, cintura: 84, abdomen: 92, quadril: 105, bracoDRelaxado: 31, bracoERelaxado: 30.5, coxaMedialD: 58, coxaMedialE: 57.5 },
+        skinFolds: { tricipital: 18, supraIliaca: 22, coxa: 28 },
+        bioimpedance: { scaleType: null },
+        observations: 'Avaliação inicial. Foco em redução de gordura corporal.'
+    },
+    {
+        id: 'eval_maria_2',
+        clientId: 'cli_2',
+        clientName: 'Maria Oliveira',
+        date: '2024-01-15',
+        protocol: 'Pollock 3 dobras',
+        bodyMeasurements: { weight: 68.2, height: 165, waistCircumference: 79, hipCircumference: 101 },
+        bodyComposition: { bodyFatPercentage: 28.1 },
+        perimetria: { ombro: 100, torax: 92, cintura: 79, abdomen: 88, quadril: 101, bracoDRelaxado: 29.5, bracoERelaxado: 29.5, coxaMedialD: 56, coxaMedialE: 56 },
+        skinFolds: { tricipital: 15, supraIliaca: 18, coxa: 24 },
+        bioimpedance: { scaleType: null },
+        observations: 'Ótima evolução. Redução significativa de medidas na cintura.'
+    },
+    {
+        id: 'eval_maria_3',
+        clientId: 'cli_2',
+        clientName: 'Maria Oliveira',
+        date: '2024-03-20',
+        protocol: 'Pollock 3 dobras',
+        bodyMeasurements: { weight: 65.0, height: 165, waistCircumference: 74, hipCircumference: 98 },
+        bodyComposition: { bodyFatPercentage: 24.2 },
+        perimetria: { ombro: 98, torax: 90, cintura: 74, abdomen: 82, quadril: 98, bracoDRelaxado: 28, bracoERelaxado: 28, coxaMedialD: 54, coxaMedialE: 54 },
+        skinFolds: { tricipital: 12, supraIliaca: 14, coxa: 20 },
+        bioimpedance: { scaleType: null },
+        observations: 'Meta de peso atingida. Iniciando fase de manutenção e ganho de massa magra.'
+    }
+];
 
 export type ProtocolMap = {
   [key: string]: string[];
