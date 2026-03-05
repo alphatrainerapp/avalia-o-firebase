@@ -104,6 +104,9 @@ export type Client = {
     age: number;
     gender: 'Masculino' | 'Feminino';
     height: number;
+    bodyMeasurements?: {
+        weight: number;
+    };
 };
 
 export type BodyComposition = {
@@ -121,179 +124,12 @@ export type BodyComposition = {
 };
 
 export const clients: Client[] = [
-    { id: 'cli_1', name: 'João da Silva', email: 'joao.silva@example.com', avatarUrl: getPlaceholderImage('client-john-doe-avatar')?.imageUrl || '', age: 34, gender: 'Masculino', height: 180 },
-    { id: 'cli_2', name: 'Maria Oliveira', email: 'maria.oliveira@example.com', avatarUrl: getPlaceholderImage('client-jane-smith-avatar')?.imageUrl || '', age: 28, gender: 'Feminino', height: 165 },
-    { id: 'cli_3', name: 'Pedro Santos', email: 'pedro.santos@example.com', avatarUrl: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl || '', age: 45, gender: 'Masculino', height: 190 },
+    { id: 'cli_1', name: 'João da Silva', email: 'joao.silva@example.com', avatarUrl: getPlaceholderImage('client-john-doe-avatar')?.imageUrl || '', age: 34, gender: 'Masculino', height: 180, bodyMeasurements: { weight: 85 } },
+    { id: 'cli_2', name: 'Maria Oliveira', email: 'maria.oliveira@example.com', avatarUrl: getPlaceholderImage('client-jane-smith-avatar')?.imageUrl || '', age: 28, gender: 'Feminino', height: 165, bodyMeasurements: { weight: 65 } },
+    { id: 'cli_3', name: 'Pedro Santos', email: 'pedro.santos@example.com', avatarUrl: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl || '', age: 45, gender: 'Masculino', height: 190, bodyMeasurements: { weight: 95 } },
 ];
 
-export const evaluations: Evaluation[] = [
-    {
-        id: 'eval_1',
-        clientId: 'cli_1',
-        clientName: 'João da Silva',
-        date: '2023-09-25',
-        protocol: 'Pollock 7 dobras',
-        observations: 'Cliente focado em hipertrofia.',
-        bodyMeasurements: {
-            weight: 85,
-            height: 180,
-            waistCircumference: 90,
-            hipCircumference: 100,
-        },
-        bodyComposition: {
-            bodyFatPercentage: 22,
-        },
-        boneDiameters: {},
-        bioimpedance: {
-            scaleType: 'inbody',
-            inbody: {
-                totalBodyWeight: 85,
-                skeletalMuscleMass: 35.2,
-                bodyFatMass: 18.5,
-                totalBodyWater: 50.1,
-                fatFreeMass: 66.5,
-                bmi: 26.2,
-                bodyFatPercentage: 21.8,
-                waistHipRatio: 0.9,
-                basalMetabolicRate: 1800,
-                rightArmLeanMass: 3.5,
-                leftArmLeanMass: 3.4,
-                trunkLeanMass: 28.1,
-                rightLegLeanMass: 9.8,
-                leftLegLeanMass: 9.7,
-            }
-        },
-        posturalPhotos: {
-            front: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
-            back: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
-            right: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
-            left: getPlaceholderImage('client-john-doe-avatar')?.imageUrl,
-        },
-        posturalDeviations: {
-            anterior: ['Ombro elevado', 'Geno valgo'],
-            posterior: ['Escápula alada D'],
-            lateral_direita: ['Cabeça projetada', 'Hipercifose torácica']
-        }
-    },
-    {
-        id: 'eval_2',
-        clientId: 'cli_1',
-        clientName: 'João da Silva',
-        date: '2023-10-25',
-        protocol: 'Pollock 7 dobras',
-        observations: 'Aumento da força notado.',
-        bodyMeasurements: {
-            weight: 82,
-            height: 180,
-            waistCircumference: 85,
-            hipCircumference: 98,
-        },
-        bodyComposition: {
-            bodyFatPercentage: 18,
-        },
-        boneDiameters: {},
-        bioimpedance: {
-            scaleType: 'inbody',
-            inbody: {
-                totalBodyWeight: 82,
-                skeletalMuscleMass: 36.5,
-                bodyFatMass: 14.8,
-                totalBodyWater: 52.3,
-                fatFreeMass: 67.2,
-                bmi: 25.3,
-                bodyFatPercentage: 18.0,
-                waistHipRatio: 0.87,
-                basalMetabolicRate: 1850,
-                rightArmLeanMass: 3.7,
-                leftArmLeanMass: 3.6,
-                trunkLeanMass: 29.0,
-                rightLegLeanMass: 10.1,
-                leftLegLeanMass: 10.0,
-            }
-        },
-        posturalPhotos: {
-            front: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl,
-            back: getPlaceholderImage('client-peter-jones-avatar')?.imageUrl,
-        },
-        posturalDeviations: {
-            anterior: ['Ombro elevado'],
-            posterior: [],
-            lateral_direita: ['Cabeça projetada']
-        }
-    },
-    {
-        id: 'eval_3',
-        clientId: 'cli_1',
-        clientName: 'João da Silva',
-        date: '2023-11-25',
-        protocol: 'Pollock 7 dobras',
-        observations: 'Melhora na resistência cardiovascular.',
-        bodyMeasurements: {
-            weight: 80,
-            height: 180,
-            waistCircumference: 82,
-            hipCircumference: 96,
-        },
-        bodyComposition: {
-            bodyFatPercentage: 15,
-        },
-        boneDiameters: {},
-        bioimpedance: {
-            scaleType: 'inbody'
-        }
-    },
-    {
-        id: 'eval_4',
-        clientId: 'cli_2',
-        clientName: 'Maria Oliveira',
-        date: '2023-11-01',
-        protocol: 'YMCA',
-        observations: 'Iniciando programa de perda de peso.',
-        bodyMeasurements: {
-            weight: 65,
-            height: 165,
-            waistCircumference: 70,
-            hipCircumference: 95,
-        },
-        bodyComposition: {
-            bodyFatPercentage: 25,
-        },
-        boneDiameters: {},
-        bioimpedance: {
-            scaleType: 'omron',
-            omron: {
-                weight: 65,
-                bmi: 23.9,
-                bodyFatPercentage: 30.2,
-                skeletalMusclePercentage: 28.5,
-                visceralFatLevel: 5,
-                basalMetabolicRate: 1400,
-                metabolicAge: 30,
-            }
-        }
-    },
-    {
-        id: 'eval_5',
-        clientId: 'cli_3',
-        clientName: 'Pedro Santos',
-        date: '2023-11-15',
-        protocol: 'Guedes',
-        observations: 'Manutenção do condicionamento físico.',
-        bodyMeasurements: {
-            weight: 95,
-            height: 190,
-            waistCircumference: 100,
-            hipCircumference: 105,
-        },
-        bodyComposition: {
-            bodyFatPercentage: 25.0,
-        },
-        boneDiameters: {},
-        bioimpedance: {
-            scaleType: null
-        }
-    }
-];
+export const evaluations: Evaluation[] = []; // Inicia vazio conforme solicitado
 
 export type ProtocolMap = {
   [key: string]: string[];

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -25,7 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ComparisonTable } from '@/components/ComparisonTable';
 import ComparisonCharts from '@/components/ComparisonCharts';
-import jsPDF from 'jspdf';
+import jspdf from 'jspdf';
 import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -59,6 +58,8 @@ export default function DashboardPage() {
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
     
     const availableProtocols = audienceProtocols[selectedAudience] || [];
+
+    const hasEvaluations = clientEvaluations.length > 0;
 
     useEffect(() => {
         const currentEval = evaluation;
@@ -339,7 +340,7 @@ export default function DashboardPage() {
         });
     
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
+        const pdf = new jspdf({
             orientation: 'portrait',
             unit: 'px',
             format: 'a4',
@@ -524,13 +525,17 @@ export default function DashboardPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
+            <div className={cn("space-y-6", !hasEvaluations ? "lg:col-span-3" : "lg:col-span-2")}>
                 
                 <Card>
                     <CardHeader>
                         <div className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>Avaliação {evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}</CardTitle>
+                                <CardTitle>
+                                  {hasEvaluations 
+                                    ? `Avaliação ${evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}` 
+                                    : "Dados de Registro"}
+                                </CardTitle>
                                 <CardDescription>{formattedDate}</CardDescription>
                             </div>
                              <Button 
@@ -593,16 +598,18 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <Label>IMC</Label>
-                                <div className="font-bold text-lg">{bmi}</div>
-                            </div>
-                            <div>
-                                <Label>Classificação</Label>
-                                <div className="font-bold text-lg">{bmiClassification}</div>
-                            </div>
-                        </div>
+                        {hasEvaluations && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4">
+                              <div>
+                                  <Label>IMC</Label>
+                                  <div className="font-bold text-lg">{bmi}</div>
+                              </div>
+                              <div>
+                                  <Label>Classificação</Label>
+                                  <div className="font-bold text-lg">{bmiClassification}</div>
+                              </div>
+                          </div>
+                        )}
                         <div>
                             <Label htmlFor="observations">Observações</Label>
                             <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
@@ -610,273 +617,279 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle>Avaliações ({clientEvaluations.length})</CardTitle>
-                            <div className="flex items-center gap-2">
-                                <Label htmlFor="compare-switch" className="text-sm">Comparar</Label>
-                                <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
-                            </div>
-                        </div>
-                         {isCompareMode && (
-                            <div className="pt-4 space-y-2">
-                                <p className="text-sm text-muted-foreground">
-                                    Selecione até 4 datas para comparar ({selectedEvalIdsForCompare.length}/4 selecionadas)
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {comparedEvaluations.map(ev => (
-                                        <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
-                                            <span>{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span>
-                                            <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
-                                                <X className="size-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                {hasEvaluations && (
+                  <>
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <CardTitle>Avaliações ({clientEvaluations.length})</CardTitle>
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="compare-switch" className="text-sm">Comparar</Label>
+                                    <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
                             </div>
-                        )}
-                    </CardHeader>
-                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.map((ev, index) => (
-                           <EvalCard ev={ev} index={index} key={ev.id}/>
-                        ))}
-                    </CardContent>
-                </Card>
-                
-                {isCompareMode && client && comparedEvaluations.length > 0 && (
-                    <div className="space-y-6">
-                        <ComparisonTable
-                            evaluations={comparedEvaluations}
-                            perimetriaFields={perimetriaFields}
-                            skinfoldFields={skinfoldFields}
-                            diametrosFields={diametrosFields}
-                        />
-                        <ComparisonCharts 
-                            evaluations={comparedEvaluations}
-                            client={client}
-                        />
-                    </div>
-                )}
-                
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Registros de Dados</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
-                                <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
-                                <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="perimetria" className="pt-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    {perimetriaFields.map(field => (
-                                        <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
-                                    ))}
-                                </div>
-                                <div className="mt-6 space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>RCQ (Relação Cintura-Quadril)</Label>
-                                            <div className="font-bold text-lg">{rcq}</div>
-                                        </div>
-                                        <div>
-                                            <Label>Classificação de Risco</Label>
-                                            <div className="font-bold text-lg">{rcqClassification}</div>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Assimetria de Braço (Relaxado)</Label>
-                                            <div className="font-bold text-lg">{armAsymmetry}</div>
-                                        </div>
-                                        <div>
-                                            <Label>Assimetria de Coxa (Medial)</Label>
-                                            <div className="font-bold text-lg">{thighAsymmetry}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="dobras" className="pt-4 space-y-4">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-base">Seleção de Protocolo</CardTitle>
-                                        <CardDescription className="text-sm">Escolha o público-alvo e o protocolo para destacar as medidas necessárias.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label htmlFor="publico-alvo">Público-Alvo</Label>
-                                                <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                                    <SelectTrigger id="publico-alvo">
-                                                        <SelectValue placeholder="Selecione o público" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {Object.keys(audienceProtocols).map(audience => (
-                                                            <SelectItem key={audience} value={audience}>{audience}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
-                                                <Select value={formState.protocol || ''} onValueChange={(value: string) => handleSelectChange('protocol', value)}>
-                                                    <SelectTrigger id="protocolo">
-                                                        <SelectValue placeholder="Selecione o protocolo" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {availableProtocols.map(protocol => (
-                                                            <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                
-                                <div className="pt-4">
-                                    <h3 className="text-lg font-medium mb-4">Medidas</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {skinfoldFields.map(field => (
-                                            <div key={field.name}>
-                                                <Label>{field.label} (mm)</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    placeholder="0.0" 
-                                                    name={`skinFolds.${field.name}`} 
-                                                    value={formState.skinFolds?.[field.name] || ''} 
-                                                    onChange={handleInputChange} 
-                                                    className={cn(requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
-                                                />
+                            {isCompareMode && (
+                                <div className="pt-4 space-y-2">
+                                    <p className="text-sm text-muted-foreground">
+                                        Selecione até 4 datas para comparar ({selectedEvalIdsForCompare.length}/4 selecionadas)
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {comparedEvaluations.map(ev => (
+                                            <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
+                                                <span>{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span>
+                                                <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
+                                                    <X className="size-4" />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-
-                                <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                    <h3 className="font-semibold mb-2">Resultados</h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Soma das Dobras (mm)</Label>
-                                            <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                            )}
+                        </CardHeader>
+                        <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                            {clientEvaluations.map((ev, index) => (
+                              <EvalCard ev={ev} index={index} key={ev.id}/>
+                            ))}
+                        </CardContent>
+                    </Card>
+                    
+                    {isCompareMode && client && comparedEvaluations.length > 0 && (
+                        <div className="space-y-6">
+                            <ComparisonTable
+                                evaluations={comparedEvaluations}
+                                perimetriaFields={perimetriaFields}
+                                skinfoldFields={skinfoldFields}
+                                diametrosFields={diametrosFields}
+                            />
+                            <ComparisonCharts 
+                                evaluations={comparedEvaluations}
+                                client={client}
+                            />
+                        </div>
+                    )}
+                    
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Registros de Dados</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
+                                    <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
+                                    <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="perimetria" className="pt-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        {perimetriaFields.map(field => (
+                                            <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-6 space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                                <div className="font-bold text-lg">{rcq}</div>
+                                            </div>
+                                            <div>
+                                                <Label>Classificação de Risco</Label>
+                                                <div className="font-bold text-lg">{rcqClassification}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <Label>% Gordura Estimado</Label>
-                                            <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>Assimetria de Braço (Relaxado)</Label>
+                                                <div className="font-bold text-lg">{armAsymmetry}</div>
+                                            </div>
+                                            <div>
+                                                <Label>Assimetria de Coxa (Medial)</Label>
+                                                <div className="font-bold text-lg">{thighAsymmetry}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="diametros" className="pt-4 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                    {diametrosFields.map(field => (
-                                        <div key={field.name}>
-                                            <Label>{field.label}</Label>
-                                            <Input 
-                                                type="number" 
-                                                placeholder="0.0" 
-                                                name={`boneDiameters.${field.name}`} 
-                                                value={formState.boneDiameters?.[field.name] || ''} 
-                                                onChange={handleInputChange} 
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                    <h3 className="font-semibold mb-2">Resultados</h3>
-                                    <div className="grid grid-cols-1 gap-4">
-                                        <div>
-                                            <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                            <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</div>
+                                </TabsContent>
+                                <TabsContent value="dobras" className="pt-4 space-y-4">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="text-base">Seleção de Protocolo</CardTitle>
+                                            <CardDescription className="text-sm">Escolha o público-alvo e o protocolo para destacar as medidas necessárias.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                                    <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                                        <SelectTrigger id="publico-alvo">
+                                                            <SelectValue placeholder="Selecione o público" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {Object.keys(audienceProtocols).map(audience => (
+                                                                <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                                    <Select value={formState.protocol || ''} onValueChange={(value: string) => handleSelectChange('protocol', value)}>
+                                                        <SelectTrigger id="protocolo">
+                                                            <SelectValue placeholder="Selecione o protocolo" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {availableProtocols.map(protocol => (
+                                                                <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                    
+                                    <div className="pt-4">
+                                        <h3 className="text-lg font-medium mb-4">Medidas</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                            {skinfoldFields.map(field => (
+                                                <div key={field.name}>
+                                                    <Label>{field.label} (mm)</Label>
+                                                    <Input 
+                                                        type="number" 
+                                                        placeholder="0.0" 
+                                                        name={`skinFolds.${field.name}`} 
+                                                        value={formState.skinFolds?.[field.name] || ''} 
+                                                        onChange={handleInputChange} 
+                                                        className={cn(requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    <p className="text-xs text-foreground mt-2">
-                                        Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
-                                    </p>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                    </CardContent>
-                </Card>
+
+                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                        <h3 className="font-semibold mb-2">Resultados</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label>Soma das Dobras (mm)</Label>
+                                                <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                            </div>
+                                            <div>
+                                                <Label>% Gordura Estimado</Label>
+                                                <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="diametros" className="pt-4 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                                        {diametrosFields.map(field => (
+                                            <div key={field.name}>
+                                                <Label>{field.label}</Label>
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="0.0" 
+                                                    name={`boneDiameters.${field.name}`} 
+                                                    value={formState.boneDiameters?.[field.name] || ''} 
+                                                    onChange={handleInputChange} 
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
+                                        <h3 className="font-semibold mb-2">Resultados</h3>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div>
+                                                <Label>Massa Óssea (kg) - Rocha, 1975</Label>
+                                                <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-foreground mt-2">
+                                            Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
+                                        </p>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                  </>
+                )}
             </div>
 
-            <div className="lg:col-span-1 space-y-6">
-                <Card>
-                    <CardHeader className="pb-2">
-                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-medium">GORDURA</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage.toFixed(1)}%</p>
-                        <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg.toFixed(1)} kg</p>
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader className="pb-2">
-                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-sm font-medium">MUSCULAR</CardTitle>
-                             {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold">{bodyComposition.muscleMassKg.toFixed(1)} kg</p>
-                        <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage.toFixed(1)}%</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-2xl font-bold">{bodyComposition.residualMassKg.toFixed(1)} kg</p>
-                        <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage.toFixed(1)}%</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-4">
-                        <CardTitle className="text-base font-medium">RESULTADOS</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Classificação % Gordura:</span>
-                            <span className="font-medium">{fatClassification}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Classificação IMC:</span>
-                            <span className="font-medium">{bmiClassification}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Massa gorda (kg / %):</span>
-                            <span className="font-medium">{bodyComposition.fatMassKg.toFixed(1)} kg / {bodyComposition.fatMassPercentage.toFixed(1)}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Massa magra (kg / %):</span>
-                            <span className="font-medium">{bodyComposition.leanMassKg.toFixed(1)} kg / {(100 - bodyComposition.fatMassPercentage).toFixed(1)}%</span>
-                        </div>
-                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Massa óssea (kg):</span>
-                            <span className="font-medium">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</span>
-                        </div>
-                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Massa muscular (kg):</span>
-                            <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? bodyComposition.muscleMassKg.toFixed(1) : '-'} kg</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Peso desejável:</span>
-                            <span className="font-medium">{bodyComposition.idealWeight > 0 ? bodyComposition.idealWeight.toFixed(1) : '-'} kg</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Perda de gordura necessária:</span>
-                            <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? bodyComposition.fatLossNeeded.toFixed(1) : '0.0'} kg</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            {hasEvaluations && (
+              <div className="lg:col-span-1 space-y-6">
+                  <Card>
+                      <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-medium">GORDURA</CardTitle>
+                              {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                          </div>
+                      </CardHeader>
+                      <CardContent>
+                          <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage.toFixed(1)}%</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg.toFixed(1)} kg</p>
+                      </CardContent>
+                  </Card>
+                  <Card>
+                      <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-medium">MUSCULAR</CardTitle>
+                              {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                          </div>
+                      </CardHeader>
+                      <CardContent>
+                          <p className="text-2xl font-bold">{bodyComposition.muscleMassKg.toFixed(1)} kg</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage.toFixed(1)}%</p>
+                      </CardContent>
+                  </Card>
+                  <Card>
+                      <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                          <p className="text-2xl font-bold">{bodyComposition.residualMassKg.toFixed(1)} kg</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage.toFixed(1)}%</p>
+                      </CardContent>
+                  </Card>
+                  <Card>
+                      <CardHeader className="pb-4">
+                          <CardTitle className="text-base font-medium">RESULTADOS</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm">
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Classificação % Gordura:</span>
+                              <span className="font-medium">{fatClassification}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Classificação IMC:</span>
+                              <span className="font-medium">{bmiClassification}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Massa gorda (kg / %):</span>
+                              <span className="font-medium">{bodyComposition.fatMassKg.toFixed(1)} kg / {bodyComposition.fatMassPercentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Massa magra (kg / %):</span>
+                              <span className="font-medium">{bodyComposition.leanMassKg.toFixed(1)} kg / {(100 - bodyComposition.fatMassPercentage).toFixed(1)}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Massa óssea (kg):</span>
+                              <span className="font-medium">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Massa muscular (kg):</span>
+                              <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? bodyComposition.muscleMassKg.toFixed(1) : '-'} kg</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Peso desejável:</span>
+                              <span className="font-medium">{bodyComposition.idealWeight > 0 ? bodyComposition.idealWeight.toFixed(1) : '-'} kg</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span className="text-muted-foreground">Perda de gordura necessária:</span>
+                              <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? bodyComposition.fatLossNeeded.toFixed(1) : '0.0'} kg</span>
+                          </div>
+                      </CardContent>
+                  </Card>
+              </div>
+            )}
         </div>
         <Toaster />
     </div>
