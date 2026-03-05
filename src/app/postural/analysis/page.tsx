@@ -15,6 +15,13 @@ import { usePosturalContext } from '../context';
 import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { posturalDeviations } from '@/lib/postural-data';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 // Configuration for the different analysis views
 const analysisOrder = ['anterior', 'posterior', 'lateral_direita', 'lateral_esquerda'] as const;
@@ -116,9 +123,55 @@ export default function PosturalAnalysisPage() {
     }, [viewIndex]);
 
     const renderAnalysisContent = () => {
-        if (!analysisSections) return null; // Or some fallback UI
+        if (!analysisSections) return null;
 
-        const content = (
+        if (isMobile) {
+            return (
+                <div className="px-4 pb-8">
+                    <Carousel className="w-full max-w-xs mx-auto">
+                        <CarouselContent>
+                            {analysisSections.map((section, index) => (
+                                <CarouselItem key={index}>
+                                    <Card className="border-primary/20 shadow-sm">
+                                        <CardHeader className="bg-primary/5 py-3">
+                                            <CardTitle className="text-base text-primary">{section.title}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="pt-4 space-y-4 min-h-[200px]">
+                                            {section.items.map((item, itemIndex) => (
+                                                <div key={itemIndex}>
+                                                    {item.subtitle && <Label className="font-bold text-xs uppercase text-muted-foreground mb-2 block">{item.subtitle}</Label>}
+                                                    <div className="grid gap-3">
+                                                        {item.options.map(option => (
+                                                            <div key={option} className="flex items-center space-x-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                                                                <Checkbox 
+                                                                    id={`mobile-${section.title}-${itemIndex}-${option}`}
+                                                                    checked={deviations[viewKey]?.includes(option)}
+                                                                    onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                                    className="size-5"
+                                                                />
+                                                                <Label htmlFor={`mobile-${section.title}-${itemIndex}-${option}`} className="font-medium text-sm leading-none cursor-pointer">
+                                                                    {option}
+                                                                </Label>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <div className="flex justify-center gap-8 mt-4">
+                            <CarouselPrevious className="static translate-y-0" />
+                            <CarouselNext className="static translate-y-0" />
+                        </div>
+                    </Carousel>
+                </div>
+            );
+        }
+
+        return (
             <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full space-y-4">
                 {analysisSections.map((section) => (
                      <Card key={section.title} className="overflow-hidden">
@@ -152,41 +205,33 @@ export default function PosturalAnalysisPage() {
                 ))}
             </Accordion>
         );
-        
-        if (isMobile) {
-            // Mobile view will use the same accordion for now to ensure functionality.
-            // A carousel could be re-implemented if requested.
-            return content;
-        }
-
-        return content;
     };
 
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
+            <header className="flex flex-wrap items-center justify-between mb-6 gap-4 px-4 sm:px-0">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={handleBack}><ArrowLeft /></Button>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Avaliação Postural</h1>
-                        <p className="text-muted-foreground">Data: {currentDate}</p>
+                        <p className="text-muted-foreground text-xs sm:text-sm">Data: {currentDate}</p>
                     </div>
                 </div>
-                <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
+                <p className="hidden sm:block text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>{title}</CardTitle>
+            <Card className="mx-2 sm:mx-0">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-lg sm:text-xl">{title}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <CardContent className="p-2 sm:p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                         <div className="space-y-4">
                              <div 
                                 ref={imageContainerRef}
-                                className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg overflow-hidden"
+                                className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg overflow-hidden border shadow-inner"
                                 onMouseDown={handleMouseDown}
                                 onMouseMove={handleMouseMove}
                                 onMouseUp={handleMouseUp}
@@ -205,29 +250,30 @@ export default function PosturalAnalysisPage() {
                                 )}
                                 {showGrid && (
                                      <div className="absolute inset-0 pointer-events-none">
-                                        {[...Array(9)].map((_, i) => (<div key={`v-${i}`} className="absolute bg-black/80" style={{ left: `${(i + 1) * 10}%`, top: 0, bottom: 0, width: '1px' }} />))}
-                                        {[...Array(14)].map((_, i) => (<div key={`h-${i}`} className="absolute bg-black/80" style={{ top: `${(i + 1) * (100 / 15)}%`, left: 0, right: 0, height: '1px' }} />))}
+                                        {[...Array(9)].map((_, i) => (<div key={`v-${i}`} className="absolute bg-black/40" style={{ left: `${(i + 1) * 10}%`, top: 0, bottom: 0, width: '1px' }} />))}
+                                        {[...Array(14)].map((_, i) => (<div key={`h-${i}`} className="absolute bg-black/40" style={{ top: `${(i + 1) * (100 / 15)}%`, left: 0, right: 0, height: '1px' }} />))}
                                     </div>
                                 )}
                                 <div className="absolute top-2 left-2 flex flex-col gap-2">
-                                    <Button variant="outline" size="icon" onClick={() => setShowGrid(!showGrid)}>
-                                        <Grid className={cn(showGrid && "text-primary")} />
+                                    <Button variant="secondary" size="icon" className="size-8 opacity-80" onClick={() => setShowGrid(!showGrid)}>
+                                        <Grid className={cn("size-4", showGrid && "text-primary")} />
                                     </Button>
-                                    <Button variant="outline" size="icon">
-                                        <Maximize />
+                                    <Button variant="secondary" size="icon" className="size-8 opacity-80" onClick={() => setZoom(1)}>
+                                        <Maximize className="size-4" />
                                     </Button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 px-4">
-                               <ZoomOut className="size-5" />
+                            <div className="flex items-center gap-2 px-4 max-w-xs mx-auto">
+                               <ZoomOut className="size-4 text-muted-foreground" />
                                <Slider
                                    value={[zoom]}
                                    onValueChange={(value) => setZoom(value[0])}
                                    min={1}
                                    max={3}
                                    step={0.1}
+                                   className="flex-1"
                                />
-                               <ZoomIn className="size-5" />
+                               <ZoomIn className="size-4 text-muted-foreground" />
                            </div>
                         </div>
 
@@ -238,25 +284,23 @@ export default function PosturalAnalysisPage() {
                 </CardContent>
             </Card>
 
-            <div className="flex justify-end gap-4 mt-8">
-                <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                    <Save className="mr-2" />
+            <div className="flex justify-between sm:justify-end gap-4 mt-8 px-4 pb-12">
+                <Button variant="outline" onClick={handleSave} className="flex-1 sm:flex-none">
+                    <Save className="mr-2 size-4" />
                     Salvar
                 </Button>
                 {viewIndex < analysisOrder.length - 1 ? (
-                    <Button variant="outline" onClick={handleNext}>
+                    <Button onClick={handleNext} className="flex-1 sm:flex-none">
                         Próximo
-                        <ArrowRight className="ml-2" />
+                        <ArrowRight className="ml-2 size-4" />
                     </Button>
                 ) : (
-                    <Button variant="outline" onClick={handleNext}>
+                    <Button onClick={handleNext} className="flex-1 sm:flex-none">
                        Ver Resumo
-                       <FileText className="ml-2" />
+                       <FileText className="ml-2 size-4" />
                     </Button>
                 )}
             </div>
         </div>
     );
 }
-
-    
