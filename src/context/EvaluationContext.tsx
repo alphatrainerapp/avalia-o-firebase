@@ -46,7 +46,12 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
       clientName: client.name,
       date: localDateString,
       protocol: Object.keys(audienceProtocols).length > 0 ? audienceProtocols[Object.keys(audienceProtocols)[0]][0] : '',
-      bodyMeasurements: { weight: client.bodyMeasurements?.weight || 0, height: client.height, waistCircumference: 0, hipCircumference: 0 },
+      bodyMeasurements: { 
+        weight: 0, // Inicia zerado conforme solicitado
+        height: client.height, 
+        waistCircumference: 0, 
+        hipCircumference: 0 
+      },
       bodyComposition: { bodyFatPercentage: 0 },
       perimetria: {},
       skinFolds: {},

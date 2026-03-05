@@ -85,7 +85,7 @@ export default function DashboardPage() {
                 gender: client.gender,
                 date: `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`,
                 protocol: availableProtocols[0],
-                bodyMeasurements: { height: client.height },
+                bodyMeasurements: { height: client.height, weight: 0 },
                 perimetria: {},
                 skinFolds: {},
              };
@@ -223,14 +223,14 @@ export default function DashboardPage() {
     };
     
     const calculateBMI = (weight?: number, height?: number) => {
-        if (weight && height) {
+        if (weight && height && weight > 0) {
             return (weight / ((height / 100) * (height / 100))).toFixed(1);
         }
-        return '-';
+        return '—';
     }
 
     const getBmiClassification = (bmi?: string) => {
-        if (!bmi || bmi === '-') return '-';
+        if (!bmi || bmi === '—') return '—';
         const bmiValue = parseFloat(bmi);
         if (bmiValue < 18.5) return 'Abaixo do peso';
         if (bmiValue < 24.9) return 'Peso normal';
@@ -241,14 +241,14 @@ export default function DashboardPage() {
     };
 
     const calculateRCQ = (waist?: number, hip?: number) => {
-        if (waist && hip && hip > 0) {
+        if (waist && hip && hip > 0 && waist > 0) {
             return (waist / hip).toFixed(2);
         }
-        return '-';
+        return '—';
     }
 
     const getRcqClassification = (rcq?: string, gender?: 'Masculino' | 'Feminino') => {
-        if (!rcq || rcq === '-' || !gender) return '-';
+        if (!rcq || rcq === '—' || !gender) return '—';
         const rcqValue = parseFloat(rcq);
         if (gender === 'Feminino') {
             if (rcqValue < 0.80) return 'Baixo Risco';
@@ -262,7 +262,7 @@ export default function DashboardPage() {
     };
 
     const getAsymmetryClassification = (val1?: number, val2?: number) => {
-        if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '-';
+        if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '—';
         const difference = Math.abs(val1 - val2);
         const maxVal = Math.max(val1, val2);
         const percentage = (difference / maxVal) * 100;
@@ -286,13 +286,15 @@ export default function DashboardPage() {
     }, [formState.skinFolds]);
 
     const bodyComposition = useMemo<BodyComposition>(() => {
-        if (!client || !formState) return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
+        if (!client || !formState || !formState.bodyMeasurements?.weight) {
+          return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
+        }
         return calculateBodyComposition(formState as Evaluation, client);
     }, [formState, client]);
 
 
     const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
-        if (percentage === undefined || !gender) return '-';
+        if (!percentage || percentage === 0 || !gender) return '—';
         if (gender === 'Feminino') {
             if (percentage < 20) return 'Atleta';
             if (percentage <= 24) return 'Bom';
@@ -491,7 +493,7 @@ export default function DashboardPage() {
                         <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
                      ) : (
                         <>
-                            <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage?.toFixed(0) ?? 'N/A'}<span className="text-lg">%</span></p>
+                            <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage > 0 ? ev.bodyComposition.bodyFatPercentage.toFixed(0) : '—'}<span className="text-lg">%</span></p>
                             <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
                         </>
                      )}
@@ -770,11 +772,11 @@ export default function DashboardPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <Label>Soma das Dobras (mm)</Label>
-                                                <div className="font-bold text-lg">{skinfoldsSum.toFixed(1)}</div>
+                                                <div className="font-bold text-lg">{skinfoldsSum > 0 ? skinfoldsSum.toFixed(1) : '—'}</div>
                                             </div>
                                             <div>
                                                 <Label>% Gordura Estimado</Label>
-                                                <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage?.toFixed(1) ?? '—'}%</div>
+                                                <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage > 0 ? `${formState.bodyComposition.bodyFatPercentage.toFixed(1)}%` : '—'}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -799,7 +801,7 @@ export default function DashboardPage() {
                                         <div className="grid grid-cols-1 gap-4">
                                             <div>
                                                 <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                                <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</div>
+                                                <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '—'} kg</div>
                                             </div>
                                         </div>
                                         <p className="text-xs text-foreground mt-2">
@@ -824,8 +826,8 @@ export default function DashboardPage() {
                           </div>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage.toFixed(1)}%</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg.toFixed(1)} kg</p>
+                          <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'}</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '0.0 kg'}</p>
                       </CardContent>
                   </Card>
                   <Card>
@@ -836,8 +838,8 @@ export default function DashboardPage() {
                           </div>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.muscleMassKg.toFixed(1)} kg</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage.toFixed(1)}%</p>
+                          <p className="text-2xl font-bold">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage > 0 ? `${bodyComposition.muscleMassPercentage.toFixed(1)}%` : '0.0%'}</p>
                       </CardContent>
                   </Card>
                   <Card>
@@ -845,8 +847,8 @@ export default function DashboardPage() {
                           <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
                       </CardHeader>
                       <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.residualMassKg.toFixed(1)} kg</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage.toFixed(1)}%</p>
+                          <p className="text-2xl font-bold">{bodyComposition.residualMassKg > 0 ? `${bodyComposition.residualMassKg.toFixed(1)} kg` : '—'}</p>
+                          <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage > 0 ? `${bodyComposition.residualMassPercentage.toFixed(1)}%` : '0.0%'}</p>
                       </CardContent>
                   </Card>
                   <Card>
@@ -864,27 +866,31 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Massa gorda (kg / %):</span>
-                              <span className="font-medium">{bodyComposition.fatMassKg.toFixed(1)} kg / {bodyComposition.fatMassPercentage.toFixed(1)}%</span>
+                              <span className="font-medium">
+                                {bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '—'} / {bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'}
+                              </span>
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Massa magra (kg / %):</span>
-                              <span className="font-medium">{bodyComposition.leanMassKg.toFixed(1)} kg / {(100 - bodyComposition.fatMassPercentage).toFixed(1)}%</span>
+                              <span className="font-medium">
+                                {bodyComposition.leanMassKg > 0 ? `${bodyComposition.leanMassKg.toFixed(1)} kg` : '—'} / {bodyComposition.fatMassPercentage > 0 ? `${(100 - bodyComposition.fatMassPercentage).toFixed(1)}%` : '—'}
+                              </span>
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Massa óssea (kg):</span>
-                              <span className="font-medium">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '-'} kg</span>
+                              <span className="font-medium">{bodyComposition.boneMassKg > 0 ? `${bodyComposition.boneMassKg.toFixed(2)} kg` : '—'}</span>
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Massa muscular (kg):</span>
-                              <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? bodyComposition.muscleMassKg.toFixed(1) : '-'} kg</span>
+                              <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</span>
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Peso desejável:</span>
-                              <span className="font-medium">{bodyComposition.idealWeight > 0 ? bodyComposition.idealWeight.toFixed(1) : '-'} kg</span>
+                              <span className="font-medium">{bodyComposition.idealWeight > 0 ? `${bodyComposition.idealWeight.toFixed(1)} kg` : '—'}</span>
                           </div>
                           <div className="flex justify-between">
                               <span className="text-muted-foreground">Perda de gordura necessária:</span>
-                              <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? bodyComposition.fatLossNeeded.toFixed(1) : '0.0'} kg</span>
+                              <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? `${bodyComposition.fatLossNeeded.toFixed(1)} kg` : '0.0 kg'}</span>
                           </div>
                       </CardContent>
                   </Card>
