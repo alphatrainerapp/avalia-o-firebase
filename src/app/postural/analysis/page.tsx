@@ -32,6 +32,13 @@ const viewConfig: Record<ViewKey, { photoKey: 'front' | 'back' | 'right' | 'left
     lateral_esquerda: { photoKey: 'left', title: 'Análise da Visão Lateral Esquerda' },
 };
 
+const photoPositionTitles: Record<ViewKey, string> = {
+    anterior: 'Foto Frente',
+    posterior: 'Foto Costas',
+    lateral_direita: 'Foto Lado Direito',
+    lateral_esquerda: 'Foto Lado Esquerdo',
+};
+
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
     const router = useRouter();
@@ -267,6 +274,9 @@ export default function PosturalAnalysisPage() {
                 <CardContent className="p-2 sm:p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                         <div className="space-y-4">
+                            <p className="text-sm font-bold text-primary text-center uppercase tracking-tight">
+                                Análise: {photoPositionTitles[viewKey]}
+                            </p>
                              <div 
                                 ref={imageContainerRef}
                                 className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg overflow-hidden border shadow-inner"
