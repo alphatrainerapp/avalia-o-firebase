@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Save, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, Maximize, Grid, ZoomIn, ZoomOut, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -35,11 +35,10 @@ const viewConfig: Record<ViewKey, { photoKey: 'front' | 'back' | 'right' | 'left
 export default function PosturalAnalysisPage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { photos, deviations, toggleDeviation, saveAnalysis } = usePosturalContext();
+    const { photos, deviations, toggleDeviation } = usePosturalContext();
     const [viewIndex, setViewIndex] = useState(0);
 
     const [showGrid, setShowGrid] = useState(false);
-    const [currentDate, setCurrentDate] = useState('');
     const [zoom, setZoom] = useState(1);
     const [isDragging, setIsDragging] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -75,15 +74,6 @@ export default function PosturalAnalysisPage() {
             }))
         );
     }, [analysisSections]);
-
-    useEffect(() => {
-        setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-    }, []);
-
-    const handleSave = () => {
-        saveAnalysis();
-        toast({ title: 'Análise Salva', description: 'A análise postural foi salva com sucesso.' });
-    };
 
     const handleNext = () => {
         if (viewIndex < analysisOrder.length - 1) {
@@ -140,7 +130,6 @@ export default function PosturalAnalysisPage() {
         if (isMobile) {
             return (
                 <div className="w-full space-y-4">
-                    {/* Custom Carousel Header */}
                     <Card className="border-none shadow-none bg-muted/20 py-4 px-2">
                         <div className="flex items-center justify-between">
                             <Button 
@@ -173,7 +162,6 @@ export default function PosturalAnalysisPage() {
                             </Button>
                         </div>
 
-                        {/* Pagination Dots */}
                         <div className="flex justify-center gap-1.5 mt-4">
                             {Array.from({ length: count }).map((_, i) => (
                                 <div 
@@ -336,9 +324,9 @@ export default function PosturalAnalysisPage() {
             </Card>
 
             <div className="flex justify-between sm:justify-end gap-4 mt-8 px-4 pb-12">
-                <Button variant="outline" onClick={handleSave} className="flex-1 sm:flex-none h-11">
-                    <Save className="mr-2 size-4" />
-                    Salvar
+                <Button variant="outline" onClick={handleBack} className="flex-1 sm:flex-none h-11">
+                    <ArrowLeft className="mr-2 size-4" />
+                    Anterior
                 </Button>
                 {viewIndex < analysisOrder.length - 1 ? (
                     <Button onClick={handleNext} className="flex-1 sm:flex-none h-11">
