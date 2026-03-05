@@ -279,19 +279,6 @@ export default function PosturalAnalysisPage() {
                 <CardContent className="p-2 sm:p-6 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                         <div className="space-y-4">
-                             <div className="flex items-center gap-2 px-4 max-w-sm mx-auto">
-                                <ZoomOut className="size-4 text-muted-foreground" />
-                                <Slider
-                                    value={[zoom]}
-                                    onValueChange={(value) => setZoom(value[0])}
-                                    min={1}
-                                    max={3}
-                                    step={0.1}
-                                    className="flex-1"
-                                />
-                                <ZoomIn className="size-4 text-muted-foreground" />
-                                <span className="text-[10px] font-mono text-muted-foreground ml-2">{(zoom * 100).toFixed(0)}%</span>
-                            </div>
                              <div 
                                 ref={imageContainerRef}
                                 className="relative w-full max-w-sm mx-auto aspect-[3/4] bg-muted rounded-lg overflow-hidden border shadow-inner"
@@ -325,6 +312,19 @@ export default function PosturalAnalysisPage() {
                                         <Maximize className="size-4" />
                                     </Button>
                                 </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 max-w-sm mx-auto">
+                                <ZoomOut className="size-4 text-muted-foreground" />
+                                <Slider
+                                    value={[zoom]}
+                                    onValueChange={(value) => setZoom(value[0])}
+                                    min={1}
+                                    max={3}
+                                    step={0.1}
+                                    className="flex-1"
+                                />
+                                <ZoomIn className="size-4 text-muted-foreground" />
+                                <span className="text-[10px] font-mono text-muted-foreground ml-2">{(zoom * 100).toFixed(0)}%</span>
                             </div>
                         </div>
 
