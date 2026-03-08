@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import BioimpedanceReport from '@/components/BioimpedanceReport';
 import { useEvaluationContext } from '@/context/EvaluationContext';
