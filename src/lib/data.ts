@@ -201,8 +201,10 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
     const height = evaluation.bodyMeasurements?.height || 0; // in cm
     const gender = client.gender;
     const fatPercentage = evaluation.bodyComposition?.bodyFatPercentage || 0;
+    
     const wristDiameter = evaluation.boneDiameters?.biestiloidal || 0; // cm
     const femurDiameter = evaluation.boneDiameters?.bicondilarFemur || 0; // cm
+    const humerusDiameter = evaluation.boneDiameters?.bicondilarUmero || 0; // cm
 
     if (weight === 0) {
         return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
@@ -211,45 +213,55 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
     const fatMassKg = (weight * fatPercentage) / 100;
     const leanMassKg = weight - fatMassKg;
 
-    // Bone Mass (Massa Óssea) - Von Dobeln (1964)
+    // Bone Mass (Massa Óssea) - Rocha (1975) adaptado de Von Dobeln
+    // Utiliza diâmetros de Punho, Fêmur e Úmero para maior precisão
     let boneMassKg = 0;
     if (height > 0 && wristDiameter > 0 && femurDiameter > 0) {
         const heightInM = height / 100;
         const wristInM = wristDiameter / 100;
         const femurInM = femurDiameter / 100;
+        const humerusInM = humerusDiameter > 0 ? humerusDiameter / 100 : wristInM; // Fallback se úmero não preenchido
+        
+        // Fórmula de Von Dobeln modificada por Rocha
         boneMassKg = 3.02 * Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712);
+        
+        // Ajuste leve se tivermos o úmero para média de membros superiores
+        if (humerusDiameter > 0) {
+            const boneMassWithHumerus = 3.02 * Math.pow(Math.pow(heightInM, 2) * humerusInM * femurInM * 400, 0.712);
+            boneMassKg = (boneMassKg + boneMassWithHumerus) / 2;
+        }
     }
     
-    // Residual Mass (Massa Residual)
+    // Residual Mass (Massa Residual) - Würch (1974)
     const residualFactor = gender === 'Feminino' ? 0.21 : 0.24;
     const residualMassKg = weight * residualFactor;
 
-    // Muscle Mass (Massa Muscular)
+    // Muscle Mass (Massa Muscular) - Estratégia de 4 componentes
     const muscleMassKg = weight - fatMassKg - boneMassKg - residualMassKg;
 
     const fatMassPercentage = fatPercentage;
-    const muscleMassPercentage = (muscleMassKg / weight) * 100;
-    const boneMassPercentage = (boneMassKg / weight) * 100;
-    const residualMassPercentage = (residualMassKg / weight) * 100;
+    const muscleMassPercentage = weight > 0 ? (muscleMassKg / weight) * 100 : 0;
+    const boneMassPercentage = weight > 0 ? (boneMassKg / weight) * 100 : 0;
+    const residualMassPercentage = weight > 0 ? (residualMassKg / weight) * 100 : 0;
 
-    // Ideal Weight
+    // Ideal Weight (Considerando gordura desejável: Homens 15%, Mulheres 25%)
     const idealLeanMassPercentage = gender === 'Masculino' ? 0.85 : 0.75;
     const idealWeight = leanMassKg / idealLeanMassPercentage;
     
     // Fat Loss Needed
-    const fatLossNeeded = weight - idealWeight;
+    const fatLossNeeded = Math.max(0, weight - idealWeight);
     
     return {
-        fatMassKg: fatMassKg > 0 ? fatMassKg : 0,
-        leanMassKg: leanMassKg > 0 ? leanMassKg : 0,
-        muscleMassKg: muscleMassKg > 0 ? muscleMassKg : 0,
-        boneMassKg: boneMassKg > 0 ? boneMassKg : 0,
-        residualMassKg: residualMassKg > 0 ? residualMassKg : 0,
-        fatMassPercentage,
-        muscleMassPercentage,
-        boneMassPercentage,
-        residualMassPercentage,
-        idealWeight,
-        fatLossNeeded,
+        fatMassKg: Math.max(0, fatMassKg),
+        leanMassKg: Math.max(0, leanMassKg),
+        muscleMassKg: Math.max(0, muscleMassKg),
+        boneMassKg: Math.max(0, boneMassKg),
+        residualMassKg: Math.max(0, residualMassKg),
+        fatMassPercentage: Math.max(0, fatMassPercentage),
+        muscleMassPercentage: Math.max(0, muscleMassPercentage),
+        boneMassPercentage: Math.max(0, boneMassPercentage),
+        residualMassPercentage: Math.max(0, residualMassPercentage),
+        idealWeight: Math.max(0, idealWeight),
+        fatLossNeeded: Math.max(0, fatLossNeeded),
     };
 }
