@@ -6,6 +6,8 @@ import { clients as initialClients, evaluations as initialEvaluations, type Eval
 type EvaluationContextType = {
   clients: Client[];
   allEvaluations: Evaluation[];
+  selectedClientId: string;
+  setSelectedClientId: (id: string) => void;
   addEvaluation: (clientId: string) => Evaluation;
   setAllEvaluations: React.Dispatch<React.SetStateAction<Evaluation[]>>;
 };
@@ -15,6 +17,7 @@ const EvaluationContext = createContext<EvaluationContextType | undefined>(undef
 export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
   const [clients] = useState<Client[]>(initialClients);
   const [allEvaluations, setAllEvaluations] = useState<Evaluation[]>(initialEvaluations);
+  const [selectedClientId, setSelectedClientId] = useState<string>(initialClients[0].id);
 
   const addEvaluation = useCallback((clientId: string) => {
     const client = clients.find(c => c.id === clientId);
@@ -47,7 +50,7 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
       date: localDateString,
       protocol: Object.keys(audienceProtocols).length > 0 ? audienceProtocols[Object.keys(audienceProtocols)[0]][0] : '',
       bodyMeasurements: { 
-        weight: 0, // Inicia zerado conforme solicitado
+        weight: 0, 
         height: client.height, 
         waistCircumference: 0, 
         hipCircumference: 0 
@@ -70,7 +73,7 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
   }, [clients, allEvaluations]);
 
   return (
-    <EvaluationContext.Provider value={{ clients, allEvaluations, addEvaluation, setAllEvaluations }}>
+    <EvaluationContext.Provider value={{ clients, allEvaluations, selectedClientId, setSelectedClientId, addEvaluation, setAllEvaluations }}>
       {children}
     </EvaluationContext.Provider>
   );

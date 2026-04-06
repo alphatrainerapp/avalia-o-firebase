@@ -12,18 +12,16 @@ import { muscleMappings } from '@/lib/postural-data';
 import { useEvaluationContext } from '@/context/EvaluationContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import PosturalReport from '@/components/PosturalReport';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -48,14 +46,12 @@ const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof ty
 
 export default function PosturalSummaryPage() {
     const { photos, deviations, clearPosturalData, isSaved, saveAnalysis } = usePosturalContext();
-    const { clients, allEvaluations } = useEvaluationContext();
+    const { clients, allEvaluations, selectedClientId, setSelectedClientId } = useEvaluationContext();
     const { toast } = useToast();
     const router = useRouter();
     const reportRef = useRef<HTMLDivElement>(null);
     
-    const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
-    const [showSaveAlert, setShowSaveAlert] = useState(false);
     
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
 
@@ -65,14 +61,12 @@ export default function PosturalSummaryPage() {
             .sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
     }, [selectedClientId, allEvaluations]);
 
-    // Pre-select evaluations that have postural data
+    // Pre-select evaluations that have postural data when client changes
     useEffect(() => {
         const evalsWithData = clientEvaluations
             .filter(e => e.posturalPhotos && Object.keys(e.posturalPhotos).length > 0)
             .map(e => e.id);
         
-        // Se houver dados na sessão atual mas não salvos em uma avaliação selecionada, 
-        // ou se o usuário acabou de chegar de uma análise, podemos querer mostrar a comparação.
         setSelectedEvalIds(evalsWithData.slice(-4)); // Select last 4 for comparison
     }, [clientEvaluations]);
 
@@ -148,7 +142,6 @@ export default function PosturalSummaryPage() {
     const handleFinish = () => {
         saveAnalysis();
         toast({ title: 'Análise Salva', description: 'A análise postural foi finalizada e salva.' });
-        // Optional: clear session data
         router.push('/dashboard');
     };
     
@@ -258,47 +251,60 @@ export default function PosturalSummaryPage() {
 
             <div className="space-y-6">
                 <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">Selecione as avaliações para comparar (máx. 4)</CardTitle>
+                    <CardHeader>
+                        <div className="grid gap-2 w-full sm:max-w-sm">
+                            <Label htmlFor="name">Cliente</Label>
+                            <Select value={selectedClientId} onValueChange={handleClientChange}>
+                                <SelectTrigger id="name">
+                                    <SelectValue placeholder="Selecione um cliente" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </CardHeader>
-                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.length > 0 ? (
-                            clientEvaluations.map((ev, index) => {
-                                const isSelectedForCompare = selectedEvalIds.includes(ev.id);
-                                const hasPosturalData = ev.posturalPhotos && Object.keys(ev.posturalPhotos).length > 0;
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">Selecione as avaliações para comparar (máx. 4)</p>
+                        <div className="flex gap-4 overflow-x-auto pb-4">
+                            {clientEvaluations.length > 0 ? (
+                                clientEvaluations.map((ev, index) => {
+                                    const isSelectedForCompare = selectedEvalIds.includes(ev.id);
+                                    const hasPosturalData = ev.posturalPhotos && Object.keys(ev.posturalPhotos).length > 0;
 
-                                return (
-                                    <Card 
-                                        key={ev.id} 
-                                        className={cn(
-                                            "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-sm rounded-2xl relative",
-                                            isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card',
-                                            !hasPosturalData && 'opacity-50 grayscale'
-                                        )}
-                                        onClick={() => handleCompareSelection(ev.id)}
-                                    >
-                                        {!hasPosturalData && (
-                                            <div className="absolute top-2 right-2">
-                                                <Info className="size-4 text-muted-foreground" />
-                                            </div>
-                                        )}
-                                        <CardHeader className="p-4 relative">
-                                                <CardTitle className={cn("text-xs font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                                {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <p className={cn("text-3xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                                            <p className="text-[10px] mt-1 uppercase tracking-tighter opacity-70">Avaliação</p>
-                                        </CardContent>
-                                    </Card>
-                                )
-                            })
-                        ) : (
-                            <div className="w-full text-center py-8 text-muted-foreground">
-                                Nenhuma avaliação encontrada para este cliente.
-                            </div>
-                        )}
+                                    return (
+                                        <Card 
+                                            key={ev.id} 
+                                            className={cn(
+                                                "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-sm rounded-2xl relative",
+                                                isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card',
+                                                !hasPosturalData && 'opacity-50 grayscale'
+                                            )}
+                                            onClick={() => handleCompareSelection(ev.id)}
+                                        >
+                                            {!hasPosturalData && (
+                                                <div className="absolute top-2 right-2">
+                                                    <Info className="size-4 text-muted-foreground" />
+                                                </div>
+                                            )}
+                                            <CardHeader className="p-4 relative">
+                                                    <CardTitle className={cn("text-xs font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
+                                                    {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-4 pt-0">
+                                                <p className={cn("text-3xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
+                                                <p className="text-[10px] mt-1 uppercase tracking-tighter opacity-70">Avaliação</p>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })
+                            ) : (
+                                <div className="w-full text-center py-8 text-muted-foreground">
+                                    Nenhuma avaliação encontrada para este cliente.
+                                </div>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
 

@@ -32,8 +32,7 @@ import { useEvaluationContext } from '@/context/EvaluationContext';
 
 
 export default function DashboardPage() {
-    const { clients, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
-    const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
+    const { clients, allEvaluations, setAllEvaluations, addEvaluation, selectedClientId, setSelectedClientId } = useEvaluationContext();
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
     const [isCompareMode, setCompareMode] = useState(false);
     const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
@@ -118,12 +117,11 @@ export default function DashboardPage() {
         setRequiredSkinfolds(currentRequired);
     }, [formState.protocol, formState.gender]);
     
-    const updateBodyFatCalculation = (newState: any) => {
-        const { skinFolds, age, gender, protocol } = newState;
-        if (!skinFolds || !age || !gender || !protocol) return newState;
+    const calculateFatFromInput = (skinfolds: any, age: number, gender: string, protocol: string) => {
+        if (!skinfolds || !age || !gender || !protocol) return 0;
 
         const getSkinfoldSum = (keys: SkinfoldKeys[]) => {
-            return keys.reduce((sum, key) => sum + (skinFolds[key] || 0), 0);
+            return keys.reduce((sum, key) => sum + (skinfolds[key] || 0), 0);
         };
 
         let bodyDensity = 0;
@@ -146,19 +144,23 @@ export default function DashboardPage() {
                     bodyDensity = 1.0994921 - 0.0009929 * sum3 + 0.0000023 * sum3 * sum3 - 0.0001392 * age;
                 }
             }
+        } else if (protocol === 'ISAK') {
+            const sum8 = getSkinfoldSum(protocolSkinfolds['ISAK']);
+            if (sum8 > 0) {
+                // Simplified ISAK estimation if specific density not provided
+                if (gender === 'Masculino') {
+                    bodyDensity = 1.109 - 0.0008 * sum8 + 0.0000016 * sum8 * sum8;
+                } else {
+                    bodyDensity = 1.099 - 0.0009 * sum8 + 0.0000023 * sum8 * sum8;
+                }
+            }
         }
 
         if (bodyDensity > 0) {
             const fatPercentage = (4.95 / bodyDensity - 4.5) * 100;
-            if (fatPercentage > 0 && fatPercentage < 100) {
-                const newFatPercentage = parseFloat(fatPercentage.toFixed(2));
-                newState.bodyComposition = {
-                    ...(newState.bodyComposition || {}),
-                    bodyFatPercentage: newFatPercentage,
-                };
-            }
+            return fatPercentage > 0 && fatPercentage < 100 ? parseFloat(fatPercentage.toFixed(2)) : 0;
         }
-        return newState;
+        return 0;
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -175,7 +177,16 @@ export default function DashboardPage() {
             }
             current[keys[keys.length - 1]] = parsedValue;
 
-            newState = updateBodyFatCalculation(newState);
+            // Recalculate body fat
+            if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
+                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+                if (newFat > 0) {
+                    newState.bodyComposition = {
+                        ...(newState.bodyComposition || {}),
+                        bodyFatPercentage: newFat,
+                    };
+                }
+            }
 
             if (selectedEvaluationId) {
                 setAllEvaluations(prevEvals => prevEvals.map(ev => 
@@ -195,9 +206,18 @@ export default function DashboardPage() {
         } else {
             setFormState(prev => {
                 let newState = { ...prev, [name]: value };
+                
+                // Recalculate body fat on protocol or gender change
                 if (name === 'gender' || name === 'protocol') {
-                    newState = updateBodyFatCalculation(newState);
+                    const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+                    if (newFat > 0) {
+                        newState.bodyComposition = {
+                            ...(newState.bodyComposition || {}),
+                            bodyFatPercentage: newFat,
+                        };
+                    }
                 }
+
                 if (selectedEvaluationId) {
                     setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
                 }
@@ -393,7 +413,7 @@ export default function DashboardPage() {
                 return [...prev, evalId].sort((a,b) => {
                     const evalA = clientEvaluations.find(e => e.id === a);
                     const evalB = clientEvaluations.find(e => e.id === b);
-                    return new Date(evalA!.date).getTime() - new Date(evalB!.date).getTime();
+                    return new Date(evalA!.date.replace(/-/g, '/')).getTime() - new Date(evalB!.date.replace(/-/g, '/')).getTime();
                 });
             }
             toast({variant: 'destructive', title: 'Aviso', description: 'Você pode selecionar no máximo 4 avaliações.'})

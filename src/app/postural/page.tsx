@@ -20,7 +20,7 @@ type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
     const { photos, setPhoto, deviations, clearPosturalData, loadPosturalData } = usePosturalContext();
-    const { clients, allEvaluations, addEvaluation, setAllEvaluations } = useEvaluationContext();
+    const { clients, allEvaluations, addEvaluation, setAllEvaluations, selectedClientId, setSelectedClientId } = useEvaluationContext();
 
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
@@ -30,8 +30,6 @@ export default function PosturalPage() {
     };
     const { toast } = useToast();
     const [currentDate, setCurrentDate] = useState('');
-    
-    const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
@@ -125,8 +123,8 @@ export default function PosturalPage() {
                         : ev
                 )
             );
-            const evalDate = allEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/');
-            const formattedDate = new Date(evalDate).toLocaleDateString('pt-BR');
+            const evalObj = allEvaluations.find(e => e.id === selectedEvaluationId);
+            const formattedDate = evalObj ? new Date(evalObj.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : '';
             toast({
                 title: 'Análise Salva',
                 description: `A análise postural foi salva na avaliação de ${formattedDate}.`,

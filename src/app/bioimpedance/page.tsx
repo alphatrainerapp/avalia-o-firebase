@@ -90,8 +90,7 @@ const inbodyFields: { block: string; fields: { key: keyof BioimpedanceInBody; la
 ];
 
 export default function BioimpedancePage() {
-    const { clients, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
-    const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
+    const { clients, allEvaluations, setAllEvaluations, addEvaluation, selectedClientId, setSelectedClientId } = useEvaluationContext();
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
     const [isModalOpen, setModalOpen] = useState(true);
     const [selectedScale, setSelectedScale] = useState<BioimpedanceScale>(null);
@@ -146,7 +145,6 @@ export default function BioimpedancePage() {
     };
 
     const handleSave = () => {
-        // Here you would implement the logic to save the updated `allEvaluations` state
         console.log("Saving evaluations...", allEvaluations);
         toast({ title: 'Salvo!', description: 'Os dados da bioimpedância foram salvos.' });
     };
