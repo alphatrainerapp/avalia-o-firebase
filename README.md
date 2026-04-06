@@ -7,35 +7,33 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ## ✨ Funcionalidades Implementadas
 
-### 1. Dashboard de Avaliação Física
-- **Gestão Centralizada**: Criação e acompanhamento de avaliações físicas com numeração automática.
-- **Estado Zero Inteligente**: Ao iniciar um novo cliente, a interface é simplificada, expandindo-se apenas após a criação da primeira avaliação.
-- **Protocolos de Dobras**: Suporte a diversos protocolos, incluindo o padrão internacional **ISAK (8 dobras)** com destaque visual das medidas obrigatórias (incluindo Panturrilha Medial e Supraespinal).
-- **Cálculos em Tempo Real**: IMC, RCQ, densidade corporal e composição de massas (Gorda, Muscular, Óssea e Residual) calculados instantaneamente.
-- **Relatórios em PDF**: Geração de relatórios profissionais utilizando `jspdf` e `html2canvas`.
+### 1. Dashboard de Avaliação Física (Protocolo ISAK)
+- **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
+- **Protocolo ISAK**: Suporte completo ao perfil de 8 dobras e 3 diâmetros ósseos (Punho, Fêmur e Úmero) para máxima precisão.
+- **Estado Zero Inteligente**: Interface adaptativa que simplifica o início para novos clientes e expande conforme o histórico é criado.
+- **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
 ### 2. Bioimpedância Sincronizada
-- **Integração Global**: Sincronização automática entre as telas de avaliação via React Context.
-- **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução.
-- **Análise Segmentar**: Visualização de massa magra e gorda por segmento corporal.
+- **Integração Global**: Sincronização automática do cliente selecionado entre todas as telas via Context API.
+- **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução segmentar.
 
 ### 3. Avaliação Postural Avançada
-- **Interface Mobile-First**: Carrossel otimizado para dispositivos móveis, permitindo marcar desvios sem perder a visão da foto.
-- **Navegação Intuitiva**: Fluxo guiado por vistas (Frente, Costas, Lateral D/E) com botões de Próximo/Anterior.
-- **Mapeamento Muscular**: Identificação automática de músculos possivelmente encurtados ou alongados com base nos desvios marcados.
-- **Ferramentas de Análise**: Grid de alinhamento e zoom dinâmico para precisão diagnóstica.
+- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso, garantindo que a foto do cliente esteja sempre visível.
+- **Mapeamento Muscular Automático**: Identificação de músculos possivelmente encurtados/superativos e alongados/inibidos com base nos desvios marcados.
+- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente.
+- **Ferramentas de Análise**: Grid de alinhamento dinâmico e zoom de precisão.
 
-### 4. Sincronização de Dados
-- **Global Context**: Uso de React Context para persistência de dados durante a sessão de navegação.
-- **Tratamento de Datas**: Lógica robusta para datas locais, evitando conflitos de fuso horário.
+### 4. Sincronização e UX
+- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação.
+- **Modo Escuro/Claro**: Interface totalmente compatível com temas claros e escuros para melhor conforto visual.
 
 ## 🛠️ Tecnologias Utilizadas
-- **Next.js 15 (App Router)**
-- **React 18**
+- **Next.js 15 (App Router & Turbopack)**
+- **React 18 & Context API**
 - **Tailwind CSS & Shadcn UI**
-- **Lucide React** (Ícones)
-- **Recharts** (Gráficos de Evolução)
-- **jsPDF & html2canvas** (Exportação de Relatórios)
+- **Lucide React** (Iconografia)
+- **Recharts** (Gráficos de Composição e Evolução)
+- **jsPDF & html2canvas** (Geração de Documentos)
 
 ## 🏁 Como Iniciar
 1. Clone o repositório.
@@ -43,4 +41,4 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 3. Inicie o servidor de desenvolvimento: `npm run dev`
 
 ---
-Desenvolvido para profissionais que buscam precisão e agilidade na avaliação física.
+Desenvolvido para profissionais que buscam precisão científica e agilidade na avaliação física.
