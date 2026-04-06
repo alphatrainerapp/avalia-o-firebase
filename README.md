@@ -18,14 +18,14 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução segmentar.
 
 ### 3. Avaliação Postural Avançada
-- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso, garantindo que a foto do cliente esteja sempre visível.
+- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso (ex: "1 de 6"), garantindo que a foto do cliente esteja sempre visível.
 - **Mapeamento Muscular Automático**: Identificação de músculos possivelmente encurtados/superativos e alongados/inibidos com base nos desvios marcados.
-- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente.
-- **Ferramentas de Análise**: Grid de alinhamento dinâmico e zoom de precisão.
+- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente em múltiplas datas.
+- **Ferramentas de Análise**: Grid de alinhamento dinâmico e zoom de precisão posicionado para melhor ergonomia.
 
 ### 4. Sincronização e UX
-- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação.
-- **Modo Escuro/Claro**: Interface totalmente compatível com temas claros e escuros para melhor conforto visual.
+- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação (Dashboard -> Bioimpedância -> Postural).
+- **Modo Escuro/Claro**: Interface totalmente compatível com temas claros e escuros para melhor conforto visual do avaliador.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
