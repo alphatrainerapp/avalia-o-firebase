@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell, Download } from 'lucide-react';
+import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell, Download, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
 import { muscleMappings } from '@/lib/postural-data';
-import { clients, evaluations } from '@/lib/data';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEvaluationContext } from '@/context/EvaluationContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -25,9 +24,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import PosturalReport from '@/components/PosturalReport';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 const viewTitles: { [key: string]: string } = {
@@ -49,36 +48,49 @@ const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof ty
 
 export default function PosturalSummaryPage() {
     const { photos, deviations, clearPosturalData, isSaved, saveAnalysis } = usePosturalContext();
+    const { clients, allEvaluations } = useEvaluationContext();
     const { toast } = useToast();
     const router = useRouter();
     const reportRef = useRef<HTMLDivElement>(null);
     
-    // Mocking postural evaluations being linked to general evaluations
     const [selectedClientId, setSelectedClientId] = useState<string>(clients[0].id);
     const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
     const [showSaveAlert, setShowSaveAlert] = useState(false);
     
-    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId]);
+    const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
 
     const clientEvaluations = useMemo(() => {
-        return evaluations
+        return allEvaluations
             .filter(e => e.clientId === selectedClientId)
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [selectedClientId]);
+            .sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
+    }, [selectedClientId, allEvaluations]);
+
+    // Pre-select evaluations that have postural data
+    useEffect(() => {
+        const evalsWithData = clientEvaluations
+            .filter(e => e.posturalPhotos && Object.keys(e.posturalPhotos).length > 0)
+            .map(e => e.id);
+        
+        // Se houver dados na sessão atual mas não salvos em uma avaliação selecionada, 
+        // ou se o usuário acabou de chegar de uma análise, podemos querer mostrar a comparação.
+        setSelectedEvalIds(evalsWithData.slice(-4)); // Select last 4 for comparison
+    }, [clientEvaluations]);
 
     const comparedEvaluations = useMemo(() => {
         return clientEvaluations
             .filter(e => selectedEvalIds.includes(e.id))
-            .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            .sort((a,b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
     }, [selectedEvalIds, clientEvaluations]);
 
     const analysisData = useMemo(() => {
+      // If comparing exactly 1 historical evaluation, use its data
       if (comparedEvaluations.length === 1) {
           return {
               photos: comparedEvaluations[0].posturalPhotos || {},
               deviations: comparedEvaluations[0].posturalDeviations || {},
           }
       }
+      // Otherwise use the current session data
       return { photos, deviations };
     }, [comparedEvaluations, photos, deviations]);
 
@@ -88,7 +100,8 @@ export default function PosturalSummaryPage() {
         const sourceDeviations = analysisData.deviations;
 
         Object.keys(sourceDeviations).forEach(view => {
-            sourceDeviations[view].forEach(deviationName => {
+            const viewDevs = sourceDeviations[view] || [];
+            viewDevs.forEach(deviationName => {
                 const mapping = muscleMappings[deviationName];
                 if (mapping) {
                     if (!analysis[deviationName]) {
@@ -120,11 +133,11 @@ export default function PosturalSummaryPage() {
             if (prev.includes(evalId)) {
                 return prev.filter(id => id !== evalId);
             }
-            if (prev.length < 4) { // Allow up to 4 photos for comparison
+            if (prev.length < 4) {
                 return [...prev, evalId].sort((a,b) => {
                     const evalA = clientEvaluations.find(e => e.id === a);
                     const evalB = clientEvaluations.find(e => e.id === b);
-                    return new Date(evalA!.date).getTime() - new Date(evalB!.date).getTime();
+                    return new Date(evalA!.date.replace(/-/g, '/')).getTime() - new Date(evalB!.date.replace(/-/g, '/')).getTime();
                 });
             }
             toast({variant: 'destructive', title: 'Aviso', description: 'Você pode selecionar no máximo 4 avaliações.'})
@@ -135,24 +148,12 @@ export default function PosturalSummaryPage() {
     const handleFinish = () => {
         saveAnalysis();
         toast({ title: 'Análise Salva', description: 'A análise postural foi finalizada e salva.' });
-        clearPosturalData();
+        // Optional: clear session data
         router.push('/dashboard');
     };
     
     const handleBackToEvaluation = () => {
        router.push('/dashboard');
-    };
-
-    const handleSaveAndContinue = () => {
-        saveAnalysis();
-        toast({ title: 'Análise Salva', description: 'Suas alterações foram salvas.' });
-        setShowSaveAlert(false);
-        router.push('/dashboard');
-    };
-
-    const handleContinueWithoutSaving = () => {
-        setShowSaveAlert(false);
-        router.push('/dashboard');
     };
 
     const handleExportPdf = async () => {
@@ -238,111 +239,108 @@ export default function PosturalSummaryPage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <AlertDialog open={showSaveAlert} onOpenChange={setShowSaveAlert}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Você tem alterações não salvas!</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Deseja salvar as alterações feitas na avaliação postural antes de voltar?
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                         <Button variant="outline" onClick={handleContinueWithoutSaving}>
-                            Continuar sem Salvar
-                        </Button>
-                        <AlertDialogAction onClick={handleSaveAndContinue}>Salvar e Voltar</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis')}><ArrowLeft /></Button>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Resumo da Avaliação Postural</h1>
-                        <p className="text-muted-foreground">Compare avaliações e veja a evolução</p>
+                        <p className="text-muted-foreground">{client?.name} - Histórico e Comparação</p>
                     </div>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button onClick={handleExportPdf}><Download className="mr-2" /> Gerar Relatório PDF</Button>
-                    <Button onClick={handleBackToEvaluation} variant="outline">
-                        <ArrowLeft className="mr-2"/>
+                    <Button onClick={handleExportPdf} variant="outline"><Download className="mr-2" /> Gerar Relatório PDF</Button>
+                    <Button onClick={handleBackToEvaluation} variant="ghost">
                         Voltar ao Dashboard
                     </Button>
-                    <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
                 </div>
             </header>
 
             <div className="space-y-6">
                 <Card>
-                    <CardContent className="pt-6 flex gap-4 overflow-x-auto pb-4">
-                        {clientEvaluations.map((ev, index) => {
-                            const isSelectedForCompare = selectedEvalIds.includes(ev.id);
-                            return (
-                                <Card 
-                                    key={ev.id} 
-                                    className={cn(
-                                        "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
-                                        isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
-                                    )}
-                                    onClick={() => handleCompareSelection(ev.id)}
-                                >
-                                    <CardHeader className="p-4 relative">
-                                            <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Selecione as avaliações para comparar (máx. 4)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                        {clientEvaluations.length > 0 ? (
+                            clientEvaluations.map((ev, index) => {
+                                const isSelectedForCompare = selectedEvalIds.includes(ev.id);
+                                const hasPosturalData = ev.posturalPhotos && Object.keys(ev.posturalPhotos).length > 0;
+
+                                return (
+                                    <Card 
+                                        key={ev.id} 
+                                        className={cn(
+                                            "shrink-0 w-40 text-center cursor-pointer transition-colors shadow-sm rounded-2xl relative",
+                                            isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card',
+                                            !hasPosturalData && 'opacity-50 grayscale'
+                                        )}
+                                        onClick={() => handleCompareSelection(ev.id)}
+                                    >
+                                        {!hasPosturalData && (
+                                            <div className="absolute top-2 right-2">
+                                                <Info className="size-4 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                        <CardHeader className="p-4 relative">
+                                                <CardTitle className={cn("text-xs font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
+                                                {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-4 pt-0">
+                                            <p className={cn("text-3xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
+                                            <p className="text-[10px] mt-1 uppercase tracking-tighter opacity-70">Avaliação</p>
+                                        </CardContent>
+                                    </Card>
+                                )
+                            })
+                        ) : (
+                            <div className="w-full text-center py-8 text-muted-foreground">
+                                Nenhuma avaliação encontrada para este cliente.
+                            </div>
+                        )}
                     </CardContent>
-                    {clientEvaluations.length > 0 && (
-                        <CardFooter>
-                                <p className="text-sm text-muted-foreground">
-                                {selectedEvalIds.length}/{clientEvaluations.length} avaliações selecionadas para comparação.
-                            </p>
-                        </CardFooter>
-                    )}
                 </Card>
 
                 {comparedEvaluations.length > 1 ? (
-                    <Card>
-                        <CardHeader>
+                    <Card className="border-primary/20 shadow-xl">
+                        <CardHeader className="bg-primary/5">
                             <CardTitle className="flex items-center gap-2 text-primary">
-                                <Camera />
-                                Comparativo de Fotos
+                                <Camera className="size-5" />
+                                Comparativo de Evolução Postural
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-8">
+                        <CardContent className="p-6 space-y-10">
                             {Object.entries(photoViewMapping).map(([photoType, { title }]) => {
                                 const hasPhotosForView = comparedEvaluations.some(ev => ev.posturalPhotos?.[photoType as PhotoType]);
                                 if (!hasPhotosForView) return null;
 
                                 return (
-                                    <div key={photoType}>
-                                        <h3 className="font-semibold text-xl mb-4">{title}</h3>
+                                    <div key={photoType} className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <h3 className="font-bold text-lg text-foreground border-l-4 border-primary pl-3">{title}</h3>
+                                            <div className="h-px flex-1 bg-muted"></div>
+                                        </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             {comparedEvaluations.map(ev => {
                                                 const photoSrc = ev.posturalPhotos?.[photoType as PhotoType];
                                                 return (
-                                                    <div key={ev.id}>
-                                                        <p className="text-sm text-muted-foreground text-center mb-1">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>
-                                                        <div className="w-full aspect-[3/4] bg-muted rounded-md flex items-center justify-center relative overflow-hidden text-muted-foreground">
-                                                            {photoSrc ? (
-                                                                <Image src={photoSrc} alt={`${title} - ${ev.date}`} layout="fill" objectFit="contain" />
-                                                            ) : (
-                                                                <div className="flex flex-col items-center">
-                                                                    <Camera className="h-8 w-8" />
-                                                                    <p className="text-xs mt-1">Sem foto</p>
-                                                                </div>
-                                                            )}
+                                                    <div key={ev.id} className="space-y-2">
+                                                        <div className="bg-muted/30 p-1 rounded-lg">
+                                                            <div className="w-full aspect-[3/4] bg-muted rounded-md flex items-center justify-center relative overflow-hidden shadow-inner">
+                                                                {photoSrc ? (
+                                                                    <Image src={photoSrc} alt={`${title} - ${ev.date}`} layout="fill" objectFit="contain" className="hover:scale-110 transition-transform duration-500" />
+                                                                ) : (
+                                                                    <div className="flex flex-col items-center text-muted-foreground/50">
+                                                                        <Camera className="h-10 w-10 mb-2" />
+                                                                        <p className="text-[10px] uppercase font-bold">Sem foto</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
+                                                        <p className="text-xs font-bold text-center bg-muted text-muted-foreground py-1 rounded-full">
+                                                            {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                                        </p>
                                                     </div>
                                                 );
                                             })}
@@ -352,8 +350,8 @@ export default function PosturalSummaryPage() {
                             })}
                         </CardContent>
                     </Card>
-                ) : (
-                    <>
+                ) : comparedEvaluations.length === 1 || Object.keys(photos).length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {Object.entries(photoViewMapping).map(([photoType, { title, viewKey }]) => {
                             const viewDeviations = analysisData.deviations[viewKey] || [];
                             const photoSrc = analysisData.photos[photoType as PhotoType];
@@ -361,51 +359,74 @@ export default function PosturalSummaryPage() {
                             if (viewDeviations.length === 0 && !photoSrc) return null;
 
                             return (
-                                <Card key={viewKey}>
-                                    <CardContent className="pt-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-24 shrink-0">
-                                                <div className="w-24 h-32 bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
-                                                    {photoSrc ? (
-                                                        <Image src={photoSrc} alt={title} layout="fill" objectFit="contain" />
-                                                    ) : (
-                                                        <Camera className="w-8 h-8 text-muted-foreground" />
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-lg">{title}</h3>
-                                                {viewDeviations.length > 0 ? (
-                                                    <ul className="list-disc pl-5 mt-1 text-sm text-muted-foreground">
-                                                        {viewDeviations.map(d => <li key={d}>{d}</li>)}
-                                                    </ul>
+                                <Card key={viewKey} className="overflow-hidden">
+                                    <CardContent className="p-0">
+                                        <div className="flex flex-col sm:flex-row">
+                                            <div className="w-full sm:w-40 bg-muted flex items-center justify-center relative aspect-[3/4] sm:aspect-auto">
+                                                {photoSrc ? (
+                                                    <Image src={photoSrc} alt={title} layout="fill" objectFit="contain" />
                                                 ) : (
-                                                    <p className="text-sm text-muted-foreground mt-1">Nenhum desvio selecionado para esta vista.</p>
+                                                    <Camera className="w-12 h-12 text-muted-foreground/30" />
                                                 )}
                                             </div>
+                                            <div className="flex-1 p-6">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <h3 className="font-bold text-lg">{title}</h3>
+                                                    {comparedEvaluations.length === 1 && (
+                                                        <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-1 rounded">
+                                                            {new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Desvios</p>
+                                                        {viewDeviations.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {viewDeviations.map(d => (
+                                                                    <span key={d} className="text-xs bg-muted px-2 py-1 rounded-md border border-muted-foreground/10">{d}</span>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-xs text-muted-foreground italic">Nenhum desvio selecionado.</p>
+                                                        )}
+                                                    </div>
+                                                    {renderMuscleAnalysisForView(viewKey as any)}
+                                                </div>
+                                            </div>
                                         </div>
-                                        {renderMuscleAnalysisForView(viewKey)}
                                     </CardContent>
                                 </Card>
                             );
                         })}
-                    </>
+                    </div>
+                ) : (
+                    <Alert className="bg-primary/5 border-primary/20">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Nenhuma análise selecionada</AlertTitle>
+                        <AlertDescription>
+                            Selecione uma ou mais avaliações acima para visualizar as fotos e os desvios posturais.
+                        </AlertDescription>
+                    </Alert>
                 )}
             </div>
 
-            <div className="flex justify-end gap-4 mt-8">
-                <Button onClick={handleFinish} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                    <Check className="mr-2" />
-                    Salvar e Finalizar
+            <div className="flex justify-end gap-4 mt-12 pb-12">
+                <Button onClick={handleFinish} size="lg" className="bg-primary text-primary-foreground shadow-lg hover:shadow-primary/20 h-12 px-8 rounded-full">
+                    <Check className="mr-2 size-5" />
+                    Finalizar Avaliação
                 </Button>
             </div>
+
+            {/* Hidden Report for PDF Generation */}
             <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white">
                 {client && (
                     <PosturalReport
                         ref={reportRef}
                         client={client}
-                        photos={photos}
-                        deviations={deviations}
+                        photos={analysisData.photos}
+                        deviations={analysisData.deviations}
                         muscleAnalysis={groupedMuscleAnalysis}
                         comparedEvaluations={comparedEvaluations}
                         viewTitles={viewTitles}
