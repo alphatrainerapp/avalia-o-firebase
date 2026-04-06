@@ -141,7 +141,19 @@ export const evaluations: Evaluation[] = [
         perimetria: { ombro: 102, torax: 94, cintura: 84, abdomen: 92, quadril: 105, bracoDRelaxado: 31, bracoERelaxado: 30.5, coxaMedialD: 58, coxaMedialE: 57.5 },
         skinFolds: { tricipital: 18, supraIliaca: 22, coxa: 28 },
         bioimpedance: { scaleType: null },
-        observations: 'Avaliação inicial. Foco em redução de gordura corporal.'
+        posturalPhotos: {
+            front: 'https://picsum.photos/seed/maria1front/600/800',
+            back: 'https://picsum.photos/seed/maria1back/600/800',
+            right: 'https://picsum.photos/seed/maria1right/600/800',
+            left: 'https://picsum.photos/seed/maria1left/600/800'
+        },
+        posturalDeviations: {
+            anterior: ['Cabeça inclinada', 'Ombro elevado'],
+            posterior: ['Escápula alada D'],
+            lateral_direita: ['Cabeça projetada', 'Hipercifose torácica'],
+            lateral_esquerda: ['Cabeça projetada']
+        },
+        observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
     },
     {
         id: 'eval_maria_2',
@@ -154,7 +166,19 @@ export const evaluations: Evaluation[] = [
         perimetria: { ombro: 100, torax: 92, cintura: 79, abdomen: 88, quadril: 101, bracoDRelaxado: 29.5, bracoERelaxado: 29.5, coxaMedialD: 56, coxaMedialE: 56 },
         skinFolds: { tricipital: 15, supraIliaca: 18, coxa: 24 },
         bioimpedance: { scaleType: null },
-        observations: 'Ótima evolução. Redução significativa de medidas na cintura.'
+        posturalPhotos: {
+            front: 'https://picsum.photos/seed/maria2front/600/800',
+            back: 'https://picsum.photos/seed/maria2back/600/800',
+            right: 'https://picsum.photos/seed/maria2right/600/800',
+            left: 'https://picsum.photos/seed/maria2left/600/800'
+        },
+        posturalDeviations: {
+            anterior: ['Ombro elevado'],
+            posterior: ['Escápula alada D'],
+            lateral_direita: ['Cabeça projetada'],
+            lateral_esquerda: ['Cabeça projetada']
+        },
+        observations: 'Ótima evolução. Redução significativa de medidas na cintura e melhora na inclinação da cabeça.'
     },
     {
         id: 'eval_maria_3',
@@ -167,7 +191,19 @@ export const evaluations: Evaluation[] = [
         perimetria: { ombro: 98, torax: 90, cintura: 74, abdomen: 82, quadril: 98, bracoDRelaxado: 28, bracoERelaxado: 28, coxaMedialD: 54, coxaMedialE: 54 },
         skinFolds: { tricipital: 12, supraIliaca: 14, coxa: 20 },
         bioimpedance: { scaleType: null },
-        observations: 'Meta de peso atingida. Iniciando fase de manutenção e ganho de massa magra.'
+        posturalPhotos: {
+            front: 'https://picsum.photos/seed/maria3front/600/800',
+            back: 'https://picsum.photos/seed/maria3back/600/800',
+            right: 'https://picsum.photos/seed/maria3right/600/800',
+            left: 'https://picsum.photos/seed/maria3left/600/800'
+        },
+        posturalDeviations: {
+            anterior: [],
+            posterior: [],
+            lateral_direita: ['Cabeça projetada'],
+            lateral_esquerda: []
+        },
+        observations: 'Meta de peso atingida. Postura muito mais alinhada, restando apenas leve projeção cervical.'
     }
 ];
 
