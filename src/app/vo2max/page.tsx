@@ -2,7 +2,23 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Wind, Activity, Timer, Calculator, Plus, Save, Download, Trash2, TrendingUp, Info, ChevronDown, X } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Wind, 
+  Activity, 
+  Timer, 
+  Calculator, 
+  Plus, 
+  Save, 
+  Download, 
+  Trash2, 
+  TrendingUp, 
+  Info, 
+  ChevronDown, 
+  X, 
+  Target,
+  Trophy
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,7 +53,7 @@ export default function VO2MaxPage() {
     const [isCompareMode, setCompareMode] = useState(false);
     const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
 
-    // Estados do Formulário (Sincronizados com a avaliação selecionada)
+    // Estados do Formulário
     const [protocol, setProtocol] = useState<VO2Protocol>('cooper');
     const [distance, setDistance] = useState<string>('');
     const [timeMinutes, setTimeMinutes] = useState<string>('');
@@ -75,7 +91,6 @@ export default function VO2MaxPage() {
             .sort((a,b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
     }, [selectedEvalIdsForCompare, clientEvaluations]);
 
-    // Carregar dados da avaliação selecionada
     useEffect(() => {
         if (evaluation?.vo2MaxData) {
             const data = evaluation.vo2MaxData;
@@ -93,7 +108,6 @@ export default function VO2MaxPage() {
             }
             if (data.stages) setConconiStages(data.stages);
         } else {
-            // Reset se não houver dados
             setDistance('');
             setTimeMinutes('');
             setTimeSeconds('');
@@ -127,7 +141,7 @@ export default function VO2MaxPage() {
         
         let vAM = 0;
         if (protocol === 'cooper' && data.distance) vAM = (data.distance / 12) * 60 / 1000;
-        else if (protocol === 'conconi') vAM = Math.max(...conconiStages.map(s => s.velocity));
+        else if (protocol === 'conconi' && conconiStages.length > 0) vAM = Math.max(...conconiStages.map(s => s.velocity));
         else if (totalSeconds > 0) {
             const dist = protocol === 'five_km' ? 5 : (protocol === 'three_km' ? 3 : 0);
             if (dist > 0) vAM = (dist / (totalSeconds / 3600));
@@ -150,12 +164,11 @@ export default function VO2MaxPage() {
     };
 
     const handleSave = () => {
-        if (!selectedEvaluationId && !evaluation) {
+        const currentId = selectedEvaluationId || evaluation?.id;
+        if (!currentId) {
             toast({ variant: 'destructive', title: 'Erro', description: 'Selecione ou crie uma avaliação primeiro.' });
             return;
         }
-
-        const currentId = selectedEvaluationId || evaluation?.id;
 
         const updatedData = {
             protocol,
@@ -190,7 +203,7 @@ export default function VO2MaxPage() {
         setSelectedEvalIdsForCompare(prev => {
             if (prev.includes(evalId)) return prev.filter(id => id !== evalId);
             if (prev.length < 4) {
-                return [...prev].sort((a,b) => {
+                return [...prev, evalId].sort((a,b) => {
                     const evalA = clientEvaluations.find(e => e.id === a);
                     const evalB = clientEvaluations.find(e => e.id === b);
                     return new Date(evalA!.date.replace(/-/g, '/')).getTime() - new Date(evalB!.date.replace(/-/g, '/')).getTime();
@@ -217,7 +230,7 @@ export default function VO2MaxPage() {
 
     const handleAddStage = () => {
         const lastStage = conconiStages[conconiStages.length - 1];
-        setConconiStages([...conconiStages, { velocity: lastStage.velocity + 0.5, hr: lastStage.hr + 5 }]);
+        setConconiStages([...conconiStages, { velocity: (lastStage?.velocity || 8) + 0.5, hr: (lastStage?.hr || 120) + 5 }]);
     };
 
     const handleUpdateStage = (index: number, field: keyof VO2Stage, value: string) => {
@@ -237,8 +250,9 @@ export default function VO2MaxPage() {
 
         return (
             <Card 
+                key={ev.id}
                 className={cn(
-                    "shrink-0 w-40 text-center cursor-pointer transition-all shadow-md rounded-2xl",
+                    "shrink-0 w-44 text-center cursor-pointer transition-all shadow-md rounded-2xl",
                     isCompareMode 
                         ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent scale-105' : 'bg-card'
                         : isSelected ? 'ring-2 ring-primary border-transparent' : 'bg-card',
@@ -246,13 +260,13 @@ export default function VO2MaxPage() {
                 )}
                 onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
             >
-                <CardHeader className="p-3 pb-1">
-                    <CardTitle className="text-xs font-normal opacity-70">
+                <CardHeader className="p-4 pb-1">
+                    <CardTitle className={cn("text-sm font-normal", isSelectedForCompare ? "text-primary-foreground" : "opacity-70")}>
                         {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                    <p className="text-2xl font-black">{vo2 ? vo2.toFixed(1) : '--'}</p>
+                    <p className="text-3xl font-black">{vo2 ? vo2.toFixed(1) : '--'}</p>
                     <p className="text-[10px] uppercase font-bold tracking-tighter opacity-60">VO2 Máximo</p>
                 </CardContent>
             </Card>
@@ -277,7 +291,6 @@ export default function VO2MaxPage() {
             </header>
 
             <div className="space-y-6">
-                {/* Cabeçalho de Seleção de Avaliações */}
                 <Card className="border-none shadow-none bg-muted/10">
                     <CardHeader className="pb-4">
                         <div className="flex items-center justify-between">
@@ -367,7 +380,6 @@ export default function VO2MaxPage() {
                     </Card>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Configuração do Teste */}
                         <div className="lg:col-span-2 space-y-6">
                             <Card className="shadow-lg border-primary/10">
                                 <CardHeader>
@@ -533,7 +545,6 @@ export default function VO2MaxPage() {
                             </Card>
                         </div>
 
-                        {/* Resultados e Zonas */}
                         <div className="space-y-6">
                             <Card className="bg-primary text-primary-foreground shadow-2xl overflow-hidden relative border-none">
                                 <div className="absolute top-0 right-0 p-4 opacity-10">
