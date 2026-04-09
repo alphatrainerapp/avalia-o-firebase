@@ -44,6 +44,19 @@ export type BioimpedanceInBody = {
     basalMetabolicRate?: number;
 };
 
+export type VO2MaxData = {
+    protocol?: string;
+    vo2?: number;
+    vAM?: number;
+    classification?: string;
+    hrMax?: number;
+    hrRest?: number;
+    distance?: number;
+    totalTimeSeconds?: number;
+    recoveryHR?: number;
+    stages?: any[];
+};
+
 
 export type Evaluation = {
     id: string;
@@ -94,6 +107,7 @@ export type Evaluation = {
     };
     posturalPhotos?: { [key: string]: string | undefined };
     posturalDeviations?: { [key: string]: string[] };
+    vo2MaxData?: VO2MaxData;
 };
 
 export type Client = {
@@ -153,6 +167,15 @@ export const evaluations: Evaluation[] = [
             lateral_direita: ['Cabeça projetada', 'Hipercifose torácica'],
             lateral_esquerda: ['Cabeça projetada']
         },
+        vo2MaxData: {
+            protocol: 'cooper',
+            vo2: 38.5,
+            vAM: 11.2,
+            classification: 'Médio',
+            hrMax: 188,
+            hrRest: 62,
+            distance: 2200
+        },
         observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
     },
     {
@@ -178,6 +201,15 @@ export const evaluations: Evaluation[] = [
             lateral_direita: ['Cabeça projetada'],
             lateral_esquerda: ['Cabeça projetada']
         },
+        vo2MaxData: {
+            protocol: 'cooper',
+            vo2: 42.1,
+            vAM: 12.5,
+            classification: 'Médio',
+            hrMax: 190,
+            hrRest: 60,
+            distance: 2400
+        },
         observations: 'Ótima evolução. Redução significativa de medidas na cintura e melhora na inclinação da cabeça.'
     },
     {
@@ -202,6 +234,15 @@ export const evaluations: Evaluation[] = [
             posterior: [],
             lateral_direita: ['Cabeça projetada'],
             lateral_esquerda: []
+        },
+        vo2MaxData: {
+            protocol: 'cooper',
+            vo2: 46.8,
+            vAM: 13.8,
+            classification: 'Bom',
+            hrMax: 192,
+            hrRest: 58,
+            distance: 2650
         },
         observations: 'Meta de peso atingida. Postura muito mais alinhada, restando apenas leve projeção cervical.'
     }
