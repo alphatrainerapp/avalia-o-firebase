@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, FileText, X } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, Wind, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -522,6 +522,9 @@ export default function DashboardPage() {
                 </Link>
                 <Link href="/postural">
                     <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><User className="mr-2" /> Avaliação Postural</Button>
+                </Link>
+                <Link href="/vo2max">
+                    <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Wind className="mr-2" /> Avaliação VO2max</Button>
                 </Link>
                 <Button onClick={handleExportPdf} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Download className="mr-2" /> Exportar PDF</Button>
             </div>

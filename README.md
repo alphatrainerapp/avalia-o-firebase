@@ -23,8 +23,12 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente em múltiplas datas.
 - **Ferramentas de Análise**: Grid de alinhamento dinâmico e zoom de precisão posicionado para melhor ergonomia.
 
-### 4. Sincronização e UX
-- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação (Dashboard -> Bioimpedância -> Postural).
+### 4. Avaliação de Capacidade Cardiorrespiratória (VO2max) - *Novo*
+- **Integração no Dashboard**: Atalho direto para testes de performance aeróbica.
+- **Protocolos Planejados**: Implementação futura dos testes de Cooper, Rockport e Balke.
+
+### 5. Sincronização e UX
+- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação (Dashboard -> Bioimpedância -> Postural -> VO2max).
 - **Modo Escuro/Claro**: Interface totalmente compatível com temas claros e escuros para melhor conforto visual do avaliador.
 
 ## 🛠️ Tecnologias Utilizadas
