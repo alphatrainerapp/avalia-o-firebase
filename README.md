@@ -13,30 +13,33 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Estado Zero Inteligente**: Interface adaptativa que simplifica o início para novos clientes e expande conforme o histórico é criado.
 - **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
-### 2. Bioimpedância Sincronizada
+### 2. Avaliação de Performance e VO2max (Novo)
+- **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km e Step Test.
+- **Teste de Conconi**: Algoritmo avançado para identificação do ponto de deflexão da Frequência Cardíaca (Limiar Anaeróbico).
+- **Zonas de Treinamento**: Geração automática de 5 zonas de intensidade baseadas na FC de Reserva (Karvonen) e % da Velocidade Aeróbica Máxima (vAM).
+- **Gráficos Fisiológicos**: Visualização da curva de FC vs Velocidade e distribuição de carga por zona.
+- **Evolução de Performance**: Tabela comparativa para monitorar o ganho de VO2max e velocidade ao longo da temporada.
+
+### 3. Bioimpedância Sincronizada
 - **Integração Global**: Sincronização automática do cliente selecionado entre todas as telas via Context API.
 - **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução segmentar.
 
-### 3. Avaliação Postural Avançada
-- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso (ex: "1 de 6"), garantindo que a foto do cliente esteja sempre visível.
+### 4. Avaliação Postural Avançada
+- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso, garantindo que a foto do cliente esteja sempre visível durante a marcação.
 - **Mapeamento Muscular Automático**: Identificação de músculos possivelmente encurtados/superativos e alongados/inibidos com base nos desvios marcados.
-- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente em múltiplas datas.
-- **Ferramentas de Análise**: Grid de alinhamento dinâmico e zoom de precisão posicionado para melhor ergonomia.
-
-### 4. Avaliação de Capacidade Cardiorrespiratória (VO2max) - *Novo*
-- **Integração no Dashboard**: Atalho direto para testes de performance aeróbica.
-- **Protocolos Planejados**: Implementação futura dos testes de Cooper, Rockport e Balke.
+- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente.
 
 ### 5. Sincronização e UX
-- **Global Context**: Persistência do cliente selecionado e das avaliações durante toda a sessão de navegação (Dashboard -> Bioimpedância -> Postural -> VO2max).
-- **Modo Escuro/Claro**: Interface totalmente compatível com temas claros e escuros para melhor conforto visual do avaliador.
+- **Global Context**: Persistência do cliente selecionado durante toda a sessão (Dashboard -> Bioimpedância -> Postural -> VO2max).
+- **Interface Responsiva**: Menu de ações inteligente que se adapta para dispositivos móveis.
+- **Modo Escuro/Claro**: Compatibilidade total com temas para conforto visual do avaliador.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
 - **React 18 & Context API**
 - **Tailwind CSS & Shadcn UI**
 - **Lucide React** (Iconografia)
-- **Recharts** (Gráficos de Composição e Evolução)
+- **Recharts** (Gráficos de Composição e Performance)
 - **jsPDF & html2canvas** (Geração de Documentos)
 
 ## 🏁 Como Iniciar
@@ -45,4 +48,4 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 3. Inicie o servidor de desenvolvimento: `npm run dev`
 
 ---
-Desenvolvido para profissionais que buscam precisão científica e agilidade na avaliação física.
+Desenvolvido para profissionais que buscam precisão científica, agilidade e inteligência na análise de performance esportiva.
