@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, Wind, X } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -29,6 +30,12 @@ import html2canvas from 'html2canvas';
 import EvaluationReport from '@/components/EvaluationReport';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEvaluationContext } from '@/context/EvaluationContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 
 export default function DashboardPage() {
@@ -147,7 +154,6 @@ export default function DashboardPage() {
         } else if (protocol === 'ISAK') {
             const sum8 = getSkinfoldSum(protocolSkinfolds['ISAK']);
             if (sum8 > 0) {
-                // Simplified ISAK estimation if specific density not provided
                 if (gender === 'Masculino') {
                     bodyDensity = 1.109 - 0.0008 * sum8 + 0.0000016 * sum8 * sum8;
                 } else {
@@ -177,7 +183,6 @@ export default function DashboardPage() {
             }
             current[keys[keys.length - 1]] = parsedValue;
 
-            // Recalculate body fat
             if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
                 const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
                 if (newFat > 0) {
@@ -207,7 +212,6 @@ export default function DashboardPage() {
             setFormState(prev => {
                 let newState = { ...prev, [name]: value };
                 
-                // Recalculate body fat on protocol or gender change
                 if (name === 'gender' || name === 'protocol') {
                     const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
                     if (newFat > 0) {
@@ -264,7 +268,7 @@ export default function DashboardPage() {
             if (rcqValue < 0.80) return 'Baixo Risco';
             if (rcqValue <= 0.85) return 'Risco Moderado';
             return 'Alto Risco';
-        } else { // Masculino
+        } else {
             if (rcqValue < 0.95) return 'Baixo Risco';
             if (rcqValue <= 1.0) return 'Risco Moderado';
             return 'Alto Risco';
@@ -310,7 +314,7 @@ export default function DashboardPage() {
             if (percentage <= 24) return 'Bom';
             if (percentage <= 30) return 'Aceitável';
             return 'Obeso';
-        } else { // Masculino
+        } else {
             if (percentage < 12) return 'Atleta';
             if (percentage <= 16) return 'Bom';
             if (percentage <= 22) return 'Aceitável';
@@ -507,26 +511,71 @@ export default function DashboardPage() {
   return (
     <>
     <div className="min-h-screen bg-background text-foreground">
-        <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-3">
                 <Activity className="size-8 text-primary" />
                 <div>
                     <h1 className="text-2xl font-bold">Dashboard</h1>
-                    <p className="text-muted-foreground">Avaliação Física Completa</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm">Avaliação Física Completa</p>
                 </div>
             </div>
-            <div className="flex items-center gap-2">
-                <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Save className="mr-2" /> Salvar</Button>
-                <Link href="/bioimpedance">
-                  <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><BarChart className="mr-2" /> Bioimpedância</Button>
-                </Link>
-                <Link href="/postural">
-                    <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><User className="mr-2" /> Avaliação Postural</Button>
-                </Link>
-                <Link href="/vo2max">
-                    <Button className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Wind className="mr-2" /> Avaliação VO2max</Button>
-                </Link>
-                <Button onClick={handleExportPdf} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"><Download className="mr-2" /> Exportar PDF</Button>
+            
+            <div className="flex flex-wrap items-center gap-2 justify-end">
+                {/* Ações Secundárias (Visíveis em desktop, Dropdown em mobile) */}
+                <div className="hidden lg:flex items-center gap-2">
+                    <Link href="/bioimpedance">
+                        <Button variant="outline" size="sm" className="shadow-sm">
+                            <BarChart className="mr-2 h-4 w-4" /> Bioimpedância
+                        </Button>
+                    </Link>
+                    <Link href="/postural">
+                        <Button variant="outline" size="sm" className="shadow-sm">
+                            <User className="mr-2 h-4 w-4" /> Postural
+                        </Button>
+                    </Link>
+                    <Link href="/vo2max">
+                        <Button variant="outline" size="sm" className="shadow-sm">
+                            <Wind className="mr-2 h-4 w-4" /> VO2max
+                        </Button>
+                    </Link>
+                </div>
+
+                {/* Dropdown de Avaliações para Mobile */}
+                <div className="lg:hidden">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Activity className="mr-2 h-4 w-4" /> Avaliações <ChevronDown className="ml-1 h-3 w-3" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <Link href="/bioimpedance">
+                                <DropdownMenuItem>
+                                    <BarChart className="mr-2 h-4 w-4" /> Bioimpedância
+                                </DropdownMenuItem>
+                            </Link>
+                            <Link href="/postural">
+                                <DropdownMenuItem>
+                                    <User className="mr-2 h-4 w-4" /> Avaliação Postural
+                                </DropdownMenuItem>
+                            </Link>
+                            <Link href="/vo2max">
+                                <DropdownMenuItem>
+                                    <Wind className="mr-2 h-4 w-4" /> Avaliação VO2max
+                                </DropdownMenuItem>
+                            </Link>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                {/* Ações Primárias (Sempre visíveis, mas responsivas) */}
+                <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                    <Save className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Salvar</span>
+                </Button>
+                
+                <Button onClick={handleExportPdf} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                    <Download className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">PDF</span>
+                </Button>
             </div>
         </header>
 
@@ -537,18 +586,19 @@ export default function DashboardPage() {
                     <CardHeader>
                         <div className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>
+                                <CardTitle className="text-lg sm:text-2xl">
                                   {hasEvaluations 
                                     ? `Avaliação ${evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}` 
                                     : "Dados de Registro"}
                                 </CardTitle>
-                                <CardDescription>{formattedDate}</CardDescription>
+                                <CardDescription className="text-xs sm:text-sm">{formattedDate}</CardDescription>
                             </div>
                              <Button 
                                 onClick={handleNewEvaluation} 
+                                size="sm"
                                 className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
                             >
-                                <Plus className="mr-2" /> Nova Avaliação
+                                <Plus className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Nova Avaliação</span>
                             </Button>
                         </div>
                     </CardHeader>
@@ -559,7 +609,7 @@ export default function DashboardPage() {
                                     <Label htmlFor="name">Nome</Label>
                                     <div className="flex items-center gap-2">
                                         {client && (
-                                            <Avatar className="h-10 w-10">
+                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                                                 <AvatarImage src={client.avatarUrl} alt={client.name} />
                                                 <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                                             </Avatar>
@@ -607,11 +657,11 @@ export default function DashboardPage() {
                         {hasEvaluations && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4">
                               <div>
-                                  <Label>IMC</Label>
+                                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">IMC</Label>
                                   <div className="font-bold text-lg">{bmi}</div>
                               </div>
                               <div>
-                                  <Label>Classificação</Label>
+                                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação</Label>
                                   <div className="font-bold text-lg">{bmiClassification}</div>
                               </div>
                           </div>
@@ -628,20 +678,20 @@ export default function DashboardPage() {
                     <Card>
                         <CardHeader>
                             <div className="flex items-center justify-between">
-                                <CardTitle>Avaliações ({clientEvaluations.length})</CardTitle>
+                                <CardTitle className="text-lg">Avaliações ({clientEvaluations.length})</CardTitle>
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="compare-switch" className="text-sm">Comparar</Label>
+                                    <Label htmlFor="compare-switch" className="text-xs sm:text-sm">Comparar</Label>
                                     <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
                             </div>
                             {isCompareMode && (
                                 <div className="pt-4 space-y-2">
-                                    <p className="text-sm text-muted-foreground">
-                                        Selecione até 4 datas para comparar ({selectedEvalIdsForCompare.length}/4 selecionadas)
+                                    <p className="text-xs text-muted-foreground">
+                                        Selecione até 4 datas ({selectedEvalIdsForCompare.length}/4 selecionadas)
                                     </p>
                                     <div className="flex flex-wrap gap-2">
                                         {comparedEvaluations.map(ev => (
-                                            <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-sm">
+                                            <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-xs">
                                                 <span>{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span>
                                                 <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
                                                     <X className="size-4" />
@@ -652,7 +702,7 @@ export default function DashboardPage() {
                                 </div>
                             )}
                         </CardHeader>
-                        <CardContent className="flex gap-4 overflow-x-auto pb-4">
+                        <CardContent className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {clientEvaluations.map((ev, index) => (
                               <EvalCard ev={ev} index={index} key={ev.id}/>
                             ))}
@@ -676,57 +726,56 @@ export default function DashboardPage() {
                     
                     <Card>
                         <CardHeader>
-                            <CardTitle>Registros de Dados</CardTitle>
+                            <CardTitle className="text-lg">Registros de Dados</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
                                 <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
-                                    <TabsTrigger value="dobras">Dobras Cutâneas</TabsTrigger>
-                                    <TabsTrigger value="diametros">Diâmetros Ósseos</TabsTrigger>
+                                    <TabsTrigger value="perimetria" className="text-xs sm:text-sm">Perimetria</TabsTrigger>
+                                    <TabsTrigger value="dobras" className="text-xs sm:text-sm">Dobras</TabsTrigger>
+                                    <TabsTrigger value="diametros" className="text-xs sm:text-sm">Diâmetros</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="perimetria" className="pt-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                         {perimetriaFields.map(field => (
-                                            <div key={field.key}><Label>{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} /></div>
+                                            <div key={field.key}><Label className="text-xs">{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} className="h-9" /></div>
                                         ))}
                                     </div>
                                     <div className="mt-6 space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label>RCQ (Relação Cintura-Quadril)</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">RCQ (Cintura-Quadril)</Label>
                                                 <div className="font-bold text-lg">{rcq}</div>
                                             </div>
                                             <div>
-                                                <Label>Classificação de Risco</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco</Label>
                                                 <div className="font-bold text-lg">{rcqClassification}</div>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label>Assimetria de Braço (Relaxado)</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Assimetria de Braço</Label>
                                                 <div className="font-bold text-lg">{armAsymmetry}</div>
                                             </div>
                                             <div>
-                                                <Label>Assimetria de Coxa (Medial)</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Assimetria de Coxa</Label>
                                                 <div className="font-bold text-lg">{thighAsymmetry}</div>
                                             </div>
                                         </div>
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="dobras" className="pt-4 space-y-4">
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="text-base">Seleção de Protocolo</CardTitle>
-                                            <CardDescription className="text-sm">Escolha o público-alvo e o protocolo para destacar as medidas necessárias.</CardDescription>
+                                    <Card className="shadow-none border-dashed">
+                                        <CardHeader className="p-4">
+                                            <CardTitle className="text-sm font-medium">Protocolo</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
+                                        <CardContent className="p-4 pt-0">
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
-                                                    <Label htmlFor="publico-alvo">Público-Alvo</Label>
+                                                    <Label htmlFor="publico-alvo" className="text-xs">Público-Alvo</Label>
                                                     <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                                        <SelectTrigger id="publico-alvo">
-                                                            <SelectValue placeholder="Selecione o público" />
+                                                        <SelectTrigger id="publico-alvo" className="h-9">
+                                                            <SelectValue placeholder="Selecione" />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             {Object.keys(audienceProtocols).map(audience => (
@@ -736,10 +785,10 @@ export default function DashboardPage() {
                                                     </Select>
                                                 </div>
                                                 <div>
-                                                    <Label htmlFor="protocolo">Protocolo de Avaliação</Label>
+                                                    <Label htmlFor="protocolo" className="text-xs">Protocolo</Label>
                                                     <Select value={formState.protocol || ''} onValueChange={(value: string) => handleSelectChange('protocol', value)}>
-                                                        <SelectTrigger id="protocolo">
-                                                            <SelectValue placeholder="Selecione o protocolo" />
+                                                        <SelectTrigger id="protocolo" className="h-9">
+                                                            <SelectValue placeholder="Selecione" />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             {availableProtocols.map(protocol => (
@@ -752,19 +801,19 @@ export default function DashboardPage() {
                                         </CardContent>
                                     </Card>
                                     
-                                    <div className="pt-4">
-                                        <h3 className="text-lg font-medium mb-4">Medidas</h3>
+                                    <div className="pt-2">
+                                        <h3 className="text-base font-medium mb-4">Medidas (mm)</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                             {skinfoldFields.map(field => (
                                                 <div key={field.name}>
-                                                    <Label>{field.label} (mm)</Label>
+                                                    <Label className="text-xs">{field.label}</Label>
                                                     <Input 
                                                         type="number" 
                                                         placeholder="0.0" 
                                                         name={`skinFolds.${field.name}`} 
                                                         value={formState.skinFolds?.[field.name] || ''} 
                                                         onChange={handleInputChange} 
-                                                        className={cn(requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
+                                                        className={cn("h-9", requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
                                                     />
                                                 </div>
                                             ))}
@@ -772,14 +821,14 @@ export default function DashboardPage() {
                                     </div>
 
                                     <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold mb-2">Resultados</h3>
+                                        <h3 className="font-semibold text-sm mb-3">Resultados Estimados</h3>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <Label>Soma das Dobras (mm)</Label>
-                                                <div className="font-bold text-lg">{skinfoldsSum > 0 ? skinfoldsSum.toFixed(1) : '—'}</div>
+                                                <Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Soma Dobras</Label>
+                                                <div className="font-bold text-lg">{skinfoldsSum > 0 ? `${skinfoldsSum.toFixed(1)} mm` : '—'}</div>
                                             </div>
                                             <div>
-                                                <Label>% Gordura Estimado</Label>
+                                                <Label className="text-[10px] text-muted-foreground uppercase tracking-widest">% Gordura</Label>
                                                 <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage > 0 ? `${formState.bodyComposition.bodyFatPercentage.toFixed(1)}%` : '—'}</div>
                                             </div>
                                         </div>
@@ -789,27 +838,27 @@ export default function DashboardPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                         {diametrosFields.map(field => (
                                             <div key={field.name}>
-                                                <Label>{field.label}</Label>
+                                                <Label className="text-xs">{field.label}</Label>
                                                 <Input 
                                                     type="number" 
                                                     placeholder="0.0" 
                                                     name={`boneDiameters.${field.name}`} 
                                                     value={formState.boneDiameters?.[field.name] || ''} 
                                                     onChange={handleInputChange} 
+                                                    className="h-9"
                                                 />
                                             </div>
                                         ))}
                                     </div>
                                     <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold mb-2">Resultados</h3>
+                                        <h3 className="font-semibold text-sm mb-2">Massa Óssea (Rocha, 1975)</h3>
                                         <div className="grid grid-cols-1 gap-4">
                                             <div>
-                                                <Label>Massa Óssea (kg) - Rocha, 1975</Label>
-                                                <div className="font-bold text-lg text-foreground">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '—'} kg</div>
+                                                <div className="font-bold text-xl text-primary">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '—'} <span className="text-sm">kg</span></div>
                                             </div>
                                         </div>
-                                        <p className="text-xs text-foreground mt-2">
-                                            Essa estimativa complementa a análise da composição corporal, fornecendo dados estruturais mais estáveis.
+                                        <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                                            Estimativa estrutural calculada via diâmetros de punho, fêmur e úmero.
                                         </p>
                                     </div>
                                 </TabsContent>
@@ -821,80 +870,84 @@ export default function DashboardPage() {
             </div>
 
             {hasEvaluations && (
-              <div className="lg:col-span-1 space-y-6">
-                  <Card>
-                      <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                              <CardTitle className="text-sm font-medium">GORDURA</CardTitle>
-                              {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
-                          </div>
+              <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                    <Card className="shadow-sm border-primary/20 bg-primary/[0.02]">
+                        <CardHeader className="pb-2 p-4">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-[10px] font-bold text-primary uppercase tracking-widest">GORDURA</CardTitle>
+                                {isCompareMode && comparedEvaluations.length > 0 && <p className="text-[10px] text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <p className="text-xl sm:text-2xl font-bold">{bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'}</p>
+                            <p className="text-[10px] text-muted-foreground">{bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '0.0 kg'}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="shadow-sm border-primary/20 bg-primary/[0.02]">
+                        <CardHeader className="pb-2 p-4">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-[10px] font-bold text-primary uppercase tracking-widest">MUSCULAR</CardTitle>
+                                {isCompareMode && comparedEvaluations.length > 0 && <p className="text-[10px] text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                            <p className="text-xl sm:text-2xl font-bold">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</p>
+                            <p className="text-[10px] text-muted-foreground">{bodyComposition.muscleMassPercentage > 0 ? `${bodyComposition.muscleMassPercentage.toFixed(1)}%` : '0.0%'}</p>
+                        </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="shadow-sm">
+                      <CardHeader className="pb-2 p-4">
+                          <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">RESIDUAL</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'}</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '0.0 kg'}</p>
+                      <CardContent className="p-4 pt-0">
+                          <p className="text-xl sm:text-2xl font-bold">{bodyComposition.residualMassKg > 0 ? `${bodyComposition.residualMassKg.toFixed(1)} kg` : '—'}</p>
+                          <p className="text-[10px] text-muted-foreground">{bodyComposition.residualMassPercentage > 0 ? `${bodyComposition.residualMassPercentage.toFixed(1)}%` : '0.0%'}</p>
                       </CardContent>
                   </Card>
-                  <Card>
-                      <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                              <CardTitle className="text-sm font-medium">MUSCULAR</CardTitle>
-                              {isCompareMode && comparedEvaluations.length > 0 && <p className="text-sm text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
-                          </div>
+
+                  <Card className="shadow-md border-primary/10">
+                      <CardHeader className="pb-4 p-4">
+                          <CardTitle className="text-sm font-bold uppercase tracking-widest">Resumo Analítico</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.muscleMassPercentage > 0 ? `${bodyComposition.muscleMassPercentage.toFixed(1)}%` : '0.0%'}</p>
-                      </CardContent>
-                  </Card>
-                  <Card>
-                      <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium">RESIDUAL</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                          <p className="text-2xl font-bold">{bodyComposition.residualMassKg > 0 ? `${bodyComposition.residualMassKg.toFixed(1)} kg` : '—'}</p>
-                          <p className="text-xs text-muted-foreground">{bodyComposition.residualMassPercentage > 0 ? `${bodyComposition.residualMassPercentage.toFixed(1)}%` : '0.0%'}</p>
-                      </CardContent>
-                  </Card>
-                  <Card>
-                      <CardHeader className="pb-4">
-                          <CardTitle className="text-base font-medium">RESULTADOS</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3 text-sm">
-                          <div className="flex justify-between">
+                      <CardContent className="space-y-3 text-xs p-4 pt-0">
+                          <div className="flex justify-between border-b border-muted pb-1">
                               <span className="text-muted-foreground">Classificação % Gordura:</span>
-                              <span className="font-medium">{fatClassification}</span>
+                              <span className="font-semibold text-primary">{fatClassification}</span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between border-b border-muted pb-1">
                               <span className="text-muted-foreground">Classificação IMC:</span>
-                              <span className="font-medium">{bmiClassification}</span>
+                              <span className="font-semibold">{bmiClassification}</span>
                           </div>
-                          <div className="flex justify-between">
-                              <span className="text-muted-foreground">Massa gorda (kg / %):</span>
-                              <span className="font-medium">
-                                {bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '—'} / {bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'}
+                          <div className="flex justify-between border-b border-muted pb-1">
+                              <span className="text-muted-foreground">Massa gorda:</span>
+                              <span className="font-semibold">
+                                {bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '—'} ({bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'})
                               </span>
                           </div>
-                          <div className="flex justify-between">
-                              <span className="text-muted-foreground">Massa magra (kg / %):</span>
-                              <span className="font-medium">
-                                {bodyComposition.leanMassKg > 0 ? `${bodyComposition.leanMassKg.toFixed(1)} kg` : '—'} / {bodyComposition.fatMassPercentage > 0 ? `${(100 - bodyComposition.fatMassPercentage).toFixed(1)}%` : '—'}
+                          <div className="flex justify-between border-b border-muted pb-1">
+                              <span className="text-muted-foreground">Massa magra:</span>
+                              <span className="font-semibold">
+                                {bodyComposition.leanMassKg > 0 ? `${bodyComposition.leanMassKg.toFixed(1)} kg` : '—'}
                               </span>
                           </div>
-                          <div className="flex justify-between">
-                              <span className="text-muted-foreground">Massa óssea (kg):</span>
-                              <span className="font-medium">{bodyComposition.boneMassKg > 0 ? `${bodyComposition.boneMassKg.toFixed(2)} kg` : '—'}</span>
+                          <div className="flex justify-between border-b border-muted pb-1">
+                              <span className="text-muted-foreground">Massa óssea:</span>
+                              <span className="font-semibold">{bodyComposition.boneMassKg > 0 ? `${bodyComposition.boneMassKg.toFixed(2)} kg` : '—'}</span>
                           </div>
-                          <div className="flex justify-between">
-                              <span className="text-muted-foreground">Massa muscular (kg):</span>
-                              <span className="font-medium">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</span>
+                          <div className="flex justify-between border-b border-muted pb-1">
+                              <span className="text-muted-foreground">Massa muscular:</span>
+                              <span className="font-semibold">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between border-b border-muted pb-1">
                               <span className="text-muted-foreground">Peso desejável:</span>
-                              <span className="font-medium">{bodyComposition.idealWeight > 0 ? `${bodyComposition.idealWeight.toFixed(1)} kg` : '—'}</span>
+                              <span className="font-semibold text-primary/80">{bodyComposition.idealWeight > 0 ? `${bodyComposition.idealWeight.toFixed(1)} kg` : '—'}</span>
                           </div>
-                          <div className="flex justify-between">
+                          <div className="flex justify-between pt-1">
                               <span className="text-muted-foreground">Perda de gordura necessária:</span>
-                              <span className="font-medium">{bodyComposition.fatLossNeeded > 0 ? `${bodyComposition.fatLossNeeded.toFixed(1)} kg` : '0.0 kg'}</span>
+                              <span className="font-bold text-destructive">{bodyComposition.fatLossNeeded > 0 ? `${bodyComposition.fatLossNeeded.toFixed(1)} kg` : '0.0 kg'}</span>
                           </div>
                       </CardContent>
                   </Card>
