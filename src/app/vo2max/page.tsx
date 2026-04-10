@@ -645,7 +645,16 @@ export default function VO2MaxPage() {
                                                     <div className="space-y-6">
                                                         {zoneConfigs.map((zone, idx) => (
                                                             <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
+                                                                    onClick={() => handleRemoveZone(idx)}
+                                                                    title="Excluir Zona"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
                                                                     <div className="space-y-2">
                                                                         <Label className="text-[10px] font-bold uppercase">Nome da Zona</Label>
                                                                         <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
@@ -675,14 +684,6 @@ export default function VO2MaxPage() {
                                                                         <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
                                                                     </div>
                                                                 </div>
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
-                                                                    className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" 
-                                                                    onClick={() => handleRemoveZone(idx)}
-                                                                >
-                                                                    <X className="h-3 w-3" />
-                                                                </Button>
                                                             </div>
                                                         ))}
                                                     </div>
