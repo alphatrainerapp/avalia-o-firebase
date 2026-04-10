@@ -1,4 +1,3 @@
-
 'use client';
 import React, { forwardRef } from 'react';
 import Image from 'next/image';
@@ -134,13 +133,13 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
                         <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Foco em vAM</h4>
                         <p className="leading-relaxed text-gray-600">
-                            Para atletas com vAM de {results.vAM.toFixed(1)} km/h, sugere-se sessões de intervalos de 400m a 800m no pace de {results.zones[4].maxPace} min/km para maximizar a economia de corrida e o tempo sob VO2max.
+                            Para atletas com vAM de {results.vAM.toFixed(1)} km/h, sugere-se sessões de intervalos de 400m a 800m no pace de {results.zones.length > 0 ? results.zones[results.zones.length - 1].maxPace : '--:--'} min/km para maximizar a economia de corrida e o tempo sob VO2max.
                         </p>
                     </div>
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
                         <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Controle de Carga</h4>
                         <p className="leading-relaxed text-gray-600">
-                            Utilize a Zona 2 ({zoneHRRange(results.zones[1])} bpm) para 80% do seu volume semanal. O limiar anaeróbico foi identificado em {results.conconiThreshold?.hr || 'nível alto'}, indicando que treinos em Z4 devem ser limitados a 1-2 vezes por semana.
+                            Utilize as zonas aeróbicas de base para 80% do seu volume semanal. O limiar anaeróbico foi identificado em {results.conconiThreshold?.hr || 'nível alto'}, indicando que treinos de alta intensidade devem ser limitados a 1-2 vezes por semana.
                         </p>
                     </div>
                 </div>
@@ -153,10 +152,6 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
         </div>
     );
 });
-
-function zoneHRRange(zone: TrainingZone) {
-    return `${zone.minHR}-${zone.maxHR}`;
-}
 
 VO2Report.displayName = "VO2Report";
 export default VO2Report;

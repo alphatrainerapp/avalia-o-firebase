@@ -17,7 +17,9 @@ import {
   ChevronDown, 
   X, 
   Target,
-  Trophy
+  Trophy,
+  Settings2,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -32,6 +34,8 @@ import { Switch } from '@/components/ui/switch';
 import { 
   type VO2Protocol, 
   type VO2Stage, 
+  type ZoneConfig,
+  DEFAULT_ZONES,
   calculateVO2, 
   getVO2Classification, 
   calculateTrainingZones, 
@@ -42,6 +46,8 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import VO2Report from '@/components/VO2Report';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function VO2MaxPage() {
     const { clients, selectedClientId, setSelectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
@@ -70,6 +76,10 @@ export default function VO2MaxPage() {
         { velocity: 13, hr: 175 },
         { velocity: 14, hr: 180 },
     ]);
+
+    // Configuração de Zonas Customizada
+    const [zoneConfigs, setZoneConfigs] = useState<ZoneConfig[]>(DEFAULT_ZONES);
+    const [isZoneDialogOpen, setIsZoneDialogOpen] = useState(false);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => {
@@ -107,11 +117,14 @@ export default function VO2MaxPage() {
                 setTimeSeconds('');
             }
             if (data.stages) setConconiStages(data.stages);
+            if (data.zoneConfig) setZoneConfigs(data.zoneConfig);
+            else setZoneConfigs(DEFAULT_ZONES);
         } else {
             setDistance('');
             setTimeMinutes('');
             setTimeSeconds('');
             setRecoveryHR('');
+            setZoneConfigs(DEFAULT_ZONES);
         }
     }, [evaluation]);
 
@@ -147,11 +160,11 @@ export default function VO2MaxPage() {
             if (dist > 0) vAM = (dist / (totalSeconds / 3600));
         }
 
-        const zones = calculateTrainingZones(vo2, data.hrMax, data.hrRest, vAM);
+        const zones = calculateTrainingZones(vo2, data.hrMax, data.hrRest, vAM, zoneConfigs);
         const conconiThreshold = protocol === 'conconi' ? detectThresholdConconi(conconiStages) : null;
 
         return { vo2, classification, zones, conconiThreshold, vAM };
-    }, [client, protocol, distance, totalSeconds, conconiStages, hrMax, hrRest, recoveryHR]);
+    }, [client, protocol, distance, totalSeconds, conconiStages, hrMax, hrRest, recoveryHR, zoneConfigs]);
 
     const handleNewEvaluation = () => {
         if (client) {
@@ -159,6 +172,7 @@ export default function VO2MaxPage() {
             setSelectedEvaluationId(newEval.id);
             setCompareMode(false);
             setSelectedEvalIdsForCompare([]);
+            setZoneConfigs(DEFAULT_ZONES);
             toast({ title: "Nova Avaliação", description: "Iniciando registro de VO2max para hoje." });
         }
     };
@@ -180,7 +194,8 @@ export default function VO2MaxPage() {
             distance: parseFloat(distance),
             totalTimeSeconds: totalSeconds,
             recoveryHR: parseFloat(recoveryHR),
-            stages: conconiStages
+            stages: conconiStages,
+            zoneConfig: zoneConfigs
         };
 
         setAllEvaluations(prev => prev.map(ev => 
@@ -241,6 +256,29 @@ export default function VO2MaxPage() {
 
     const handleRemoveStage = (index: number) => {
         setConconiStages(conconiStages.filter((_, i) => i !== index));
+    };
+
+    // Funções para Zonas Customizadas
+    const handleAddZone = () => {
+        const lastZone = zoneConfigs[zoneConfigs.length - 1];
+        const newZone: ZoneConfig = {
+            zone: `Z${zoneConfigs.length + 1}`,
+            desc: 'Nova Zona',
+            hrPerc: [lastZone?.hrPerc[1] || 0.92, (lastZone?.hrPerc[1] || 0.92) + 0.05],
+            vAMperc: [lastZone?.vAMperc[1] || 0.95, (lastZone?.vAMperc[1] || 0.95) + 0.10],
+            color: '#000000'
+        };
+        setZoneConfigs([...zoneConfigs, newZone]);
+    };
+
+    const handleUpdateZone = (index: number, updates: Partial<ZoneConfig>) => {
+        const newConfigs = [...zoneConfigs];
+        newConfigs[index] = { ...newConfigs[index], ...updates };
+        setZoneConfigs(newConfigs);
+    };
+
+    const handleRemoveZone = (index: number) => {
+        setZoneConfigs(zoneConfigs.filter((_, i) => i !== index));
     };
 
     const EvalCard = ({ ev, index }: { ev: any; index: number }) => {
@@ -586,7 +624,74 @@ export default function VO2MaxPage() {
 
                             <Card className="shadow-lg border-primary/5">
                                 <CardHeader className="pb-4">
-                                    <CardTitle className="text-sm font-black uppercase">Zonas de Treinamento</CardTitle>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-black uppercase">Zonas de Treinamento</CardTitle>
+                                        <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
+                                                    <Settings2 className="h-4 w-4" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
+                                                    <DialogDescription>
+                                                        Personalize os nomes, percentuais de FC e vAM conforme sua metodologia.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <ScrollArea className="h-[50vh] pr-4">
+                                                    <div className="space-y-6">
+                                                        {zoneConfigs.map((zone, idx) => (
+                                                            <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Nome da Zona</Label>
+                                                                        <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
+                                                                    </div>
+                                                                    <div className="md:col-span-2 space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Descrição / Objetivo</Label>
+                                                                        <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
+                                                                            <span>-</span>
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">% vAM (Min-Max)</Label>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Input type="number" step="0.01" value={zone.vAMperc[0]} onChange={(e) => handleUpdateZone(idx, { vAMperc: [parseFloat(e.target.value), zone.vAMperc[1]] })} className="h-9 text-xs" />
+                                                                            <span>-</span>
+                                                                            <Input type="number" step="0.01" value={zone.vAMperc[1]} onChange={(e) => handleUpdateZone(idx, { vAMperc: [zone.vAMperc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Cor</Label>
+                                                                        <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
+                                                                    </div>
+                                                                </div>
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="absolute -top-2 -right-2 h-6 w-6 bg-destructive text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" 
+                                                                    onClick={() => handleRemoveZone(idx)}
+                                                                >
+                                                                    <X className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
+                                                <DialogFooter className="flex flex-row justify-between sm:justify-between pt-4 border-t">
+                                                    <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Adicionar Zona</Button>
+                                                    <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar Mudanças</Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     <Table>

@@ -55,6 +55,7 @@ export type VO2MaxData = {
     totalTimeSeconds?: number;
     recoveryHR?: number;
     stages?: any[];
+    zoneConfig?: any[]; // Armazena a configuração de zonas customizada
 };
 
 

@@ -1,4 +1,3 @@
-
 'use client';
 
 export type VO2Protocol = 'cooper' | 'five_km' | 'three_km' | 'balke' | 'conconi' | 'step_test';
@@ -6,6 +5,14 @@ export type VO2Protocol = 'cooper' | 'five_km' | 'three_km' | 'balke' | 'conconi
 export interface VO2Stage {
   velocity: number; // km/h
   hr: number; // bpm
+}
+
+export interface ZoneConfig {
+  zone: string;
+  desc: string;
+  hrPerc: [number, number];
+  vAMperc: [number, number];
+  color: string;
 }
 
 export interface VO2TestData {
@@ -35,6 +42,14 @@ export interface TrainingZone {
   maxPace: string;
   color: string;
 }
+
+export const DEFAULT_ZONES: ZoneConfig[] = [
+  { zone: 'Z1', desc: 'Regenerativo', hrPerc: [0.50, 0.60], vAMperc: [0.55, 0.65], color: '#94a3b8' },
+  { zone: 'Z2', desc: 'Endurance / Base', hrPerc: [0.60, 0.75], vAMperc: [0.65, 0.75], color: '#22c55e' },
+  { zone: 'Z3', desc: 'Tempo / Moderado', hrPerc: [0.75, 0.85], vAMperc: [0.75, 0.85], color: '#eab308' },
+  { zone: 'Z4', desc: 'Limiar Anaeróbico', hrPerc: [0.85, 0.92], vAMperc: [0.85, 0.95], color: '#f97316' },
+  { zone: 'Z5', desc: 'VO2 Máximo', hrPerc: [0.92, 1.00], vAMperc: [0.95, 1.10], color: '#ef4444' },
+];
 
 export function secondsToPace(secondsPerKm: number): string {
   if (!secondsPerKm || isNaN(secondsPerKm) || secondsPerKm === Infinity) return '--:--';
@@ -83,9 +98,8 @@ export function calculateVO2(data: VO2TestData) {
       break;
     case 'conconi':
       if (data.stages && data.stages.length > 0) {
-        // Estimativa simples baseada no último estágio atingido
         const maxVelocity = Math.max(...data.stages.map(s => s.velocity));
-        vo2 = maxVelocity * 3.5; // Estimativa genérica METs
+        vo2 = maxVelocity * 3.5; 
       }
       break;
   }
@@ -96,7 +110,6 @@ export function calculateVO2(data: VO2TestData) {
 export function getVO2Classification(vo2: number, age: number, gender: 'Masculino' | 'Feminino'): string {
   if (vo2 <= 0) return 'N/A';
   
-  // Tabelas simplificadas de Cooper/ACSM
   if (gender === 'Masculino') {
     if (vo2 < 30) return 'Muito Fraco';
     if (vo2 < 35) return 'Fraco';
@@ -114,38 +127,25 @@ export function getVO2Classification(vo2: number, age: number, gender: 'Masculin
   }
 }
 
-export function calculateTrainingZones(vo2: number, hrMax: number, hrRest: number, vAM: number): TrainingZone[] {
+export function calculateTrainingZones(vo2: number, hrMax: number, hrRest: number, vAM: number, customConfig?: ZoneConfig[]): TrainingZone[] {
   const hrReserve = hrMax - hrRest;
-  
-  // vAM = Velocidade Aeróbica Máxima aproximada
-  // Se não provida, estimamos que vAM ocorre em 100% do VO2
   const baseVAM = vAM > 0 ? vAM : (vo2 / 3.5); 
+  const config = customConfig || DEFAULT_ZONES;
 
-  const zonesConfig = [
-    { zone: 'Z1', desc: 'Regenerativo', hrPerc: [0.50, 0.60], vAMperc: [0.55, 0.65], color: '#94a3b8' },
-    { zone: 'Z2', desc: 'Endurance / Base', hrPerc: [0.60, 0.75], vAMperc: [0.65, 0.75], color: '#22c55e' },
-    { zone: 'Z3', desc: 'Tempo / Moderado', hrPerc: [0.75, 0.85], vAMperc: [0.75, 0.85], color: '#eab308' },
-    { zone: 'Z4', desc: 'Limiar Anaeróbico', hrPerc: [0.85, 0.92], vAMperc: [0.85, 0.95], color: '#f97316' },
-    { zone: 'Z5', desc: 'VO2 Máximo', hrPerc: [0.92, 1.00], vAMperc: [0.95, 1.10], color: '#ef4444' },
-  ];
-
-  return zonesConfig.map(z => ({
+  return config.map(z => ({
     zone: z.zone,
     description: z.desc,
     minHR: Math.round(hrRest + (hrReserve * z.hrPerc[0])),
     maxHR: Math.round(hrRest + (hrReserve * z.hrPerc[1])),
-    minPace: velocityToPace(baseVAM * z.vAMperc[1]), // Pace mais rápido no topo da zona
-    maxPace: velocityToPace(baseVAM * z.vAMperc[0]), // Pace mais lento no fundo da zona
+    minPace: velocityToPace(baseVAM * z.vAMperc[1]), 
+    maxPace: velocityToPace(baseVAM * z.vAMperc[0]), 
     color: z.color
   }));
 }
 
-// Detecção do Ponto de Deflexão de FC (Método de Conconi)
 export function detectThresholdConconi(stages: VO2Stage[]): { velocity: number, hr: number } | null {
   if (stages.length < 5) return null;
 
-  // Simplificação: O ponto de deflexão é onde a inclinação da curva FC/Velocidade diminui
-  // Em um sistema real, usaríamos regressão linear segmentada
   let maxDeflectionIndex = -1;
   let maxDiff = -Infinity;
 
