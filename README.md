@@ -13,12 +13,12 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Estado Zero Inteligente**: Interface adaptativa que simplifica o início para novos clientes e expande conforme o histórico é criado.
 - **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
-### 2. Avaliação de Performance e VO2max (Novo)
+### 2. Avaliação de Performance e VO2max (Elite)
 - **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km e Step Test.
-- **Teste de Conconi**: Algoritmo avançado para identificação do ponto de deflexão da Frequência Cardíaca (Limiar Anaeróbico).
-- **Zonas de Treinamento**: Geração automática de 5 zonas de intensidade baseadas na FC de Reserva (Karvonen) e % da Velocidade Aeróbica Máxima (vAM).
+- **Teste de Conconi**: Algoritmo avançado para identificação do ponto de deflexão da Frequência Cardíaca (Limiar Anaeróbico) com entrega de **Velocidade, FC e Pace**.
+- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador adicionar, remover e ajustar zonas de intensidade baseadas na FC de Reserva (Karvonen) e % da vAM.
 - **Gráficos Fisiológicos**: Visualização da curva de FC vs Velocidade e distribuição de carga por zona.
-- **Evolução de Performance**: Tabela comparativa para monitorar o ganho de VO2max e velocidade ao longo da temporada.
+- **Evolução de Performance**: Tabela comparativa histórica para monitorar o ganho de VO2max e velocidade ao longo da temporada.
 
 ### 3. Bioimpedância Sincronizada
 - **Integração Global**: Sincronização automática do cliente selecionado entre todas as telas via Context API.
