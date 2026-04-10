@@ -89,7 +89,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                     {results.conconiThreshold ? (
                         <>
                             <div className="text-4xl font-black">{results.conconiThreshold.velocity}</div>
-                            <p className="text-[9px] font-bold">km/h</p>
+                            <p className="text-[9px] font-bold">km/h ({velocityToPace(results.conconiThreshold.velocity)})</p>
                             <div className="mt-3 text-xs font-bold uppercase text-primary">@ {results.conconiThreshold.hr} bpm</div>
                         </>
                     ) : (

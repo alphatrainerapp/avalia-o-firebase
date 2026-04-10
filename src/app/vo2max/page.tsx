@@ -554,7 +554,9 @@ export default function VO2MaxPage() {
                                                     </div>
                                                     <div>
                                                         <p className="text-xs uppercase font-black text-primary leading-none mb-1">Limiar Anaeróbico Identificado</p>
-                                                        <p className="text-lg font-black">{testResults.conconiThreshold.velocity} <span className="text-xs">km/h</span> @ {testResults.conconiThreshold.hr} <span className="text-xs">bpm</span></p>
+                                                        <p className="text-lg font-black">
+                                                            {testResults.conconiThreshold.velocity} <span className="text-xs">km/h</span> ({velocityToPace(testResults.conconiThreshold.velocity)}) @ {testResults.conconiThreshold.hr} <span className="text-xs">bpm</span>
+                                                        </p>
                                                     </div>
                                                 </div>
                                             )}
