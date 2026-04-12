@@ -41,7 +41,8 @@ import {
   getVO2Classification, 
   calculateTrainingZones, 
   detectThresholdConconi, 
-  velocityToPace 
+  velocityToPace,
+  getBPClassification
 } from '@/lib/vo2-logic';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from 'recharts';
 import { jsPDF } from 'jspdf';
@@ -152,6 +153,10 @@ export default function VO2MaxPage() {
             '90%': Math.round(hrr + 0.9 * reserve),
         }
     }, [hrMax, hrRest]);
+
+    const bpClass = useMemo(() => {
+        return getBPClassification(parseInt(pas) || 0, parseInt(pad) || 0);
+    }, [pas, pad]);
 
     const testResults = useMemo(() => {
         if (!client) return null;
@@ -281,7 +286,6 @@ export default function VO2MaxPage() {
         setConconiStages(conconiStages.filter((_, i) => i !== index));
     };
 
-    // Funções para Zonas Customizadas
     const handleAddZone = () => {
         const lastZone = zoneConfigs[zoneConfigs.length - 1];
         const newZone: ZoneConfig = {
@@ -485,7 +489,7 @@ export default function VO2MaxPage() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-dashed">
+                                        <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-dashed relative">
                                             <Label className="text-xs uppercase font-black text-primary tracking-widest flex items-center gap-2">
                                                 <Heart className="size-3" /> Dados Hemodinâmicos (Repouso)
                                             </Label>
@@ -499,6 +503,15 @@ export default function VO2MaxPage() {
                                                     <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-10 font-bold bg-background" placeholder="80" />
                                                 </div>
                                             </div>
+                                            
+                                            <div className="flex justify-between items-center bg-background p-2 rounded border border-primary/20 shadow-inner">
+                                                <p className="text-[10px] uppercase font-black text-muted-foreground">Classificação:</p>
+                                                <p className={cn("text-[11px] font-black uppercase", 
+                                                    bpClass.includes('Normal') ? 'text-green-500' : 
+                                                    bpClass.includes('Pré') ? 'text-yellow-500' : 'text-destructive'
+                                                )}>{bpClass}</p>
+                                            </div>
+
                                             <div className="pt-2 border-t mt-2">
                                                 <p className="text-[10px] text-muted-foreground font-bold mb-2 uppercase">FCT Calculada (Karvonen)</p>
                                                 <div className="grid grid-cols-4 gap-2">
@@ -800,6 +813,7 @@ export default function VO2MaxPage() {
                         hrMax={parseInt(hrMax) || 190}
                         hrRest={parseInt(hrRest) || 60}
                         bloodPressure={`${pas}/${pad}`}
+                        bpClassification={bpClass}
                         stages={conconiStages}
                     />
                 )}

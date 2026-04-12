@@ -127,6 +127,18 @@ export function getVO2Classification(vo2: number, age: number, gender: 'Masculin
   }
 }
 
+/**
+ * Classificação de P.A. baseada na Sociedade Brasileira de Cardiologia 2020
+ */
+export function getBPClassification(pas: number, pad: number): string {
+  if (!pas || !pad) return '--';
+  if (pas <= 120 && pad <= 80) return 'Normal';
+  if (pas <= 139 || pad <= 89) return 'Pré-hipertensão';
+  if (pas <= 159 || pad <= 99) return 'Hipertensão Estágio 1';
+  if (pas <= 179 || pad <= 109) return 'Hipertensão Estágio 2';
+  return 'Hipertensão Estágio 3';
+}
+
 export function calculateTrainingZones(vo2: number, hrMax: number, hrRest: number, vAM: number, customConfig?: ZoneConfig[]): TrainingZone[] {
   const hrReserve = hrMax - hrRest;
   const baseVAM = vAM > 0 ? vAM : (vo2 / 3.5); 

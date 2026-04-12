@@ -20,6 +20,7 @@ type VO2ReportProps = {
     hrMax: number;
     hrRest: number;
     bloodPressure?: string;
+    bpClassification?: string;
     stages: VO2Stage[];
 };
 
@@ -33,7 +34,7 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
     </section>
 );
 
-const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol, results, hrMax, hrRest, bloodPressure, stages }, ref) => {
+const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol, results, hrMax, hrRest, bloodPressure, bpClassification, stages }, ref) => {
     const logo = getPlaceholderImage('alpha-trainer-logo');
     const protocolNames: Record<VO2Protocol, string> = {
         cooper: 'Teste de Cooper (12 min)',
@@ -57,7 +58,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                 </div>
             </header>
 
-            {/* Client Info */}
+            {/* Atleta Info */}
             <div className="flex items-center gap-6 mt-6 p-4 bg-gray-50 rounded-xl">
                 <Avatar className="h-16 w-16 border-2 border-primary">
                     <AvatarImage src={client.avatarUrl} alt={client.name} />
@@ -66,29 +67,31 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                 <div className="grid grid-cols-4 gap-x-8 gap-y-2 flex-1">
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Atleta:</strong> <span className="font-bold text-sm">{client.name}</span></div>
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Idade:</strong> <span className="font-bold text-sm">{client.age} anos</span></div>
-                    <div><strong className="block text-gray-400 text-[10px] uppercase">P.A. Repouso:</strong> <span className="font-bold text-sm">{bloodPressure || '--/--'} mmHg</span></div>
+                    <div><strong className="block text-gray-400 text-[10px] uppercase">Sexo:</strong> <span className="font-bold text-sm">{client.gender}</span></div>
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Data:</strong> <span className="font-bold text-sm">{new Date().toLocaleDateString('pt-BR')}</span></div>
                 </div>
             </div>
 
-            {/* Clinical & Basal Info */}
+            {/* Hemodinâmica e Basal */}
             <div className="mt-4 flex gap-4">
                 <div className="flex-1 p-3 bg-primary/5 border border-primary/10 rounded-lg">
-                    <p className="text-[9px] uppercase font-black text-primary mb-1">Frequência Cardíaca</p>
+                    <p className="text-[9px] uppercase font-black text-primary mb-1">Pressão Arterial de Repouso</p>
                     <div className="flex justify-between items-center">
                         <div>
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold">Máxima</p>
-                            <p className="font-black text-lg">{hrMax} <span className="text-[10px]">bpm</span></p>
+                            <p className="font-black text-lg">{bloodPressure || '--/--'} <span className="text-[10px]">mmHg</span></p>
+                            <p className="text-[8px] text-primary uppercase font-bold tracking-widest">{bpClassification}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold">Repouso</p>
-                            <p className="font-black text-lg">{hrRest} <span className="text-[10px]">bpm</span></p>
+                            <Heart className="text-primary size-5 opacity-30" />
                         </div>
                     </div>
                 </div>
                 <div className="flex-1 p-3 bg-gray-100 rounded-lg border border-gray-200">
-                    <p className="text-[9px] uppercase font-black text-gray-500 mb-1">FC de Reserva (FCR)</p>
-                    <p className="text-xl font-black">{hrMax - hrRest} <span className="text-[10px]">bpm</span></p>
+                    <p className="text-[9px] uppercase font-black text-gray-500 mb-1">FC Máxima / Repouso</p>
+                    <div className="flex justify-between items-baseline">
+                        <p className="text-xl font-black">{hrMax} <span className="text-[10px]">bpm</span></p>
+                        <p className="text-sm font-bold text-gray-400">/ {hrRest} bpm</p>
+                    </div>
                 </div>
             </div>
 
