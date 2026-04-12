@@ -19,7 +19,8 @@ import {
   Target,
   Trophy,
   Settings2,
-  Check
+  Check,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -66,6 +67,8 @@ export default function VO2MaxPage() {
     const [timeSeconds, setTimeSeconds] = useState<string>('');
     const [hrMax, setHrMax] = useState<string>('190');
     const [hrRest, setHrRest] = useState<string>('60');
+    const [pas, setPas] = useState<string>('120');
+    const [pad, setPad] = useState<string>('80');
     const [recoveryHR, setRecoveryHR] = useState<string>('');
     const [conconiStages, setConconiStages] = useState<VO2Stage[]>([
         { velocity: 8, hr: 120 },
@@ -107,6 +110,8 @@ export default function VO2MaxPage() {
             setProtocol(data.protocol as VO2Protocol || 'cooper');
             setHrMax(data.hrMax?.toString() || '190');
             setHrRest(data.hrRest?.toString() || '60');
+            setPas(data.bloodPressureSystolic?.toString() || '120');
+            setPad(data.bloodPressureDiastolic?.toString() || '80');
             setDistance(data.distance?.toString() || '');
             setRecoveryHR(data.recoveryHR?.toString() || '');
             if (data.totalTimeSeconds) {
@@ -124,6 +129,10 @@ export default function VO2MaxPage() {
             setTimeMinutes('');
             setTimeSeconds('');
             setRecoveryHR('');
+            setHrMax('190');
+            setHrRest('60');
+            setPas('120');
+            setPad('80');
             setZoneConfigs(DEFAULT_ZONES);
         }
     }, [evaluation]);
@@ -131,6 +140,18 @@ export default function VO2MaxPage() {
     const totalSeconds = useMemo(() => {
         return (parseInt(timeMinutes) || 0) * 60 + (parseInt(timeSeconds) || 0);
     }, [timeMinutes, timeSeconds]);
+
+    const fctCalculated = useMemo(() => {
+        const hrm = parseInt(hrMax) || 190;
+        const hrr = parseInt(hrRest) || 60;
+        const reserve = hrm - hrr;
+        return {
+            '60%': Math.round(hrr + 0.6 * reserve),
+            '70%': Math.round(hrr + 0.7 * reserve),
+            '80%': Math.round(hrr + 0.8 * reserve),
+            '90%': Math.round(hrr + 0.9 * reserve),
+        }
+    }, [hrMax, hrRest]);
 
     const testResults = useMemo(() => {
         if (!client) return null;
@@ -191,6 +212,8 @@ export default function VO2MaxPage() {
             classification: testResults?.classification,
             hrMax: parseInt(hrMax),
             hrRest: parseInt(hrRest),
+            bloodPressureSystolic: parseInt(pas),
+            bloodPressureDiastolic: parseInt(pad),
             distance: parseFloat(distance),
             totalTimeSeconds: totalSeconds,
             recoveryHR: parseFloat(recoveryHR),
@@ -391,6 +414,7 @@ export default function VO2MaxPage() {
                                         { label: 'vAM (km/h)', key: 'vAM' },
                                         { label: 'Ritmo vAM (min/km)', key: 'pace' },
                                         { label: 'FC Máxima (bpm)', key: 'hrMax' },
+                                        { label: 'P.A. Repouso (mmHg)', key: 'bp' },
                                         { label: 'Classificação', key: 'classification' },
                                         { label: 'Protocolo', key: 'protocol' }
                                     ].map((row) => (
@@ -401,6 +425,7 @@ export default function VO2MaxPage() {
                                                 let value = data ? (data as any)[row.key] : '--';
                                                 
                                                 if (row.key === 'pace' && data?.vAM) value = velocityToPace(data.vAM);
+                                                if (row.key === 'bp') value = data?.bloodPressureSystolic ? `${data.bloodPressureSystolic}/${data.bloodPressureDiastolic}` : '--';
                                                 if (typeof value === 'number') value = value.toFixed(1);
                                                 if (row.key === 'protocol') value = value === 'cooper' ? 'Cooper' : value === 'conconi' ? 'Conconi' : value || '--';
 
@@ -423,8 +448,8 @@ export default function VO2MaxPage() {
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <CardTitle>Dados de Campo</CardTitle>
-                                            <CardDescription>Insira os resultados do teste realizado em {evaluation ? new Date(evaluation.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : 'hoje'}.</CardDescription>
+                                            <CardTitle>Dados de Campo e Clínicos</CardTitle>
+                                            <CardDescription>Insira os resultados e dados de repouso de {evaluation ? new Date(evaluation.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : 'hoje'}.</CardDescription>
                                         </div>
                                         <div className="p-2 bg-primary/10 rounded-full">
                                             <Wind className="text-primary size-6" />
@@ -432,29 +457,58 @@ export default function VO2MaxPage() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label>Protocolo de Teste</Label>
-                                            <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
-                                                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
-                                                    <SelectItem value="three_km">Teste de 3km</SelectItem>
-                                                    <SelectItem value="five_km">Teste de 5km</SelectItem>
-                                                    <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
-                                                    <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
-                                                    <SelectItem value="step_test">Step Test (Banco)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <Label className="text-xs uppercase font-bold text-muted-foreground">FC Máxima (bpm)</Label>
-                                                <Input type="number" className="h-11 font-black" value={hrMax} onChange={(e) => setHrMax(e.target.value)} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label className="text-xs uppercase font-bold text-muted-foreground">Protocolo de Teste</Label>
+                                                <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
+                                                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
+                                                        <SelectItem value="three_km">Teste de 3km</SelectItem>
+                                                        <SelectItem value="five_km">Teste de 5km</SelectItem>
+                                                        <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
+                                                        <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
+                                                        <SelectItem value="step_test">Step Test (Banco)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-xs uppercase font-bold text-muted-foreground">FC Repouso (bpm)</Label>
-                                                <Input type="number" className="h-11 font-black" value={hrRest} onChange={(e) => setHrRest(e.target.value)} />
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs uppercase font-bold text-muted-foreground">FC Máxima (bpm)</Label>
+                                                    <Input type="number" className="h-11 font-black" value={hrMax} onChange={(e) => setHrMax(e.target.value)} />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs uppercase font-bold text-muted-foreground">FC Repouso (bpm)</Label>
+                                                    <Input type="number" className="h-11 font-black" value={hrRest} onChange={(e) => setHrRest(e.target.value)} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-dashed">
+                                            <Label className="text-xs uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                                                <Heart className="size-3" /> Dados Hemodinâmicos (Repouso)
+                                            </Label>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground">P.A. Sistólica (mmHg)</Label>
+                                                    <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-10 font-bold bg-background" placeholder="120" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] font-bold text-muted-foreground">P.A. Diastólica (mmHg)</Label>
+                                                    <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-10 font-bold bg-background" placeholder="80" />
+                                                </div>
+                                            </div>
+                                            <div className="pt-2 border-t mt-2">
+                                                <p className="text-[10px] text-muted-foreground font-bold mb-2 uppercase">FCT Calculada (Karvonen)</p>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                    {Object.entries(fctCalculated).map(([perc, val]) => (
+                                                        <div key={perc} className="text-center bg-background rounded p-1 border">
+                                                            <p className="text-[8px] font-black text-primary">{perc}</p>
+                                                            <p className="text-xs font-bold">{val}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -745,6 +799,7 @@ export default function VO2MaxPage() {
                         results={testResults}
                         hrMax={parseInt(hrMax) || 190}
                         hrRest={parseInt(hrRest) || 60}
+                        bloodPressure={`${pas}/${pad}`}
                         stages={conconiStages}
                     />
                 )}

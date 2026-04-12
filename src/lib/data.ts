@@ -51,6 +51,8 @@ export type VO2MaxData = {
     classification?: string;
     hrMax?: number;
     hrRest?: number;
+    bloodPressureSystolic?: number;
+    bloodPressureDiastolic?: number;
     distance?: number;
     totalTimeSeconds?: number;
     recoveryHR?: number;
@@ -175,6 +177,8 @@ export const evaluations: Evaluation[] = [
             classification: 'Médio',
             hrMax: 188,
             hrRest: 62,
+            bloodPressureSystolic: 120,
+            bloodPressureDiastolic: 80,
             distance: 2200
         },
         observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
@@ -209,6 +213,8 @@ export const evaluations: Evaluation[] = [
             classification: 'Médio',
             hrMax: 190,
             hrRest: 60,
+            bloodPressureSystolic: 118,
+            bloodPressureDiastolic: 78,
             distance: 2400
         },
         observations: 'Ótima evolução. Redução significativa de medidas na cintura e melhora na inclinação da cabeça.'
@@ -243,6 +249,8 @@ export const evaluations: Evaluation[] = [
             classification: 'Bom',
             hrMax: 192,
             hrRest: 58,
+            bloodPressureSystolic: 115,
+            bloodPressureDiastolic: 75,
             distance: 2650
         },
         observations: 'Meta de peso atingida. Postura muito mais alinhada, restando apenas leve projeção cervical.'
