@@ -15,11 +15,12 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ### 2. Avaliação de Performance e VO2max (Elite)
 - **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km, Step Test e o avançado **Teste de Conconi**.
+- **Ciclismo de Elite**: Inclusão do **Teste de Potência (Bike - Watts)** com cálculo de VO2max via fórmula ACSM e análise de Watts/kg.
 - **Análise Fisiológica Completa**: Medição de **Pressão Arterial de Repouso** com classificação automática (Diretrizes SBC) e cálculo de **FCT (FC de Trabalho)** via fórmula de Karvonen.
 - **Teste de Conconi**: Identificação do ponto de deflexão da Frequência Cardíaca (Limiar Anaeróbico) com entrega de **Velocidade, FC e Pace**.
-- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador adicionar, remover e ajustar zonas de intensidade baseadas na FC de Reserva e % da vAM.
+- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador adicionar, remover e ajustar zonas de intensidade baseadas na FC de Reserva e % da vAM ou % de Potência.
 - **Gráficos Fisiológicos**: Visualização da curva de FC vs Velocidade e distribuição de carga por zona.
-- **Evolução de Performance**: Tabela comparativa histórica para monitorar o ganho de VO2max, velocidade e saúde cardiovascular.
+- **Evolução de Performance**: Tabela comparativa histórica para monitorar o ganho de VO2max, velocidade, potência e saúde cardiovascular.
 
 ### 3. Bioimpedância Sincronizada
 - **Integração Global**: Sincronização automática do cliente selecionado entre todas as telas via Context API.
@@ -32,7 +33,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ### 5. Sincronização e UX
 - **Global Context**: Persistência do cliente selecionado durante toda a sessão (Dashboard -> Bioimpedância -> Postural -> VO2max).
-- **Interface Responsiva**: Menu de ações inteligente que se adapta para dispositivos móveis.
+- **Interface Responsiva**: Menu de ações inteligente que se adapta para dispositivos móveis (Dashboard e VO2max).
 - **Modo Escuro/Claro**: Compatibilidade total com temas para conforto visual do avaliador.
 
 ## 🛠️ Tecnologias Utilizadas
