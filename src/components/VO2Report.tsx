@@ -3,7 +3,7 @@ import React, { forwardRef } from 'react';
 import Image from 'next/image';
 import type { Client } from '@/lib/data';
 import { type VO2Protocol, type VO2Stage, type TrainingZone, velocityToPace } from '@/lib/vo2-logic';
-import { User, Wind, Activity, TrendingUp, Target, Heart } from 'lucide-react';
+import { User, Wind, Activity, TrendingUp, Target, Heart, Bike } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 
@@ -22,6 +22,7 @@ type VO2ReportProps = {
     bloodPressure?: string;
     bpClassification?: string;
     stages: VO2Stage[];
+    powerWatts?: number;
 };
 
 const Section = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
@@ -34,7 +35,7 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
     </section>
 );
 
-const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol, results, hrMax, hrRest, bloodPressure, bpClassification, stages }, ref) => {
+const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol, results, hrMax, hrRest, bloodPressure, bpClassification, stages, powerWatts }, ref) => {
     const logo = getPlaceholderImage('alpha-trainer-logo');
     const protocolNames: Record<VO2Protocol, string> = {
         cooper: 'Teste de Cooper (12 min)',
@@ -42,7 +43,8 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
         five_km: 'Teste de 5km',
         balke: 'Teste de Balke',
         conconi: 'Teste de Conconi',
-        step_test: 'Step Test (Banco)'
+        step_test: 'Step Test (Banco)',
+        cycling_power: 'Teste de Potência (Ciclismo)'
     };
 
     return (
@@ -103,18 +105,27 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                     <p className="text-[9px] font-bold">ml/kg/min</p>
                     <div className="mt-3 text-xs font-bold uppercase bg-white/20 py-1 rounded-full">{results.classification}</div>
                 </div>
-                <div className="bg-gray-800 p-6 rounded-2xl text-white text-center shadow-lg">
-                    <p className="text-[10px] uppercase font-black opacity-80 mb-1">Vel. Aeróbica Máx (vAM)</p>
-                    <div className="text-4xl font-black">{results.vAM.toFixed(1)}</div>
-                    <p className="text-[9px] font-bold">km/h</p>
-                    <div className="mt-3 text-xs font-bold uppercase bg-white/10 py-1 rounded-full">Pace: {velocityToPace(results.vAM)}</div>
-                </div>
+                {protocol === 'cycling_power' ? (
+                    <div className="bg-gray-800 p-6 rounded-2xl text-white text-center shadow-lg">
+                        <p className="text-[10px] uppercase font-black opacity-80 mb-1">Potência Máxima</p>
+                        <div className="text-4xl font-black">{powerWatts}</div>
+                        <p className="text-[9px] font-bold">Watts</p>
+                        <div className="mt-3 text-xs font-bold uppercase bg-white/10 py-1 rounded-full">Relativo: {(powerWatts! / client.height).toFixed(2)} W/kg</div>
+                    </div>
+                ) : (
+                    <div className="bg-gray-800 p-6 rounded-2xl text-white text-center shadow-lg">
+                        <p className="text-[10px] uppercase font-black opacity-80 mb-1">Vel. Aeróbica Máx (vAM)</p>
+                        <div className="text-4xl font-black">{results.vAM.toFixed(1)}</div>
+                        <p className="text-[9px] font-bold">km/h</p>
+                        <div className="mt-3 text-xs font-bold uppercase bg-white/10 py-1 rounded-full">Pace: {velocityToPace(results.vAM)}</div>
+                    </div>
+                )}
                 <div className="bg-gray-100 p-6 rounded-2xl text-gray-800 text-center border-2 border-gray-200">
                     <p className="text-[10px] uppercase font-black text-gray-400 mb-1">Limiar Anaeróbico</p>
                     {results.conconiThreshold ? (
                         <>
                             <div className="text-4xl font-black">{results.conconiThreshold.velocity}</div>
-                            <p className="text-[9px] font-bold">km/h ({velocityToPace(results.conconiThreshold.velocity)})</p>
+                            <p className="text-[9px] font-bold">{protocol === 'cycling_power' ? 'Watts' : 'km/h'} ({velocityToPace(results.conconiThreshold.velocity)})</p>
                             <div className="mt-3 text-xs font-bold uppercase text-primary">@ {results.conconiThreshold.hr} bpm</div>
                         </>
                     ) : (
@@ -131,7 +142,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                             <th className="p-3 text-left rounded-tl-lg">Zona</th>
                             <th className="p-3 text-left">Intensidade / Objetivo</th>
                             <th className="p-3 text-center">Frequência Cardíaca</th>
-                            <th className="p-3 text-right rounded-tr-lg">Pace Sugerido (min/km)</th>
+                            <th className="p-3 text-right rounded-tr-lg">{protocol === 'cycling_power' ? 'Intensidade %' : 'Pace Sugerido (min/km)'}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-gray-50">
@@ -145,7 +156,9 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                                 </td>
                                 <td className="p-3 font-bold text-gray-600">{zone.description}</td>
                                 <td className="p-3 text-center font-mono font-bold text-sm">{zone.minHR} - {zone.maxHR} bpm</td>
-                                <td className="p-3 text-right font-mono font-bold text-sm text-primary">{zone.maxPace} - {zone.minPace}</td>
+                                <td className="p-3 text-right font-mono font-bold text-sm text-primary">
+                                    {protocol === 'cycling_power' ? zone.minPace : `${zone.maxPace} - ${zone.minPace}`}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -156,9 +169,12 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
             <Section title="Recomendações Práticas" icon={<Activity size={16} className="text-primary"/>}>
                 <div className="grid grid-cols-2 gap-6 mt-2">
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
-                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Foco em vAM</h4>
+                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">{protocol === 'cycling_power' ? 'Foco em Potência' : 'Foco em vAM'}</h4>
                         <p className="leading-relaxed text-gray-600">
-                            Para atletas com vAM de {results.vAM.toFixed(1)} km/h, sugere-se sessões de intervalos de 400m a 800m no pace de {results.zones.length > 0 ? results.zones[results.zones.length - 1].maxPace : '--:--'} min/km para maximizar a economia de corrida e o tempo sob VO2max.
+                            {protocol === 'cycling_power' 
+                                ? `Para o atleta com potência aeróbica de ${powerWatts} Watts, sugere-se sessões de intervalos no limiar para elevar o limiar de lactato e a eficiência mecânica na pedalada.`
+                                : `Para atletas com vAM de ${results.vAM.toFixed(1)} km/h, sugere-se sessões de intervalos de 400m a 800m no pace de ${results.zones.length > 0 ? results.zones[results.zones.length - 1].maxPace : '--:--'} min/km para maximizar a economia de corrida e o tempo sob VO2max.`
+                            }
                         </p>
                     </div>
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">

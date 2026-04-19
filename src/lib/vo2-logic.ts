@@ -1,9 +1,9 @@
 'use client';
 
-export type VO2Protocol = 'cooper' | 'five_km' | 'three_km' | 'balke' | 'conconi' | 'step_test';
+export type VO2Protocol = 'cooper' | 'five_km' | 'three_km' | 'balke' | 'conconi' | 'step_test' | 'cycling_power';
 
 export interface VO2Stage {
-  velocity: number; // km/h
+  velocity: number; // km/h ou Watts
   hr: number; // bpm
 }
 
@@ -31,6 +31,8 @@ export interface VO2TestData {
   stages?: VO2Stage[];
   // Step Test
   recoveryHR?: number;
+  // Cycling Power
+  powerWatts?: number;
 }
 
 export interface TrainingZone {
@@ -102,6 +104,12 @@ export function calculateVO2(data: VO2TestData) {
         vo2 = maxVelocity * 3.5; 
       }
       break;
+    case 'cycling_power':
+      if (data.powerWatts && data.weight) {
+        // ACSM Formula for Cycling: VO2 = (10.8 * Watts / Weight) + 7
+        vo2 = (10.8 * data.powerWatts / data.weight) + 7;
+      }
+      break;
   }
 
   return Math.max(0, parseFloat(vo2.toFixed(1)));
@@ -127,9 +135,6 @@ export function getVO2Classification(vo2: number, age: number, gender: 'Masculin
   }
 }
 
-/**
- * Classificação de P.A. baseada na Sociedade Brasileira de Cardiologia 2020
- */
 export function getBPClassification(pas: number, pad: number): string {
   if (!pas || !pad) return '--';
   if (pas <= 120 && pad <= 80) return 'Normal';
