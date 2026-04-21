@@ -14,6 +14,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ### 2. Dashboard de Avaliação Física (Protocolo ISAK)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
+- **Indicadores de Saúde**: Inclusão do **RCE (Relação Cintura-Estatura)** com classificação de risco cardiometabólico, além de IMC e RCQ.
 - **Protocolo ISAK**: Suporte completo ao perfil de 8 dobras e 3 diâmetros ósseos (Punho, Fêmur e Úmero) para máxima precisão.
 - **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
