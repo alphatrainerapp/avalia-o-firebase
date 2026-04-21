@@ -21,7 +21,10 @@ import {
   Settings2,
   Check,
   Heart,
-  Bike
+  Bike,
+  Zap,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -44,7 +47,8 @@ import {
   calculateTrainingZones, 
   detectThresholdConconi, 
   velocityToPace,
-  getBPClassification
+  getBPClassification,
+  calculateTanakaFCMax
 } from '@/lib/vo2-logic';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from 'recharts';
 import { jsPDF } from 'jspdf';
@@ -66,10 +70,16 @@ export default function VO2MaxPage() {
     const [distance, setDistance] = useState<string>('');
     const [timeMinutes, setTimeMinutes] = useState<string>('');
     const [timeSeconds, setTimeSeconds] = useState<string>('');
-    const [hrMax, setHrMax] = useState<string>('190');
+    
+    // Heart Rate State
+    const [hrMax, setHrMax] = useState<string>('');
+    const [isManualHRMax, setIsManualHRMax] = useState(false);
     const [hrRest, setHrRest] = useState<string>('60');
+    
+    // Hemodynamics
     const [pas, setPas] = useState<string>('120');
     const [pad, setPad] = useState<string>('80');
+    
     const [recoveryHR, setRecoveryHR] = useState<string>('');
     const [powerWatts, setPowerWatts] = useState<string>('');
     const [conconiStages, setConconiStages] = useState<VO2Stage[]>([
@@ -86,6 +96,24 @@ export default function VO2MaxPage() {
     const [isZoneDialogOpen, setIsZoneDialogOpen] = useState(false);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
+    
+    // Automatic FCMax using Tanaka (2001)
+    const calculatedFCMax = useMemo(() => {
+        if (!client) return 190;
+        return calculateTanakaFCMax(client.age);
+    }, [client]);
+
+    // Current effective FCMax based on mode
+    const effectiveFCMax = useMemo(() => {
+        if (isManualHRMax) return parseInt(hrMax) || calculatedFCMax;
+        return calculatedFCMax;
+    }, [isManualHRMax, hrMax, calculatedFCMax]);
+
+    const hrReserve = useMemo(() => {
+        const rest = parseInt(hrRest) || 60;
+        return Math.max(0, effectiveFCMax - rest);
+    }, [effectiveFCMax, hrRest]);
+
     const clientEvaluations = useMemo(() => {
         return allEvaluations
             .filter(e => e.clientId === selectedClientId)
@@ -109,7 +137,8 @@ export default function VO2MaxPage() {
         if (evaluation?.vo2MaxData) {
             const data = evaluation.vo2MaxData;
             setProtocol(data.protocol as VO2Protocol || 'cooper');
-            setHrMax(data.hrMax?.toString() || '190');
+            setHrMax(data.hrMax?.toString() || '');
+            setIsManualHRMax(data.isManualHRMax || false);
             setHrRest(data.hrRest?.toString() || '60');
             setPas(data.bloodPressureSystolic?.toString() || '120');
             setPad(data.bloodPressureDiastolic?.toString() || '80');
@@ -132,7 +161,8 @@ export default function VO2MaxPage() {
             setTimeSeconds('');
             setRecoveryHR('');
             setPowerWatts('');
-            setHrMax('190');
+            setHrMax('');
+            setIsManualHRMax(false);
             setHrRest('60');
             setPas('120');
             setPad('80');
@@ -143,18 +173,6 @@ export default function VO2MaxPage() {
     const totalSeconds = useMemo(() => {
         return (parseInt(timeMinutes) || 0) * 60 + (parseInt(timeSeconds) || 0);
     }, [timeMinutes, timeSeconds]);
-
-    const fctCalculated = useMemo(() => {
-        const hrm = parseInt(hrMax) || 190;
-        const hrr = parseInt(hrRest) || 60;
-        const reserve = hrm - hrr;
-        return {
-            '60%': Math.round(hrr + 0.6 * reserve),
-            '70%': Math.round(hrr + 0.7 * reserve),
-            '80%': Math.round(hrr + 0.8 * reserve),
-            '90%': Math.round(hrr + 0.9 * reserve),
-        }
-    }, [hrMax, hrRest]);
 
     const bpClass = useMemo(() => {
         return getBPClassification(parseInt(pas) || 0, parseInt(pad) || 0);
@@ -169,7 +187,7 @@ export default function VO2MaxPage() {
             weight: client.bodyMeasurements?.weight || 70, 
             age: client.age,
             gender: client.gender,
-            hrMax: parseInt(hrMax) || 190,
+            hrMax: effectiveFCMax,
             hrRest: parseInt(hrRest) || 60,
             distance: parseFloat(distance) || 0,
             totalTimeSeconds: totalSeconds,
@@ -193,7 +211,7 @@ export default function VO2MaxPage() {
         const conconiThreshold = protocol === 'conconi' ? detectThresholdConconi(conconiStages) : null;
 
         return { vo2, classification, zones, conconiThreshold, vAM };
-    }, [client, protocol, distance, totalSeconds, conconiStages, hrMax, hrRest, recoveryHR, powerWatts, zoneConfigs]);
+    }, [client, protocol, distance, totalSeconds, conconiStages, effectiveFCMax, hrRest, recoveryHR, powerWatts, zoneConfigs]);
 
     const handleNewEvaluation = () => {
         if (client) {
@@ -218,7 +236,8 @@ export default function VO2MaxPage() {
             vo2: testResults?.vo2,
             vAM: testResults?.vAM,
             classification: testResults?.classification,
-            hrMax: parseInt(hrMax),
+            hrMax: effectiveFCMax,
+            isManualHRMax,
             hrRest: parseInt(hrRest),
             bloodPressureSystolic: parseInt(pas),
             bloodPressureDiastolic: parseInt(pad),
@@ -295,8 +314,8 @@ export default function VO2MaxPage() {
         const newZone: ZoneConfig = {
             zone: `Z${zoneConfigs.length + 1}`,
             desc: 'Nova Zona',
-            hrPerc: [lastZone?.hrPerc[1] || 0.92, (lastZone?.hrPerc[1] || 0.92) + 0.05],
-            vAMperc: [lastZone?.vAMperc[1] || 0.95, (lastZone?.vAMperc[1] || 0.95) + 0.10],
+            hrPerc: [lastZone?.hrPerc[1] || 0.90, (lastZone?.hrPerc[1] || 0.90) + 0.05],
+            vAMperc: [lastZone?.vAMperc[1] || 0.90, (lastZone?.vAMperc[1] || 0.90) + 0.10],
             color: '#000000'
         };
         setZoneConfigs([...zoneConfigs, newZone]);
@@ -354,7 +373,7 @@ export default function VO2MaxPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button onClick={handleSave} className="shadow-lg"><Save className="mr-2 h-4 w-4" /> Salvar</Button>
+                    <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"><Save className="mr-2 h-4 w-4" /> Salvar</Button>
                     <Button onClick={handleExportPdf} variant="outline" className="shadow-sm"><Download className="mr-2 h-4 w-4" /> PDF</Button>
                 </div>
             </header>
@@ -388,7 +407,7 @@ export default function VO2MaxPage() {
                                     <Label htmlFor="compare-mode" className="text-xs font-bold uppercase cursor-pointer">Comparar</Label>
                                     <Switch id="compare-mode" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
-                                <Button onClick={handleNewEvaluation} size="sm" className="bg-primary text-primary-foreground shadow-md">
+                                <Button onClick={handleNewEvaluation} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                     <Plus className="mr-2 h-4 w-4" /> Nova Avaliação
                                 </Button>
                             </div>
@@ -478,82 +497,92 @@ export default function VO2MaxPage() {
                                 <CardHeader>
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <CardTitle>Dados de Campo e Clínicos</CardTitle>
-                                            <CardDescription>Insira os resultados e dados de repouso de {evaluation ? new Date(evaluation.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : 'hoje'}.</CardDescription>
+                                            <CardTitle>Cálculo de Frequência Cardíaca</CardTitle>
+                                            <CardDescription>FC Máxima e Reserva baseadas no protocolo de Tanaka (2001).</CardDescription>
                                         </div>
-                                        <div className="p-2 bg-primary/10 rounded-full">
-                                            {protocol.includes('cycling') ? <Bike className="text-primary size-6" /> : <Wind className="text-primary size-6" />}
+                                        <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-full border border-primary/10">
+                                            <Label htmlFor="manual-fcmax" className="text-[10px] font-black uppercase cursor-pointer text-primary">Manual</Label>
+                                            <Switch 
+                                                id="manual-fcmax" 
+                                                checked={isManualHRMax} 
+                                                onCheckedChange={setIsManualHRMax}
+                                                className="scale-75"
+                                            />
                                         </div>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs uppercase font-bold text-muted-foreground">Protocolo de Teste</Label>
-                                                <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
-                                                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
-                                                        <SelectItem value="three_km">Teste de 3km</SelectItem>
-                                                        <SelectItem value="five_km">Teste de 5km</SelectItem>
-                                                        <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
-                                                        <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
-                                                        <SelectItem value="cycling_power">Teste de Potência (Bike - Watts)</SelectItem>
-                                                        <SelectItem value="step_test">Step Test (Banco)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
+                                            <div className="space-y-1 relative">
+                                                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-between">
+                                                    FC Máxima (bpm)
+                                                    {!isManualHRMax ? <Lock className="size-2.5" /> : <Unlock className="size-2.5 text-primary" />}
+                                                </Label>
+                                                <Input 
+                                                    type="number" 
+                                                    className={cn("h-11 font-black text-xl transition-all", !isManualHRMax ? "bg-muted/50 border-transparent text-muted-foreground opacity-70" : "border-primary shadow-sm")}
+                                                    value={isManualHRMax ? hrMax : calculatedFCMax} 
+                                                    onChange={(e) => setHrMax(e.target.value)} 
+                                                    disabled={!isManualHRMax}
+                                                />
+                                                {!isManualHRMax && <p className="text-[9px] text-muted-foreground mt-1 italic">Calculada: 208 - (0.7 × idade)</p>}
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs uppercase font-bold text-muted-foreground">FC Máxima (bpm)</Label>
-                                                    <Input type="number" className="h-11 font-black" value={hrMax} onChange={(e) => setHrMax(e.target.value)} />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs uppercase font-bold text-muted-foreground">FC Repouso (bpm)</Label>
-                                                    <Input type="number" className="h-11 font-black" value={hrRest} onChange={(e) => setHrRest(e.target.value)} />
-                                                </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">FC Repouso (bpm)</Label>
+                                                <Input type="number" className="h-11 font-black text-xl" value={hrRest} onChange={(e) => setHrRest(e.target.value)} />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex flex-col justify-center text-center space-y-2">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-primary">FC de Reserva</p>
+                                            <div className="text-4xl font-black text-primary">{hrReserve} <span className="text-xs">bpm</span></div>
+                                            <div className="p-2 bg-white/50 rounded-lg text-[10px] font-medium leading-relaxed italic border border-primary/10">
+                                                "Representa a capacidade de adaptação cardiovascular"
                                             </div>
                                         </div>
 
                                         <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-dashed relative">
-                                            <Label className="text-xs uppercase font-black text-primary tracking-widest flex items-center gap-2">
-                                                <Heart className="size-3" /> Dados Hemodinâmicos (Repouso)
+                                            <Label className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                                                <Heart className="size-3" /> Hemodinâmica
                                             </Label>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] font-bold text-muted-foreground">P.A. Sistólica (mmHg)</Label>
-                                                    <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-10 font-bold bg-background" placeholder="120" />
+                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAS (Sist)</Label>
+                                                    <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-9 font-bold bg-background text-sm" placeholder="120" />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] font-bold text-muted-foreground">P.A. Diastólica (mmHg)</Label>
-                                                    <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-10 font-bold bg-background" placeholder="80" />
+                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAD (Diast)</Label>
+                                                    <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-9 font-bold bg-background text-sm" placeholder="80" />
                                                 </div>
                                             </div>
-                                            
                                             <div className="flex justify-between items-center bg-background p-2 rounded border border-primary/20 shadow-inner">
                                                 <p className="text-[10px] uppercase font-black text-muted-foreground">Classificação:</p>
-                                                <p className={cn("text-[11px] font-black uppercase", 
+                                                <p className={cn("text-[10px] font-black uppercase", 
                                                     bpClass.includes('Normal') ? 'text-green-500' : 
                                                     bpClass.includes('Pré') ? 'text-yellow-500' : 'text-destructive'
                                                 )}>{bpClass}</p>
                                             </div>
-
-                                            <div className="pt-2 border-t mt-2">
-                                                <p className="text-[10px] text-muted-foreground font-bold mb-2 uppercase">FCT Calculada (Karvonen)</p>
-                                                <div className="grid grid-cols-4 gap-2">
-                                                    {Object.entries(fctCalculated).map(([perc, val]) => (
-                                                        <div key={perc} className="text-center bg-background rounded p-1 border">
-                                                            <p className="text-[8px] font-black text-primary">{perc}</p>
-                                                            <p className="text-xs font-bold">{val}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="pt-4 border-t space-y-4">
+                                    <div className="pt-6 border-t space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-xs uppercase font-bold text-muted-foreground">Protocolo de Teste</Label>
+                                            <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
+                                                <SelectTrigger className="h-9 w-64"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
+                                                    <SelectItem value="three_km">Teste de 3km</SelectItem>
+                                                    <SelectItem value="five_km">Teste de 5km</SelectItem>
+                                                    <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
+                                                    <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
+                                                    <SelectItem value="cycling_power">Teste de Potência (Bike - Watts)</SelectItem>
+                                                    <SelectItem value="step_test">Step Test (Banco)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
                                         {protocol === 'cooper' && (
                                             <div className="space-y-2 max-w-xs">
                                                 <Label className="font-bold">Distância Total Percorrida (metros)</Label>
@@ -571,7 +600,6 @@ export default function VO2MaxPage() {
                                                     <Input type="number" placeholder="Ex: 250" value={powerWatts} onChange={(e) => setPowerWatts(e.target.value)} className="h-12 text-xl font-black pr-12" />
                                                     <span className="absolute right-4 top-3 text-muted-foreground font-black">W</span>
                                                 </div>
-                                                <p className="text-[10px] text-muted-foreground italic">Cálculo baseado na fórmula da ACSM para ciclismo.</p>
                                             </div>
                                         )}
 
@@ -612,17 +640,17 @@ export default function VO2MaxPage() {
                                                                 <p className="text-[10px] font-black text-primary uppercase">Estágio {idx + 1}</p>
                                                                 <div className="flex gap-2">
                                                                     <div className="flex-1">
-                                                                        <Input type="number" value={stage.velocity} onChange={(e) => handleUpdateStage(idx, 'velocity', e.target.value)} step="0.5" className="h-9 font-bold" />
-                                                                        <p className="text-[9px] text-center text-muted-foreground font-bold">km/h</p>
+                                                                        <Input type="number" value={stage.velocity} onChange={(e) => handleUpdateStage(idx, 'velocity', e.target.value)} step="0.5" className="h-9 font-bold text-sm" />
+                                                                        <p className="text-[8px] text-center text-muted-foreground font-bold">km/h</p>
                                                                     </div>
                                                                     <div className="flex-1">
-                                                                        <Input type="number" value={stage.hr} onChange={(e) => handleUpdateStage(idx, 'hr', e.target.value)} className="h-9 font-bold" />
-                                                                        <p className="text-[9px] text-center text-muted-foreground font-bold">bpm</p>
+                                                                        <Input type="number" value={stage.hr} onChange={(e) => handleUpdateStage(idx, 'hr', e.target.value)} className="h-9 font-bold text-sm" />
+                                                                        <p className="text-[8px] text-center text-muted-foreground font-bold">bpm</p>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveStage(idx)}>
-                                                                <Trash2 className="h-4" />
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveStage(idx)}>
+                                                                <Trash2 className="h-3" />
                                                             </Button>
                                                         </div>
                                                     ))}
@@ -635,58 +663,114 @@ export default function VO2MaxPage() {
 
                             <Card className="shadow-lg border-primary/5">
                                 <CardHeader>
-                                    <CardTitle>Análise Visual</CardTitle>
+                                    <CardTitle>Zonas de Treinamento (Metodologia Karvonen)</CardTitle>
+                                    <CardDescription>Cálculo: (FC Reserva × intensidade) + FC Repouso</CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-8">
-                                    {protocol === 'conconi' && (
-                                        <div className="space-y-4">
-                                            <h3 className="text-sm font-black uppercase text-primary tracking-widest border-l-4 border-primary pl-3">Curva de Frequência Cardíaca</h3>
-                                            <div className="h-[300px] w-full">
-                                                <ResponsiveContainer>
-                                                    <LineChart data={conconiStages}>
-                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                                                        <XAxis dataKey="velocity" stroke="hsl(var(--muted-foreground))" fontSize={12} label={{ value: 'Velocidade (km/h)', position: 'insideBottom', offset: -5 }} />
-                                                        <YAxis domain={['auto', 'auto']} stroke="hsl(var(--muted-foreground))" fontSize={12} label={{ value: 'FC (bpm)', angle: -90, position: 'insideLeft' }} />
-                                                        <Tooltip />
-                                                        <Line type="monotone" dataKey="hr" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 6, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 8 }} />
-                                                    </LineChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                            {testResults?.conconiThreshold && (
-                                                <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center gap-4 shadow-sm">
-                                                    <div className="p-2 bg-primary rounded-full">
-                                                        <TrendingUp className="text-white size-5" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs uppercase font-black text-primary leading-none mb-1">Limiar Anaeróbico Identificado</p>
-                                                        <p className="text-lg font-black">
-                                                            {testResults.conconiThreshold.velocity} <span className="text-xs">km/h</span> ({velocityToPace(testResults.conconiThreshold.velocity)}) @ {testResults.conconiThreshold.hr} <span className="text-xs">bpm</span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-sm font-black uppercase text-primary tracking-widest border-l-4 border-primary pl-3">Intensidade por Zona</h3>
-                                        <div className="h-[250px] w-full">
-                                            <ResponsiveContainer>
-                                                <BarChart data={testResults?.zones || []}>
-                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                                                    <XAxis dataKey="zone" stroke="hsl(var(--muted-foreground))" />
-                                                    <YAxis stroke="hsl(var(--muted-foreground))" />
-                                                    <Tooltip cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
-                                                    <Bar dataKey="maxHR" radius={[6, 6, 0, 0]}>
-                                                        {(testResults?.zones || []).map((entry, index) => (
-                                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                                        ))}
-                                                    </Bar>
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        </div>
-                                    </div>
+                                <CardContent className="p-0">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent bg-muted/30">
+                                                <TableHead className="text-[10px] h-10 font-black">ZONA</TableHead>
+                                                <TableHead className="text-[10px] h-10 font-black">INTENSIDADE</TableHead>
+                                                <TableHead className="text-[10px] h-10 font-black">INTERVALO (BPM)</TableHead>
+                                                <TableHead className="text-[10px] h-10 font-black">OBJETIVO FISIOLÓGICO</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {testResults?.zones.map((zone, idx) => (
+                                                <TableRow key={zone.zone} className="hover:bg-muted/10 h-14 border-b last:border-0">
+                                                    <TableCell className="py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: zone.color }} />
+                                                            <span className="text-xs font-black">{zone.zone}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="py-2">
+                                                        <span className="text-[10px] font-bold bg-muted px-2 py-1 rounded">
+                                                            {(zoneConfigs[idx]?.hrPerc[0] * 100).toFixed(0)}-{(zoneConfigs[idx]?.hrPerc[1] * 100).toFixed(0)}%
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-sm font-black py-2 text-primary">
+                                                        {zone.minHR} - {zone.maxHR} <span className="text-[9px] opacity-70">bpm</span>
+                                                    </TableCell>
+                                                    <TableCell className="py-2">
+                                                        <div className="flex flex-col">
+                                                            <p className="text-xs font-bold leading-none">{zone.description}</p>
+                                                            <p className="text-[9px] text-muted-foreground font-medium mt-1">
+                                                                {idx === 0 && "Recuperação ativa e remoção de metabólitos."}
+                                                                {idx === 1 && "Melhora da oxidação de gorduras e capilarização."}
+                                                                {idx === 2 && "Aumento da resistência muscular e economia de corrida."}
+                                                                {idx === 3 && "Melhora da tolerância ao lactato."}
+                                                                {idx === 4 && "Melhora do consumo máximo de oxigênio (VO2max)."}
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
                                 </CardContent>
+                                <CardFooter className="pt-4 border-t flex justify-between items-center">
+                                     <p className="text-[10px] text-muted-foreground italic font-medium">
+                                        Karvonen (FC Reserva) + Metodologia Alpha Trainer
+                                     </p>
+                                     <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-8 text-primary hover:text-primary hover:bg-primary/5">
+                                                <Settings2 className="mr-2 h-3.5 w-3.5" /> Ajustar Percentuais
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+                                            <DialogHeader>
+                                                <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
+                                                <DialogDescription>Personalize as zonas conforme sua metodologia de treinamento.</DialogDescription>
+                                            </DialogHeader>
+                                            <ScrollArea className="h-[50vh] pr-4">
+                                                <div className="space-y-6">
+                                                    {zoneConfigs.map((zone, idx) => (
+                                                        <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon" 
+                                                                className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
+                                                                onClick={() => handleRemoveZone(idx)}
+                                                                title="Excluir Zona"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold uppercase">Zona</Label>
+                                                                    <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
+                                                                </div>
+                                                                <div className="md:col-span-2 space-y-2">
+                                                                    <Label className="text-[10px] font-bold uppercase">Descrição</Label>
+                                                                    <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
+                                                                        <span>-</span>
+                                                                        <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label className="text-[10px] font-bold uppercase">Cor</Label>
+                                                                    <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                            <DialogFooter className="pt-4 border-t">
+                                                <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Nova Zona</Button>
+                                                <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar</Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                </CardFooter>
                             </Card>
                         </div>
 
@@ -705,7 +789,6 @@ export default function VO2MaxPage() {
                                         <Target size={14} /> Classificação: {testResults?.classification}
                                     </div>
                                 </CardContent>
-                            </Card>
 
                             <Card className="shadow-lg border-primary/5">
                                 <CardHeader className="pb-2">
@@ -742,115 +825,23 @@ export default function VO2MaxPage() {
                             </Card>
 
                             <Card className="shadow-lg border-primary/5">
-                                <CardHeader className="pb-4">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-sm font-black uppercase">Zonas de Treinamento</CardTitle>
-                                        <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary">
-                                                    <Settings2 className="h-4 w-4" />
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
-                                                    <DialogDescription>
-                                                        Personalize os nomes, percentuais de FC e vAM conforme sua metodologia.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <ScrollArea className="h-[50vh] pr-4">
-                                                    <div className="space-y-6">
-                                                        {zoneConfigs.map((zone, idx) => (
-                                                            <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
-                                                                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
-                                                                    onClick={() => handleRemoveZone(idx)}
-                                                                    title="Excluir Zona"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">Nome da Zona</Label>
-                                                                        <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
-                                                                    </div>
-                                                                    <div className="md:col-span-2 space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">Descrição / Objetivo</Label>
-                                                                        <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
-                                                                            <span>-</span>
-                                                                            <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">% vAM (Min-Max)</Label>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Input type="number" step="0.01" value={zone.vAMperc[0]} onChange={(e) => handleUpdateZone(idx, { vAMperc: [parseFloat(e.target.value), zone.vAMperc[1]] })} className="h-9 text-xs" />
-                                                                            <span>-</span>
-                                                                            <Input type="number" step="0.01" value={zone.vAMperc[1]} onChange={(e) => handleUpdateZone(idx, { vAMperc: [zone.vAMperc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">Cor</Label>
-                                                                        <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
-                                                <DialogFooter className="flex flex-row justify-between sm:justify-between pt-4 border-t">
-                                                    <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Adicionar Zona</Button>
-                                                    <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar Mudanças</Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
+                                <CardHeader className="pb-4 border-b">
+                                    <CardTitle className="text-xs font-black uppercase text-primary">Resumo das Zonas (Pace)</CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     <Table>
-                                        <TableHeader>
-                                            <TableRow className="hover:bg-transparent bg-muted/30">
-                                                <TableHead className="text-[10px] h-8 font-black">ZONA</TableHead>
-                                                <TableHead className="text-[10px] h-8 font-black">FC (bpm)</TableHead>
-                                                <TableHead className="text-[10px] h-8 text-right font-black">{protocol === 'cycling_power' ? 'POTÊNCIA %' : 'PACE'}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
                                         <TableBody>
-                                            {testResults?.zones.map((zone, idx) => (
-                                                <TableRow key={zone.zone} className="hover:bg-muted/10 h-14 border-b last:border-0">
-                                                    <TableCell className="py-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: zone.color }} />
-                                                            <div>
-                                                                <p className="text-xs font-black leading-none">{zone.zone}</p>
-                                                                <p className="text-[9px] text-muted-foreground font-bold">{zone.description}</p>
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="text-xs font-mono font-black py-2">{zone.minHR}-{zone.maxHR}</TableCell>
-                                                    <TableCell className="text-xs font-mono font-black py-2 text-right text-primary">
-                                                        {protocol === 'cycling_power' 
-                                                            ? `${(zoneConfigs[idx]?.vAMperc[0] * 100).toFixed(0)}-${(zoneConfigs[idx]?.vAMperc[1] * 100).toFixed(0)}%`
-                                                            : `${zone.maxPace}-${zone.minPace}`
-                                                        }
+                                            {testResults?.zones.map((zone) => (
+                                                <TableRow key={`pace-${zone.zone}`} className="hover:bg-muted/5 h-10 border-b last:border-0">
+                                                    <TableCell className="py-1 font-bold text-[10px] text-muted-foreground">{zone.zone}</TableCell>
+                                                    <TableCell className="py-1 text-right font-black text-xs">
+                                                        {protocol === 'cycling_power' ? zone.minPace : `${zone.maxPace}-${zone.minPace} min/km`}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
                                     </Table>
                                 </CardContent>
-                                <CardFooter className="pt-4 border-t">
-                                     <p className="text-[9px] text-muted-foreground italic text-center w-full font-bold uppercase tracking-tighter">
-                                        Karvonen (FC Reserva) + {protocol === 'cycling_power' ? '% Potência' : '% vAM'}
-                                     </p>
-                                </CardFooter>
                             </Card>
                         </div>
                     </div>
@@ -864,7 +855,7 @@ export default function VO2MaxPage() {
                         client={client}
                         protocol={protocol}
                         results={testResults}
-                        hrMax={parseInt(hrMax) || 190}
+                        hrMax={effectiveFCMax}
                         hrRest={parseInt(hrRest) || 60}
                         bloodPressure={`${pas}/${pad}`}
                         bpClassification={bpClass}

@@ -45,13 +45,18 @@ export interface TrainingZone {
   color: string;
 }
 
+// Configuração de zonas seguindo a solicitação (Metodologia Karvonen Clássica)
 export const DEFAULT_ZONES: ZoneConfig[] = [
-  { zone: 'Z1', desc: 'Regenerativo', hrPerc: [0.50, 0.60], vAMperc: [0.55, 0.65], color: '#94a3b8' },
-  { zone: 'Z2', desc: 'Endurance / Base', hrPerc: [0.60, 0.75], vAMperc: [0.65, 0.75], color: '#22c55e' },
-  { zone: 'Z3', desc: 'Tempo / Moderado', hrPerc: [0.75, 0.85], vAMperc: [0.75, 0.85], color: '#eab308' },
-  { zone: 'Z4', desc: 'Limiar Anaeróbico', hrPerc: [0.85, 0.92], vAMperc: [0.85, 0.95], color: '#f97316' },
-  { zone: 'Z5', desc: 'VO2 Máximo', hrPerc: [0.92, 1.00], vAMperc: [0.95, 1.10], color: '#ef4444' },
+  { zone: 'Z1', desc: 'Regenerativa', hrPerc: [0.50, 0.60], vAMperc: [0.50, 0.60], color: '#94a3b8' },
+  { zone: 'Z2', desc: 'Base Aeróbica', hrPerc: [0.60, 0.70], vAMperc: [0.60, 0.70], color: '#22c55e' },
+  { zone: 'Z3', desc: 'Moderada', hrPerc: [0.70, 0.80], vAMperc: [0.70, 0.80], color: '#eab308' },
+  { zone: 'Z4', desc: 'Limiar', hrPerc: [0.80, 0.90], vAMperc: [0.80, 0.90], color: '#f97316' },
+  { zone: 'Z5', desc: 'Máxima', hrPerc: [0.90, 1.00], vAMperc: [0.90, 1.10], color: '#ef4444' },
 ];
+
+export function calculateTanakaFCMax(age: number): number {
+  return Math.round(208 - (0.7 * age));
+}
 
 export function secondsToPace(secondsPerKm: number): string {
   if (!secondsPerKm || isNaN(secondsPerKm) || secondsPerKm === Infinity) return '--:--';
@@ -106,7 +111,6 @@ export function calculateVO2(data: VO2TestData) {
       break;
     case 'cycling_power':
       if (data.powerWatts && data.weight) {
-        // ACSM Formula for Cycling: VO2 = (10.8 * Watts / Weight) + 7
         vo2 = (10.8 * data.powerWatts / data.weight) + 7;
       }
       break;
@@ -145,7 +149,7 @@ export function getBPClassification(pas: number, pad: number): string {
 }
 
 export function calculateTrainingZones(vo2: number, hrMax: number, hrRest: number, vAM: number, customConfig?: ZoneConfig[]): TrainingZone[] {
-  const hrReserve = hrMax - hrRest;
+  const hrReserve = Math.max(0, hrMax - hrRest);
   const baseVAM = vAM > 0 ? vAM : (vo2 / 3.5); 
   const config = customConfig || DEFAULT_ZONES;
 

@@ -47,6 +47,8 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
         cycling_power: 'Teste de Potência (Ciclismo)'
     };
 
+    const hrReserve = hrMax - hrRest;
+
     return (
         <div ref={ref} className="p-10 font-sans bg-white text-gray-900 text-xs w-[800px]">
             {/* Header */}
@@ -74,26 +76,28 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                 </div>
             </div>
 
-            {/* Hemodinâmica e Basal */}
-            <div className="mt-4 flex gap-4">
-                <div className="flex-1 p-3 bg-primary/5 border border-primary/10 rounded-lg">
-                    <p className="text-[9px] uppercase font-black text-primary mb-1">Pressão Arterial de Repouso</p>
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <p className="font-black text-lg">{bloodPressure || '--/--'} <span className="text-[10px]">mmHg</span></p>
-                            <p className="text-[8px] text-primary uppercase font-bold tracking-widest">{bpClassification}</p>
-                        </div>
-                        <div className="text-right">
-                            <Heart className="text-primary size-5 opacity-30" />
-                        </div>
+            {/* Perfil Hemodinâmico e FC de Reserva */}
+            <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                    <p className="text-[9px] uppercase font-black text-primary mb-1">FC de Reserva</p>
+                    <div className="flex justify-between items-baseline">
+                        <p className="text-xl font-black text-primary">{hrReserve} <span className="text-[10px]">bpm</span></p>
                     </div>
+                    <p className="text-[8px] text-gray-400 italic mt-1 leading-tight">Adaptabilidade cardiovascular</p>
                 </div>
-                <div className="flex-1 p-3 bg-gray-100 rounded-lg border border-gray-200">
+                <div className="p-3 bg-gray-100 rounded-lg border border-gray-200">
                     <p className="text-[9px] uppercase font-black text-gray-500 mb-1">FC Máxima / Repouso</p>
                     <div className="flex justify-between items-baseline">
                         <p className="text-xl font-black">{hrMax} <span className="text-[10px]">bpm</span></p>
                         <p className="text-sm font-bold text-gray-400">/ {hrRest} bpm</p>
                     </div>
+                </div>
+                <div className="p-3 bg-gray-100 rounded-lg border border-gray-200">
+                    <p className="text-[9px] uppercase font-black text-gray-500 mb-1">Pressão Arterial</p>
+                    <div className="flex justify-between items-baseline">
+                        <p className="text-xl font-black">{bloodPressure || '--/--'} <span className="text-[10px]">mmHg</span></p>
+                    </div>
+                    <p className="text-[8px] uppercase font-bold text-primary">{bpClassification}</p>
                 </div>
             </div>
 
@@ -110,7 +114,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                         <p className="text-[10px] uppercase font-black opacity-80 mb-1">Potência Máxima</p>
                         <div className="text-4xl font-black">{powerWatts}</div>
                         <p className="text-[9px] font-bold">Watts</p>
-                        <div className="mt-3 text-xs font-bold uppercase bg-white/10 py-1 rounded-full">Relativo: {(powerWatts! / client.height).toFixed(2)} W/kg</div>
+                        <div className="mt-3 text-xs font-bold uppercase bg-white/10 py-1 rounded-full">Relativo: {(powerWatts! / (client.bodyMeasurements?.weight || 70)).toFixed(2)} W/kg</div>
                     </div>
                 ) : (
                     <div className="bg-gray-800 p-6 rounded-2xl text-white text-center shadow-lg">
@@ -135,14 +139,14 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
             </div>
 
             {/* Training Zones */}
-            <Section title="Zonas de Treinamento Personalizadas" icon={<Target size={16} className="text-primary"/>}>
+            <Section title="Zonas de Treinamento (Karvonen)" icon={<Target size={16} className="text-primary"/>}>
                 <table className="w-full text-xs border-collapse">
                     <thead>
                         <tr className="bg-gray-800 text-white uppercase text-[10px]">
                             <th className="p-3 text-left rounded-tl-lg">Zona</th>
-                            <th className="p-3 text-left">Intensidade / Objetivo</th>
+                            <th className="p-3 text-left">Intensidade</th>
                             <th className="p-3 text-center">Frequência Cardíaca</th>
-                            <th className="p-3 text-right rounded-tr-lg">{protocol === 'cycling_power' ? 'Intensidade %' : 'Pace Sugerido (min/km)'}</th>
+                            <th className="p-3 text-right rounded-tr-lg">{protocol === 'cycling_power' ? 'Intensidade %' : 'Pace Sugerido'}</th>
                         </tr>
                     </thead>
                     <tbody className="bg-gray-50">
@@ -154,9 +158,12 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                                         <span className="font-black text-sm">{zone.zone}</span>
                                     </div>
                                 </td>
-                                <td className="p-3 font-bold text-gray-600">{zone.description}</td>
-                                <td className="p-3 text-center font-mono font-bold text-sm">{zone.minHR} - {zone.maxHR} bpm</td>
-                                <td className="p-3 text-right font-mono font-bold text-sm text-primary">
+                                <td className="p-3">
+                                    <p className="font-black text-gray-800">{zone.description}</p>
+                                    <p className="text-[8px] text-gray-400 uppercase font-bold">Metodologia Alpha</p>
+                                </td>
+                                <td className="p-3 text-center font-mono font-bold text-sm text-primary">{zone.minHR} - {zone.maxHR} bpm</td>
+                                <td className="p-3 text-right font-mono font-bold text-sm">
                                     {protocol === 'cycling_power' ? zone.minPace : `${zone.maxPace} - ${zone.minPace}`}
                                 </td>
                             </tr>
@@ -169,26 +176,23 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
             <Section title="Recomendações Práticas" icon={<Activity size={16} className="text-primary"/>}>
                 <div className="grid grid-cols-2 gap-6 mt-2">
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
-                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">{protocol === 'cycling_power' ? 'Foco em Potência' : 'Foco em vAM'}</h4>
+                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Distribuição de Carga</h4>
                         <p className="leading-relaxed text-gray-600">
-                            {protocol === 'cycling_power' 
-                                ? `Para o atleta com potência aeróbica de ${powerWatts} Watts, sugere-se sessões de intervalos no limiar para elevar o limiar de lactato e a eficiência mecânica na pedalada.`
-                                : `Para atletas com vAM de ${results.vAM.toFixed(1)} km/h, sugere-se sessões de intervalos de 400m a 800m no pace de ${results.zones.length > 0 ? results.zones[results.zones.length - 1].maxPace : '--:--'} min/km para maximizar a economia de corrida e o tempo sob VO2max.`
-                            }
+                            Utilize a FC de Reserva ({hrReserve} bpm) para modular as intensidades. Treinos em Z2 devem compor a maior parte do volume semanal para base sólida. Sessões em Z4 e Z5 devem ser pontuais e focadas no desenvolvimento da potência aeróbica.
                         </p>
                     </div>
                     <div className="p-4 border-2 border-dashed border-gray-200 rounded-xl">
-                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Controle de Carga</h4>
+                        <h4 className="font-black text-primary uppercase mb-2 text-[10px]">Considerações Hemodinâmicas</h4>
                         <p className="leading-relaxed text-gray-600">
-                            Utilize as zonas aeróbicas de base para 80% do seu volume semanal. O limiar anaeróbico foi identificado em {results.conconiThreshold?.hr || 'nível alto'}, indicando que treinos de alta intensidade devem ser limitados a 1-2 vezes por semana.
+                            Sua P.A. em repouso de {bloodPressure} mmHg é classificada como {bpClassification}. Monitore regularmente os batimentos em repouso; aumentos acima de 10% podem indicar fadiga acumulada (overtraining).
                         </p>
                     </div>
                 </div>
             </Section>
 
             <footer className="mt-12 pt-4 border-t border-gray-200 text-center">
-                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico gerado por Alpha Trainer Engine &copy; {new Date().getFullYear()}</p>
-                <p className="text-[8px] text-gray-300 mt-1">Este documento é uma estimativa fisiológica e não substitui exames laboratoriais como a Ergoespirometria.</p>
+                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico Alpha Trainer Engine &copy; {new Date().getFullYear()}</p>
+                <p className="text-[8px] text-gray-300 mt-1">Estimativa fisiológica calculada via Tanaka (2001) e Karvonen. Consulte um médico antes de iniciar atividades intensas.</p>
             </footer>
         </div>
     );
