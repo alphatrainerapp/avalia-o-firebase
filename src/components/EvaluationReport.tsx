@@ -66,6 +66,19 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
 
     const logo = getPlaceholderImage('alpha-trainer-logo');
 
+    const calculateRCE = (waist?: number, height?: number) => {
+        if (waist && height && waist > 0 && height > 0) {
+            return (waist / height).toFixed(2);
+        }
+        return '—';
+    };
+
+    const getRceClassification = (rce?: string) => {
+        if (!rce || rce === '—') return '—';
+        const rceValue = parseFloat(rce);
+        return rceValue <= 0.50 ? 'Baixo Risco' : 'Risco Aumentado';
+    };
+
     if (!mainEvaluation) return <div ref={ref}></div>;
 
     return (
@@ -130,6 +143,26 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                                 })}
                             </TableRow>
                         ))}
+                    </TableBody>
+                </Table>
+            </Section>
+
+            {/* Health Indicators */}
+            <Section title="Indicadores de Saúde" icon={<Target size={14} className="text-gray-600"/>}>
+                <Table className="mt-1 text-xs">
+                    <TableHeader>
+                        <TableRow className="bg-gray-100">
+                            <TableHead className="font-bold text-gray-600">Indicador</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600">Valor</TableHead>
+                            <TableHead className="text-center font-bold text-gray-600">Classificação</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell className="font-medium">RCE (Cintura-Estatura)</TableCell>
+                            <TableCell className="text-center">{calculateRCE(mainEvaluation.perimetria?.cintura, mainEvaluation.bodyMeasurements.height)}</TableCell>
+                            <TableCell className="text-center">{getRceClassification(calculateRCE(mainEvaluation.perimetria?.cintura, mainEvaluation.bodyMeasurements.height))}</TableCell>
+                        </TableRow>
                     </TableBody>
                 </Table>
             </Section>

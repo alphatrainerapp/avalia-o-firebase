@@ -267,6 +267,20 @@ export default function DashboardPage() {
         }
     };
 
+    const calculateRCE = (waist?: number, height?: number) => {
+        if (waist && height && waist > 0 && height > 0) {
+            return (waist / height).toFixed(2);
+        }
+        return '—';
+    }
+
+    const getRceClassification = (rce?: string) => {
+        if (!rce || rce === '—') return '—';
+        const rceValue = parseFloat(rce);
+        if (rceValue <= 0.50) return 'Baixo Risco';
+        return 'Risco Aumentado';
+    };
+
     const getAsymmetryClassification = (val1?: number, val2?: number) => {
         if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '—';
         const difference = Math.abs(val1 - val2);
@@ -283,6 +297,8 @@ export default function DashboardPage() {
     const bmiClassification = useMemo(() => getBmiClassification(bmi), [bmi]);
     const rcq = useMemo(() => calculateRCQ(formState.perimetria?.cintura, formState.perimetria?.quadril), [formState.perimetria]);
     const rcqClassification = useMemo(() => getRcqClassification(rcq, formState.gender), [rcq, formState.gender]);
+    const rce = useMemo(() => calculateRCE(formState.perimetria?.cintura, formState.bodyMeasurements?.height), [formState.perimetria, formState.bodyMeasurements]);
+    const rceClassification = useMemo(() => getRceClassification(rce), [rce]);
     const armAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.bracoDRelaxado, formState.perimetria?.bracoERelaxado), [formState.perimetria]);
     const thighAsymmetry = useMemo(() => getAsymmetryClassification(formState.perimetria?.coxaMedialD, formState.perimetria?.coxaMedialE), [formState.perimetria]);
 
@@ -733,8 +749,18 @@ export default function DashboardPage() {
                                                 <div className="font-bold text-lg">{rcq}</div>
                                             </div>
                                             <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco (RCQ)</Label>
                                                 <div className="font-bold text-lg">{rcqClassification}</div>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">RCE (Cintura-Estatura)</Label>
+                                                <div className="font-bold text-lg">{rce}</div>
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco (RCE)</Label>
+                                                <div className="font-bold text-lg">{rceClassification}</div>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
