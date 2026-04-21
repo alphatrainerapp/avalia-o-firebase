@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -203,31 +202,24 @@ export default function DashboardPage() {
     };
 
     const handleSelectChange = (name: string, value: string) => {
-        if (name === 'clientId') {
-            setSelectedClientId(value);
-            setSelectedEvaluationId(null);
-            setCompareMode(false);
-            setSelectedEvalIdsForCompare([]);
-        } else {
-            setFormState(prev => {
-                let newState = { ...prev, [name]: value };
-                
-                if (name === 'gender' || name === 'protocol') {
-                    const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
-                    if (newFat > 0) {
-                        newState.bodyComposition = {
-                            ...(newState.bodyComposition || {}),
-                            bodyFatPercentage: newFat,
-                        };
-                    }
+        setFormState(prev => {
+            let newState = { ...prev, [name]: value };
+            
+            if (name === 'gender' || name === 'protocol') {
+                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+                if (newFat > 0) {
+                    newState.bodyComposition = {
+                        ...(newState.bodyComposition || {}),
+                        bodyFatPercentage: newFat,
+                    };
                 }
+            }
 
-                if (selectedEvaluationId) {
-                    setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-                }
-                return newState;
-            });
-        }
+            if (selectedEvaluationId) {
+                setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
+            }
+            return newState;
+        });
     }
 
     const handleAudienceChange = (audience: string) => {
@@ -461,7 +453,7 @@ export default function DashboardPage() {
     const diametrosFields: { name: BoneDiameterKeys, label: string }[] = [
         { name: 'biestiloidal', label: 'Biestiloidal (Punho) (cm)' },
         { name: 'bicondilarUmero', label: 'Bicondilar do Úmero (cm)' },
-        { name: 'bicondilarFemur', label: 'Bicondilar do Fêmur (cm)' },
+        { name: 'bicondilarFemur', label: 'Biestiloidal do Fêmur (cm)' },
     ];
 
     const EvalCard = ({ ev, index }: { ev: Evaluation; index: number }) => {
@@ -521,7 +513,6 @@ export default function DashboardPage() {
             </div>
             
             <div className="flex flex-wrap items-center gap-2 justify-end">
-                {/* Ações Secundárias (Visíveis em desktop, Dropdown em mobile) */}
                 <div className="hidden lg:flex items-center gap-2">
                     <Link href="/bioimpedance">
                         <Button variant="outline" size="sm" className="shadow-sm">
@@ -540,7 +531,6 @@ export default function DashboardPage() {
                     </Link>
                 </div>
 
-                {/* Dropdown de Avaliações para Mobile */}
                 <div className="lg:hidden">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -568,7 +558,6 @@ export default function DashboardPage() {
                     </DropdownMenu>
                 </div>
 
-                {/* Ações Primárias (Sempre visíveis, mas responsivas) */}
                 <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                     <Save className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Salvar</span>
                 </Button>
@@ -606,7 +595,7 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                                 <div className="md:col-span-2">
-                                    <Label htmlFor="name">Nome</Label>
+                                    <Label htmlFor="name">Nome do Aluno</Label>
                                     <div className="flex items-center gap-2">
                                         {client && (
                                             <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
@@ -614,15 +603,11 @@ export default function DashboardPage() {
                                                 <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                                             </Avatar>
                                         )}
-                                        <Select value={selectedClientId} onValueChange={(value: string) => handleSelectChange('clientId', value)} className="flex-1">
-                                            <SelectTrigger id="name">
-                                                <SelectValue placeholder="Selecione um cliente" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">
+                                            {client?.name || 'Nenhum aluno selecionado'}
+                                        </div>
                                     </div>
+                                    <p className="text-[10px] text-muted-foreground mt-1">Para trocar de aluno, utilize o menu lateral "Alunos".</p>
                                 </div>
                                 <div className="md:col-span-2">
                                     <Label htmlFor="email">Email</Label>

@@ -114,13 +114,6 @@ export default function BioimpedancePage() {
             .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [selectedEvalIds, clientEvaluations]);
 
-    const handleClientChange = (clientId: string) => {
-        setSelectedClientId(clientId);
-        setSelectedEvalIds([]);
-        setModalOpen(true);
-        setSelectedScale(null);
-    };
-
     const handleScaleSelect = (scale: BioimpedanceScale) => {
         setSelectedScale(scale);
         setSelectedEvalIds([]);
@@ -386,15 +379,11 @@ export default function BioimpedancePage() {
                         <CardHeader>
                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="sm:col-span-2">
-                                    <Label htmlFor="name">Nome</Label>
-                                    <Select value={selectedClientId} onValueChange={handleClientChange}>
-                                        <SelectTrigger id="name">
-                                            <SelectValue placeholder="Selecione um cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
+                                    <Label htmlFor="name">Aluno</Label>
+                                    <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">
+                                        {client?.name || 'Nenhum aluno selecionado'}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-1">Para trocar de aluno, utilize o menu lateral "Alunos".</p>
                                 </div>
                                 <div className="flex items-end gap-2">
                                      <Button onClick={handleNewEvaluation} variant="outline">

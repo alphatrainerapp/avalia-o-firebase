@@ -51,10 +51,6 @@ export default function PosturalPage() {
         fileInputRefs[type].current?.click();
     };
     
-    const handleClientChange = (clientId: string) => {
-        setSelectedClientId(clientId);
-    };
-    
     const handleSelectEvaluation = useCallback((evalId: string | null) => {
         setSelectedEvaluationId(evalId);
         if (!evalId) {
@@ -190,15 +186,11 @@ export default function PosturalPage() {
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="grid gap-2 w-full sm:max-w-sm">
-                                <Label htmlFor="name">Cliente</Label>
-                                 <Select value={selectedClientId} onValueChange={handleClientChange}>
-                                    <SelectTrigger id="name">
-                                        <SelectValue placeholder="Selecione um cliente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="name">Aluno</Label>
+                                <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">
+                                    {client?.name || 'Nenhum aluno selecionado'}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">Para trocar de aluno, utilize o menu lateral "Alunos".</p>
                             </div>
                             <Button onClick={handleNewEvaluation} variant="outline" className="w-full sm:w-auto">
                                 <Plus className="mr-2" /> Nova Avaliação
