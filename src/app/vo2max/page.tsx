@@ -33,6 +33,7 @@ import { useEvaluationContext } from '@/context/EvaluationContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   type VO2Protocol, 
   type VO2Stage, 
@@ -359,6 +360,22 @@ export default function VO2MaxPage() {
             </header>
 
             <div className="space-y-6">
+                {/* Perfil do Aluno */}
+                <Card className="border-none shadow-sm bg-card">
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <Avatar className="h-16 w-16 border-2 border-primary/20">
+                            <AvatarImage src={client?.avatarUrl} alt={client?.name} />
+                            <AvatarFallback>{client?.name?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <h2 className="text-xl font-bold">{client?.name}</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {client?.age} anos • {client?.gender} • {client?.height}cm
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <Card className="border-none shadow-none bg-muted/10">
                     <CardHeader className="pb-4">
                         <div className="flex items-center justify-between">
