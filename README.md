@@ -7,41 +7,37 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ## ✨ Funcionalidades Implementadas
 
-### 1. Dashboard de Avaliação Física (Protocolo ISAK)
+### 1. Gestão Centralizada de Alunos
+- **Listagem Profissional**: Painel dedicado para controle de alunos ativos com busca em tempo real.
+- **Contexto Global**: Seleção de aluno unificada. Ao selecionar um aluno na lista, todo o sistema (Dashboard, Bio, Postural, VO2) sincroniza automaticamente com os dados dele.
+- **Navegação Inteligente**: Sidebar (menu lateral) colapsável por padrão para maximizar a área útil de trabalho.
+
+### 2. Dashboard de Avaliação Física (Protocolo ISAK)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
 - **Protocolo ISAK**: Suporte completo ao perfil de 8 dobras e 3 diâmetros ósseos (Punho, Fêmur e Úmero) para máxima precisão.
-- **Estado Zero Inteligente**: Interface adaptativa que simplifica o início para novos clientes e expande conforme o histórico é criado.
 - **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
-### 2. Avaliação de Performance e VO2max (Elite)
-- **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km, Step Test e o avançado **Teste de Conconi**.
+### 3. Avaliação de Performance e VO2max (Elite)
 - **Ciclismo de Elite**: Inclusão do **Teste de Potência (Bike - Watts)** com cálculo de VO2max via fórmula ACSM e análise de Watts/kg.
+- **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km, Step Test e o avançado **Teste de Conconi**.
 - **Análise Fisiológica Completa**: Medição de **Pressão Arterial de Repouso** com classificação automática (Diretrizes SBC) e cálculo de **FCT (FC de Trabalho)** via fórmula de Karvonen.
-- **Teste de Conconi**: Identificação do ponto de deflexão da Frequência Cardíaca (Limiar Anaeróbico) com entrega de **Velocidade, FC e Pace**.
-- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador adicionar, remover e ajustar zonas de intensidade baseadas na FC de Reserva e % da vAM ou % de Potência.
-- **Gráficos Fisiológicos**: Visualização da curva de FC vs Velocidade e distribuição de carga por zona.
-- **Evolução de Performance**: Tabela comparativa histórica para monitorar o ganho de VO2max, velocidade, potência e saúde cardiovascular.
+- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador definir nomes, cores e percentuais de carga (% vAM ou % Potência) para cada zona.
+- **Identificação Visual**: Cabeçalho de avaliação com foto e dados biométricos do atleta para conferência rápida.
 
-### 3. Bioimpedância Sincronizada
-- **Integração Global**: Sincronização automática do cliente selecionado entre todas as telas via Context API.
+### 4. Bioimpedância Sincronizada
 - **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução segmentar.
+- **Histórico Comparativo**: Gráficos de tendência de peso, massa gorda e muscular.
 
-### 4. Avaliação Postural Avançada
-- **Interface Mobile-First**: Carrossel otimizado com navegação por "dots" e indicadores de progresso, garantindo que a foto do cliente esteja sempre visível durante a marcação.
-- **Mapeamento Muscular Automático**: Identificação de músculos possivelmente encurtados/superativos e alongados/inibidos com base nos desvios marcados.
-- **Comparativo de Evolução**: Visualização lado a lado de fotos históricas para acompanhar a progressão postural do cliente.
-
-### 5. Sincronização e UX
-- **Global Context**: Persistência do cliente selecionado durante toda a sessão (Dashboard -> Bioimpedância -> Postural -> VO2max).
-- **Interface Responsiva**: Menu de ações inteligente que se adapta para dispositivos móveis (Dashboard e VO2max).
-- **Modo Escuro/Claro**: Compatibilidade total com temas para conforto visual do avaliador.
+### 5. Avaliação Postural Avançada
+- **Interface Mobile-First**: Carrossel otimizado para marcação de desvios diretamente no celular.
+- **Mapeamento Muscular**: Identificação automática de músculos encurtados/superativos e alongados/inibidos.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
 - **React 18 & Context API**
 - **Tailwind CSS & Shadcn UI**
 - **Lucide React** (Iconografia)
-- **Recharts** (Gráficos de Composição e Performance)
+- **Recharts** (Gráficos Fisiológicos)
 - **jsPDF & html2canvas** (Geração de Documentos)
 
 ## 🏁 Como Iniciar
