@@ -388,7 +388,7 @@ export default function VO2MaxPage() {
                                     <Label htmlFor="compare-mode" className="text-xs font-bold uppercase cursor-pointer">Comparar</Label>
                                     <Switch id="compare-mode" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
-                                <Button onClick={handleNewEvaluation} size="sm" variant="outline" className="bg-background">
+                                <Button onClick={handleNewEvaluation} size="sm" className="bg-primary text-primary-foreground shadow-md">
                                     <Plus className="mr-2 h-4 w-4" /> Nova Avaliação
                                 </Button>
                             </div>
