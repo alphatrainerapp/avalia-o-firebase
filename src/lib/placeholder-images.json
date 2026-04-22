@@ -56,15 +56,15 @@
     },
     {
       "id": "abdominal-test",
-      "description": "Athlete performing sit-ups.",
-      "imageUrl": "https://picsum.photos/seed/situps/600/400",
-      "imageHint": "situp exercise"
+      "description": "Desenho técnico de teste abdominal com destaque para musculatura do core e amplitude de movimento.",
+      "imageUrl": "https://picsum.photos/seed/abdominal-tech/600/400",
+      "imageHint": "abdominal technical"
     },
     {
       "id": "handgrip-test",
       "description": "Desenho técnico de preensão manual com dinamômetro e eixos de flexão.",
       "imageUrl": "https://picsum.photos/seed/handgrip-tech/600/400",
-      "imageHint": "handgrip dynamometer"
+      "imageHint": "handgrip technical"
     },
     {
       "id": "wells-test",
