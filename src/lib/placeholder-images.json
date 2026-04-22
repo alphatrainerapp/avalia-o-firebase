@@ -51,26 +51,26 @@
     {
       "id": "push-ups-test",
       "description": "Desenho técnico de atleta realizando flexão de braço com eixos de movimento.",
-      "imageUrl": "https://picsum.photos/seed/push-ups-tech-draw/600/400",
-      "imageHint": "pushup technical"
+      "imageUrl": "https://picsum.photos/seed/push-ups-tech/600/400",
+      "imageHint": "pushup exercise"
     },
     {
       "id": "abdominal-test",
-      "description": "Desenho técnico de teste abdominal com destaque para musculatura do core e amplitude de movimento.",
-      "imageUrl": "https://picsum.photos/seed/abdominal-tech-draw/600/400",
-      "imageHint": "abdominal technical"
+      "description": "Desenho técnico de teste abdominal com destaque para musculatura do core.",
+      "imageUrl": "https://picsum.photos/seed/abdominal-tech/600/400",
+      "imageHint": "abdominal exercise"
     },
     {
       "id": "handgrip-test",
-      "description": "Desenho técnico de preensão manual com dinamômetro e eixos de flexão.",
-      "imageUrl": "https://picsum.photos/seed/handgrip-tech-draw/600/400",
-      "imageHint": "handgrip technical"
+      "description": "Desenho técnico de preensão manual com dinamômetro.",
+      "imageUrl": "https://picsum.photos/seed/handgrip-tech/600/400",
+      "imageHint": "handgrip strength"
     },
     {
       "id": "wells-test",
-      "description": "Desenho técnico do Banco de Wells destacando alongamento de cadeia posterior e eixos de flexibilidade.",
-      "imageUrl": "https://picsum.photos/seed/wells-tech-draw/600/400",
-      "imageHint": "flexibility technical"
+      "description": "Desenho técnico do Banco de Wells destacando alongamento.",
+      "imageUrl": "https://picsum.photos/seed/wells-tech/600/400",
+      "imageHint": "flexibility test"
     }
   ]
 }

@@ -50,6 +50,12 @@ import {
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 
+const functionalTestsConfig = [
+    { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
+    { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência de membros abdominais', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
+    { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima. Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
+    { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de membros inferiores', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
+];
 
 export default function DashboardPage() {
     const { clients, allEvaluations, setAllEvaluations, addEvaluation, selectedClientId, setSelectedClientId } = useEvaluationContext();
@@ -62,7 +68,6 @@ export default function DashboardPage() {
     const reportRef = useRef<HTMLDivElement>(null);
     const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros' | 'testes'>('perimetria');
     const [formattedDate, setFormattedDate] = useState('');
-
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime()), [selectedClientId, allEvaluations]);
@@ -81,9 +86,7 @@ export default function DashboardPage() {
     }, [selectedEvalIdsForCompare, clientEvaluations]);
 
     const [formState, setFormState] = useState<Partial<Evaluation & Client & any>>({});
-    
     const availableProtocols = audienceProtocols[selectedAudience] || [];
-
     const hasEvaluations = clientEvaluations.length > 0;
 
     useEffect(() => {
@@ -102,13 +105,15 @@ export default function DashboardPage() {
             setSelectedAudience(audience);
         } else if (client) {
              const agora = new Date();
-             const localDate = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+             const year = agora.getFullYear();
+             const month = String(agora.getMonth() + 1).padStart(2, '0');
+             const day = String(agora.getDate()).padStart(2, '0');
 
              initialState = {
                 ...client,
                 clientName: client.name,
                 gender: client.gender,
-                date: `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`,
+                date: `${year}-${month}-${day}`,
                 protocol: availableProtocols[0],
                 bodyMeasurements: { height: client.height, weight: 0 },
                 perimetria: {},
@@ -117,7 +122,6 @@ export default function DashboardPage() {
              };
         }
         setFormState(initialState);
-
     }, [client, evaluation, availableProtocols, selectedAudience]);
 
     useEffect(() => {
@@ -125,7 +129,6 @@ export default function DashboardPage() {
             setFormattedDate(new Date(formState.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }));
         }
     }, [formState.date]);
-
 
     useEffect(() => {
         if (!formState.protocol) return;
@@ -140,39 +143,30 @@ export default function DashboardPage() {
     
     const calculateFatFromInput = (skinfolds: any, age: number, gender: string, protocol: string) => {
         if (!skinfolds || !age || !gender || !protocol) return 0;
-
-        const getSkinfoldSum = (keys: SkinfoldKeys[]) => {
-            return keys.reduce((sum, key) => sum + (skinfolds[key] || 0), 0);
-        };
+        const getSkinfoldSum = (keys: SkinfoldKeys[]) => keys.reduce((sum, key) => sum + (skinfolds[key] || 0), 0);
 
         let bodyDensity = 0;
         if (protocol.includes('Pollock 7 dobras')) {
             const sum7 = getSkinfoldSum(protocolSkinfolds['Pollock 7 dobras']);
             if (sum7 > 0) {
-                if (gender === 'Masculino') {
-                    bodyDensity = 1.112 - 0.00043499 * sum7 + 0.00000055 * sum7 * sum7 - 0.00028826 * age;
-                } else {
-                    bodyDensity = 1.097 - 0.00046971 * sum7 + 0.00000056 * sum7 * sum7 - 0.00012828 * age;
-                }
+                bodyDensity = gender === 'Masculino' 
+                    ? 1.112 - 0.00043499 * sum7 + 0.00000055 * sum7 * sum7 - 0.00028826 * age
+                    : 1.097 - 0.00046971 * sum7 + 0.00000056 * sum7 * sum7 - 0.00012828 * age;
             }
         } else if (protocol.includes('Pollock 3 dobras')) {
             const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
             const sum3 = getSkinfoldSum(skfoldKeys);
             if (sum3 > 0) {
-                if (gender === 'Masculino') {
-                    bodyDensity = 1.10938 - 0.0008267 * sum3 + 0.0000016 * sum3 * sum3 - 0.0002574 * age;
-                } else {
-                    bodyDensity = 1.0994921 - 0.0009929 * sum3 + 0.0000023 * sum3 * sum3 - 0.0001392 * age;
-                }
+                bodyDensity = gender === 'Masculino'
+                    ? 1.10938 - 0.0008267 * sum3 + 0.0000016 * sum3 * sum3 - 0.0002574 * age
+                    : 1.0994921 - 0.0009929 * sum3 + 0.0000023 * sum3 * sum3 - 0.0001392 * age;
             }
         } else if (protocol === 'ISAK') {
             const sum8 = getSkinfoldSum(protocolSkinfolds['ISAK']);
             if (sum8 > 0) {
-                if (gender === 'Masculino') {
-                    bodyDensity = 1.109 - 0.0008 * sum8 + 0.0000016 * sum8 * sum8;
-                } else {
-                    bodyDensity = 1.099 - 0.0009 * sum8 + 0.0000023 * sum8 * sum8;
-                }
+                bodyDensity = gender === 'Masculino'
+                    ? 1.109 - 0.0008 * sum8 + 0.0000016 * sum8 * sum8
+                    : 1.099 - 0.0009 * sum8 + 0.0000023 * sum8 * sum8;
             }
         }
 
@@ -200,17 +194,12 @@ export default function DashboardPage() {
             if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
                 const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
                 if (newFat > 0) {
-                    newState.bodyComposition = {
-                        ...(newState.bodyComposition || {}),
-                        bodyFatPercentage: newFat,
-                    };
+                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
                 }
             }
 
             if (selectedEvaluationId) {
-                setAllEvaluations(prevEvals => prevEvals.map(ev => 
-                    ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev
-                ));
+                setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
             }
             return newState;
         });
@@ -219,17 +208,12 @@ export default function DashboardPage() {
     const handleSelectChange = (name: string, value: string) => {
         setFormState(prev => {
             let newState = { ...prev, [name]: value };
-            
             if (name === 'gender' || name === 'protocol') {
                 const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
                 if (newFat > 0) {
-                    newState.bodyComposition = {
-                        ...(newState.bodyComposition || {}),
-                        bodyFatPercentage: newFat,
-                    };
+                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
                 }
             }
-
             if (selectedEvaluationId) {
                 setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
             }
@@ -243,68 +227,36 @@ export default function DashboardPage() {
         handleSelectChange('protocol', newProtocols[0]);
     };
     
-    const calculateBMI = (weight?: number, height?: number) => {
-        if (weight && height && weight > 0) {
-            return (weight / ((height / 100) * (height / 100))).toFixed(1);
-        }
-        return '—';
-    }
-
+    const calculateBMI = (weight?: number, height?: number) => (weight && height && weight > 0) ? (weight / ((height / 100) * (height / 100))).toFixed(1) : '—';
     const getBmiClassification = (bmi?: string) => {
         if (!bmi || bmi === '—') return '—';
-        const bmiValue = parseFloat(bmi);
-        if (bmiValue < 18.5) return 'Abaixo do peso';
-        if (bmiValue < 24.9) return 'Peso normal';
-        if (bmiValue < 29.9) return 'Sobrepeso';
-        if (bmiValue < 34.9) return 'Obesidade Grau I';
-        if (bmiValue < 39.9) return 'Obesidade Grau II';
+        const v = parseFloat(bmi);
+        if (v < 18.5) return 'Abaixo do peso';
+        if (v < 24.9) return 'Peso normal';
+        if (v < 29.9) return 'Sobrepeso';
+        if (v < 34.9) return 'Obesidade Grau I';
+        if (v < 39.9) return 'Obesidade Grau II';
         return 'Obesidade Grau III';
     };
 
-    const calculateRCQ = (waist?: number, hip?: number) => {
-        if (waist && hip && hip > 0 && waist > 0) {
-            return (waist / hip).toFixed(2);
-        }
-        return '—';
-    }
-
+    const calculateRCQ = (waist?: number, hip?: number) => (waist && hip && hip > 0 && waist > 0) ? (waist / hip).toFixed(2) : '—';
     const getRcqClassification = (rcq?: string, gender?: 'Masculino' | 'Feminino') => {
         if (!rcq || rcq === '—' || !gender) return '—';
-        const rcqValue = parseFloat(rcq);
-        if (gender === 'Feminino') {
-            if (rcqValue < 0.80) return 'Baixo Risco';
-            if (rcqValue <= 0.85) return 'Risco Moderado';
-            return 'Alto Risco';
-        } else {
-            if (rcqValue < 0.95) return 'Baixo Risco';
-            if (rcqValue <= 1.0) return 'Risco Moderado';
-            return 'Alto Risco';
-        }
+        const v = parseFloat(rcq);
+        if (gender === 'Feminino') return v < 0.80 ? 'Baixo Risco' : (v <= 0.85 ? 'Risco Moderado' : 'Alto Risco');
+        return v < 0.95 ? 'Baixo Risco' : (v <= 1.0 ? 'Risco Moderado' : 'Alto Risco');
     };
 
-    const calculateRCE = (waist?: number, height?: number) => {
-        if (waist && height && waist > 0 && height > 0) {
-            return (waist / height).toFixed(2);
-        }
-        return '—';
-    }
-
-    const getRceClassification = (rce?: string) => {
-        if (!rce || rce === '—') return '—';
-        const rceValue = parseFloat(rce);
-        if (rceValue <= 0.50) return 'Baixo Risco';
-        return 'Risco Aumentado';
-    };
+    const calculateRCE = (waist?: number, height?: number) => (waist && height && waist > 0 && height > 0) ? (waist / height).toFixed(2) : '—';
+    const getRceClassification = (rce?: string) => (!rce || rce === '—') ? '—' : (parseFloat(rce) <= 0.50 ? 'Baixo Risco' : 'Risco Aumentado');
 
     const getAsymmetryClassification = (val1?: number, val2?: number) => {
         if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '—';
-        const difference = Math.abs(val1 - val2);
-        const maxVal = Math.max(val1, val2);
-        const percentage = (difference / maxVal) * 100;
-        
-        if (percentage < 1.5) return 'Sem diferença';
-        if (percentage <= 5) return 'Diferença';
-        if (percentage <= 10) return 'Diferença grande';
+        const diff = Math.abs(val1 - val2);
+        const p = (diff / Math.max(val1, val2)) * 100;
+        if (p < 1.5) return 'Sem diferença';
+        if (p <= 5) return 'Diferença';
+        if (p <= 10) return 'Diferença grande';
         return 'Diferença severa';
     };
 
@@ -329,20 +281,10 @@ export default function DashboardPage() {
         return calculateBodyComposition(formState as Evaluation, client);
     }, [formState, client]);
 
-
     const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
         if (!percentage || percentage === 0 || !gender) return '—';
-        if (gender === 'Feminino') {
-            if (percentage < 20) return 'Atleta';
-            if (percentage <= 24) return 'Bom';
-            if (percentage <= 30) return 'Aceitável';
-            return 'Obeso';
-        } else {
-            if (percentage < 12) return 'Atleta';
-            if (percentage <= 16) return 'Bom';
-            if (percentage <= 22) return 'Aceitável';
-            return 'Obeso';
-        }
+        if (gender === 'Feminino') return percentage < 20 ? 'Atleta' : (percentage <= 24 ? 'Bom' : (percentage <= 30 ? 'Aceitável' : 'Obeso'));
+        return percentage < 12 ? 'Atleta' : (percentage <= 16 ? 'Bom' : (percentage <= 22 ? 'Aceitável' : 'Obeso'));
     };
     
     const fatClassification = useMemo(() => getFatClassification(bodyComposition.fatMassPercentage, formState.gender), [bodyComposition.fatMassPercentage, formState.gender]);
@@ -358,126 +300,58 @@ export default function DashboardPage() {
     };
     
     const handleSave = () => {
-        console.log("Saving data:", formState);
         toast({ title: "Salvo!", description: "Os dados da avaliação foram salvos com sucesso." });
     }
 
     const handleExportPdf = async () => {
-        const reportElement = reportRef.current;
-        if (!reportElement) {
-            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível gerar o PDF.' });
-            return;
-        }
-    
-        toast({ title: 'Exportando PDF...', description: 'Aguarde enquanto o relatório é gerado.' });
-    
-        const canvas = await html2canvas(reportElement, {
-            scale: 2,
-            useCORS: true,
-            logging: true,
-            allowTaint: true,
-        });
-    
+        const el = reportRef.current;
+        if (!el) return;
+        toast({ title: 'Exportando PDF...' });
+        const canvas = await html2canvas(el, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'px',
-            format: 'a4',
-        });
-    
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgRatio = canvas.width / canvas.height;
-        const pdfRatio = pdfWidth / pdfHeight;
-    
-        let finalImgWidth, finalImgHeight;
-    
-        if (imgRatio > pdfRatio) {
-            finalImgWidth = pdfWidth;
-            finalImgHeight = pdfWidth / imgRatio;
-        } else {
-            finalImgHeight = pdfHeight;
-            finalImgWidth = pdfHeight * imgRatio;
-        }
-
-        const x = (pdfWidth - finalImgWidth) / 2;
-        
-        let position = 0;
-        let remainingHeight = canvas.height;
-        const pageHeightOnCanvas = (pdfHeight * canvas.width) / finalImgWidth;
-    
-        pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
-        remainingHeight -= pageHeightOnCanvas;
-    
-        while (remainingHeight > 0) {
-            position -= pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, 'PNG', x, position, finalImgWidth, finalImgHeight);
-            remainingHeight -= pageHeightOnCanvas;
-        }
-    
-        pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}_${new Date().toLocaleDateString('pt-BR')}.pdf`);
-        toast({ title: 'PDF Exportado!', description: 'O relatório foi salvo com sucesso.' });
+        const finalImgWidth = pdfWidth;
+        const finalImgHeight = pdfWidth / imgRatio;
+        pdf.addImage(imgData, 'PNG', 0, 0, finalImgWidth, finalImgHeight);
+        pdf.save(`relatorio_${client?.name.replace(/ /g, '_')}.pdf`);
+        toast({ title: 'PDF Exportado!' });
     };
 
     const handleCompareToggle = (checked: boolean) => {
         setCompareMode(checked);
-        if (!checked) {
-            setSelectedEvalIdsForCompare([]);
-        } else {
-            if (evaluation && !selectedEvalIdsForCompare.includes(evaluation.id)) {
-                setSelectedEvalIdsForCompare([evaluation.id]);
-            }
-        }
+        if (!checked) setSelectedEvalIdsForCompare([]);
+        else if (evaluation && !selectedEvalIdsForCompare.includes(evaluation.id)) setSelectedEvalIdsForCompare([evaluation.id]);
     }
 
     const handleCompareSelection = (evalId: string) => {
         setSelectedEvalIdsForCompare(prev => {
-            if (prev.includes(evalId)) {
-                return prev.filter(id => id !== evalId);
-            }
-            if (prev.length < 4) {
-                return [...prev, evalId].sort((a,b) => {
-                    const evalA = clientEvaluations.find(e => e.id === a);
-                    const evalB = clientEvaluations.find(e => e.id === b);
-                    return new Date(evalA!.date.replace(/-/g, '/')).getTime() - new Date(evalB!.date.replace(/-/g, '/')).getTime();
-                });
-            }
-            toast({variant: 'destructive', title: 'Aviso', description: 'Você pode selecionar no máximo 4 avaliações.'})
+            if (prev.includes(evalId)) return prev.filter(id => id !== evalId);
+            if (prev.length < 4) return [...prev, evalId].sort((a,b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
+            toast({variant: 'destructive', title: 'Aviso', description: 'Máximo 4 avaliações.'})
             return prev;
         });
     }
 
     const skinfoldFields: { name: SkinfoldKeys; label: string }[] = [
-        { name: 'subscapular', label: 'Subscapular' },
-        { name: 'tricipital', label: 'Tricipital' },
-        { name: 'bicipital', label: 'Bicipital' },
-        { name: 'peitoral', label: 'Peitoral' },
-        { name: 'axilarMedia', label: 'Axilar-média' },
-        { name: 'supraIliaca', label: 'Supra-ilíaca' },
-        { name: 'supraspinale', label: 'Supraespinal' },
-        { name: 'abdominal', label: 'Abdominal' },
-        { name: 'coxa', label: 'Coxa' },
-        { name: 'panturrilha', label: 'Panturrilha' },
+        { name: 'subscapular', label: 'Subscapular' }, { name: 'tricipital', label: 'Tricipital' },
+        { name: 'bicipital', label: 'Bicipital' }, { name: 'peitoral', label: 'Peitoral' },
+        { name: 'axilarMedia', label: 'Axilar-média' }, { name: 'supraIliaca', label: 'Supra-ilíaca' },
+        { name: 'supraspinale', label: 'Supraespinal' }, { name: 'abdominal', label: 'Abdominal' },
+        { name: 'coxa', label: 'Coxa' }, { name: 'panturrilha', label: 'Panturrilha' },
     ];
     
     const perimetriaFields = [
-        { key: 'ombro', label: 'Ombro' },
-        { key: 'torax', label: 'Tórax' },
-        { key: 'cintura', label: 'Cintura' },
-        { key: 'abdomen', label: 'Abdômen' },
-        { key: 'quadril', label: 'Quadril' },
-        { key: 'bracoDRelaxado', label: 'Braço D (relaxado)' },
-        { key: 'bracoDContraido', label: 'Braço D (contraído)' },
-        { key: 'bracoERelaxado', label: 'Braço E (relaxado)' },
-        { key: 'bracoEContraido', label: 'Braço E (contraído)' },
-        { key: 'antebracoD', label: 'Antebraço D' },
-        { key: 'antebracoE', label: 'Antebraço E' },
-        { key: 'coxaProximalD', label: 'Coxa Proximal D' },
-        { key: 'coxaProximalE', label: 'Coxa Proximal E' },
-        { key: 'coxaMedialD', label: 'Coxa Medial D' },
-        { key: 'coxaMedialE', label: 'Coxa Medial E' },
-        { key: 'panturrilhaD', label: 'Panturrilha D' },
+        { key: 'ombro', label: 'Ombro' }, { key: 'torax', label: 'Tórax' },
+        { key: 'cintura', label: 'Cintura' }, { key: 'abdomen', label: 'Abdômen' },
+        { key: 'quadril', label: 'Quadril' }, { key: 'bracoDRelaxado', label: 'Braço D (relaxado)' },
+        { key: 'bracoDContraido', label: 'Braço D (contraído)' }, { key: 'bracoERelaxado', label: 'Braço E (relaxado)' },
+        { key: 'bracoEContraido', label: 'Braço E (contraído)' }, { key: 'antebracoD', label: 'Antebraço D' },
+        { key: 'antebracoE', label: 'Antebraço E' }, { key: 'coxaProximalD', label: 'Coxa Proximal D' },
+        { key: 'coxaProximalE', label: 'Coxa Proximal E' }, { key: 'coxaMedialD', label: 'Coxa Medial D' },
+        { key: 'coxaMedialE', label: 'Coxa Medial E' }, { key: 'panturrilhaD', label: 'Panturrilha D' },
         { key: 'panturrilhaE', label: 'Panturrilha E' },
     ];
     
@@ -487,49 +361,29 @@ export default function DashboardPage() {
         { name: 'bicondilarFemur', label: 'Biestiloidal do Fêmur (cm)' },
     ];
 
-    const functionalTestsConfig = [
-        { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
-        { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência de membros abdominais', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
-        { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima. Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
-        { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de membros inferiores', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
-    ];
-
     const EvalCard = ({ ev, index }: { ev: Evaluation; index: number }) => {
-        const [date, setDate] = useState('');
         const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
         const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
-
-        useEffect(() => {
-            if(ev.date) {
-                const localDate = new Date(ev.date.replace(/-/g, '/'));
-                setDate(localDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }));
-            }
-        }, [ev.date]);
+        const date = new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         return (
             <Card 
-                key={ev.id} 
                 className={cn(
                     "shrink-0 w-44 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                     isCompareMode 
                         ? isSelectedForCompare ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
-                        : isSelected ? 'border-2 border-primary' : 'bg-card',
-                    !isCompareMode && 'hover:bg-accent'
+                        : isSelected ? 'border-2 border-primary' : 'bg-card'
                 )}
                 onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
             >
                 <CardHeader className="p-4 relative">
-                    <CardTitle className={cn("text-sm font-normal capitalize", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>
-                        {date}
-                    </CardTitle>
+                    <CardTitle className={cn("text-sm font-normal", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{date}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                     {isCompareMode ? (
-                        <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                     ) : (
+                     {isCompareMode ? <p className={cn("text-4xl font-bold", isSelectedForCompare ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p> : (
                         <>
                             <p className="text-4xl font-bold">{ev.bodyComposition.bodyFatPercentage > 0 ? ev.bodyComposition.bodyFatPercentage.toFixed(0) : '—'}<span className="text-lg">%</span></p>
-                            <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
+                            <p className="text-xs opacity-70">Gordura</p>
                         </>
                      )}
                 </CardContent>
@@ -574,11 +428,11 @@ export default function DashboardPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-3">
                             {img && (
                                 <div className="relative aspect-video rounded-lg overflow-hidden border shadow-inner">
-                                    <Image src={img.imageUrl} alt={config.title} fill className="object-cover" />
+                                    <Image src={img.imageUrl} alt={config.title} fill className="object-cover" data-ai-hint={img.imageHint} />
                                 </div>
                             )}
                             <div className="flex gap-2 items-start">
@@ -622,7 +476,6 @@ export default function DashboardPage() {
         );
     };
 
-
   return (
     <>
     <div className="min-h-screen bg-background text-foreground">
@@ -637,147 +490,64 @@ export default function DashboardPage() {
             
             <div className="flex flex-wrap items-center gap-2 justify-end">
                 <div className="hidden lg:flex items-center gap-2">
-                    <Link href="/bioimpedance">
-                        <Button variant="outline" size="sm" className="shadow-sm">
-                            <BarChart className="mr-2 h-4 w-4" /> Bioimpedância
-                        </Button>
-                    </Link>
-                    <Link href="/postural">
-                        <Button variant="outline" size="sm" className="shadow-sm">
-                            <User className="mr-2 h-4 w-4" /> Postural
-                        </Button>
-                    </Link>
-                    <Link href="/vo2max">
-                        <Button variant="outline" size="sm" className="shadow-sm">
-                            <Wind className="mr-2 h-4 w-4" /> VO2max
-                        </Button>
-                    </Link>
+                    <Link href="/bioimpedance"><Button variant="outline" size="sm"><BarChart className="mr-2 h-4 w-4" /> Bioimpedância</Button></Link>
+                    <Link href="/postural"><Button variant="outline" size="sm"><User className="mr-2 h-4 w-4" /> Postural</Button></Link>
+                    <Link href="/vo2max"><Button variant="outline" size="sm"><Wind className="mr-2 h-4 w-4" /> VO2max</Button></Link>
                 </div>
-
                 <div className="lg:hidden">
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                <Activity className="mr-2 h-4 w-4" /> Avaliações <ChevronDown className="ml-1 h-3 w-3" />
-                            </Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild><Button variant="outline" size="sm"><Activity className="mr-2 h-4 w-4" /> Avaliações <ChevronDown className="ml-1 h-3 w-3" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <Link href="/bioimpedance">
-                                <DropdownMenuItem>
-                                    <BarChart className="mr-2 h-4 w-4" /> Bioimpedância
-                                </DropdownMenuItem>
-                            </Link>
-                            <Link href="/postural">
-                                <DropdownMenuItem>
-                                    <User className="mr-2 h-4 w-4" /> Avaliação Postural
-                                </DropdownMenuItem>
-                            </Link>
-                            <Link href="/vo2max">
-                                <DropdownMenuItem>
-                                    <Wind className="mr-2 h-4 w-4" /> Avaliação VO2max
-                                </DropdownMenuItem>
-                            </Link>
+                            <Link href="/bioimpedance"><DropdownMenuItem><BarChart className="mr-2 h-4 w-4" /> Bioimpedância</DropdownMenuItem></Link>
+                            <Link href="/postural"><DropdownMenuItem><User className="mr-2 h-4 w-4" /> Postural</DropdownMenuItem></Link>
+                            <Link href="/vo2max"><DropdownMenuItem><Wind className="mr-2 h-4 w-4" /> VO2max</DropdownMenuItem></Link>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-
-                <Button onClick={handleSave} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                    <Save className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Salvar</span>
-                </Button>
-                
-                <Button onClick={handleExportPdf} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                    <Download className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">PDF</span>
-                </Button>
+                <Button onClick={handleSave} size="sm"><Save className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Salvar</span></Button>
+                <Button onClick={handleExportPdf} size="sm"><Download className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">PDF</span></Button>
             </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className={cn("space-y-6", !hasEvaluations ? "lg:col-span-3" : "lg:col-span-2")}>
-                
                 <Card>
                     <CardHeader>
                         <div className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg sm:text-2xl">
-                                  {hasEvaluations 
-                                    ? `Avaliação ${evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}` 
-                                    : "Dados de Registro"}
-                                </CardTitle>
+                                <CardTitle className="text-lg sm:text-2xl">{hasEvaluations ? `Avaliação ${evaluation ? clientEvaluations.map(e => e.id).indexOf(evaluation.id) + 1 : clientEvaluations.length + 1}` : "Dados de Registro"}</CardTitle>
                                 <CardDescription className="text-xs sm:text-sm">{formattedDate}</CardDescription>
                             </div>
-                             <Button 
-                                onClick={handleNewEvaluation} 
-                                size="sm"
-                                className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
-                            >
-                                <Plus className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Nova Avaliação</span>
-                            </Button>
+                             <Button onClick={handleNewEvaluation} size="sm"><Plus className="sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Nova Avaliação</span></Button>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="flex items-center gap-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-                                <div className="md:col-span-2">
-                                    <Label htmlFor="name">Nome do Aluno</Label>
-                                    <div className="flex items-center gap-2">
-                                        {client && (
-                                            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                                                <AvatarImage src={client.avatarUrl} alt={client.name} />
-                                                <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                            </Avatar>
-                                        )}
-                                        <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">
-                                            {client?.name || 'Nenhum aluno selecionado'}
-                                        </div>
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground mt-1">Para trocar de aluno, utilize o menu lateral "Alunos".</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input id="email" name="email" type="email" placeholder="cliente@example.com" value={formState.email || ''} onChange={handleInputChange} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="age">Idade</Label>
-                                    <Input id="age" name="age" type="number" placeholder="Anos" value={formState.age || ''} onChange={handleInputChange} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="gender">Sexo</Label>
-                                    <Select value={formState.gender || ''} onValueChange={(value: string) => handleSelectChange('gender', value)}>
-                                        <SelectTrigger id="gender">
-                                            <SelectValue placeholder="Selecione o sexo" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Masculino">Masculino</SelectItem>
-                                            <SelectItem value="Feminino">Feminino</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label htmlFor="height">Altura (cm)</Label>
-                                    <Input id="height" name="bodyMeasurements.height" type="number" placeholder="Ex: 175" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} />
-                                </div>
-                                <div>
-                                    <Label htmlFor="weight">Peso (kg)</Label>
-                                    <Input id="weight" name="bodyMeasurements.weight" type="number" placeholder="Ex: 70.5" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-2">
+                                <Label>Nome do Aluno</Label>
+                                <div className="flex items-center gap-2">
+                                    {client && <Avatar className="h-8 w-8 sm:h-10 sm:w-10"><AvatarImage src={client.avatarUrl} /><AvatarFallback>{client.name[0]}</AvatarFallback></Avatar>}
+                                    <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">{client?.name || 'Nenhum selecionado'}</div>
                                 </div>
                             </div>
+                            <div className="md:col-span-2"><Label>Email</Label><Input name="email" value={formState.email || ''} onChange={handleInputChange} /></div>
+                            <div><Label>Idade</Label><Input name="age" type="number" value={formState.age || ''} onChange={handleInputChange} /></div>
+                            <div><Label>Sexo</Label>
+                                <Select value={formState.gender || ''} onValueChange={(v) => handleSelectChange('gender', v)}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent><SelectItem value="Masculino">Masculino</SelectItem><SelectItem value="Feminino">Feminino</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                            <div><Label>Altura (cm)</Label><Input name="bodyMeasurements.height" type="number" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} /></div>
+                            <div><Label>Peso (kg)</Label><Input name="bodyMeasurements.weight" type="number" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} /></div>
                         </div>
                         {hasEvaluations && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4">
-                              <div>
-                                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">IMC</Label>
-                                  <div className="font-bold text-lg">{bmi}</div>
-                              </div>
-                              <div>
-                                  <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação</Label>
-                                  <div className="font-bold text-lg">{bmiClassification}</div>
-                              </div>
+                              <div><Label className="text-xs opacity-70">IMC</Label><div className="font-bold text-lg">{bmi}</div></div>
+                              <div><Label className="text-xs opacity-70">Classificação</Label><div className="font-bold text-lg">{bmiClassification}</div></div>
                           </div>
                         )}
-                        <div>
-                            <Label htmlFor="observations">Observações</Label>
-                            <Textarea id="observations" name="observations" placeholder="Notas adicionais sobre o cliente..." value={formState.observations || ''} onChange={handleInputChange} />
-                        </div>
+                        <div><Label>Observações</Label><Textarea name="observations" value={formState.observations || ''} onChange={handleInputChange} /></div>
                     </CardContent>
                 </Card>
 
@@ -788,236 +558,76 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                                 <CardTitle className="text-lg">Avaliações ({clientEvaluations.length})</CardTitle>
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="compare-switch" className="text-xs sm:text-sm">Comparar</Label>
-                                    <Switch id="compare-switch" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
+                                    <Label className="text-xs sm:text-sm">Comparar</Label>
+                                    <Switch checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
                             </div>
-                            {isCompareMode && (
-                                <div className="pt-4 space-y-2">
-                                    <p className="text-xs text-muted-foreground">
-                                        Selecione até 4 datas ({selectedEvalIdsForCompare.length}/4 selecionadas)
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {comparedEvaluations.map(ev => (
-                                            <div key={`chip-${ev.id}`} className="flex items-center gap-2 bg-primary/20 text-primary-foreground rounded-full px-3 py-1 text-xs">
-                                                <span>{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span>
-                                                <button onClick={() => handleCompareSelection(ev.id)} className="text-primary-foreground/70 hover:text-primary-foreground">
-                                                    <X className="size-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
                         </CardHeader>
                         <CardContent className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                            {clientEvaluations.map((ev, index) => (
-                              <EvalCard ev={ev} index={index} key={ev.id}/>
-                            ))}
+                            {clientEvaluations.map((ev, idx) => <EvalCard ev={ev} index={idx} key={ev.id}/>)}
                         </CardContent>
                     </Card>
                     
                     {isCompareMode && client && comparedEvaluations.length > 0 && (
                         <div className="space-y-6">
-                            <ComparisonTable
-                                evaluations={comparedEvaluations}
-                                perimetriaFields={perimetriaFields}
-                                skinfoldFields={skinfoldFields}
-                                diametrosFields={diametrosFields}
-                            />
-                            <ComparisonCharts 
-                                evaluations={comparedEvaluations}
-                                client={client}
-                            />
+                            <ComparisonTable evaluations={comparedEvaluations} perimetriaFields={perimetriaFields} skinfoldFields={skinfoldFields} diametrosFields={diametrosFields} />
+                            <ComparisonCharts evaluations={comparedEvaluations} client={client} />
                         </div>
                     )}
                     
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg">Registros de Dados</CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle className="text-lg">Registros de Dados</CardTitle></CardHeader>
                         <CardContent>
-                            <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
+                            <Tabs defaultValue="perimetria" onValueChange={(v) => setActiveTab(v as any)}>
                                 <TabsList className="grid w-full grid-cols-4">
-                                    <TabsTrigger value="perimetria" className="text-xs sm:text-sm">Perimetria</TabsTrigger>
-                                    <TabsTrigger value="dobras" className="text-xs sm:text-sm">Dobras</TabsTrigger>
-                                    <TabsTrigger value="diametros" className="text-xs sm:text-sm">Diâmetros</TabsTrigger>
-                                    <TabsTrigger value="testes" className="text-xs sm:text-sm">Testes Funcionais</TabsTrigger>
+                                    <TabsTrigger value="perimetria">Perimetria</TabsTrigger>
+                                    <TabsTrigger value="dobras">Dobras</TabsTrigger>
+                                    <TabsTrigger value="diametros">Diâmetros</TabsTrigger>
+                                    <TabsTrigger value="testes">Testes</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="perimetria" className="pt-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {perimetriaFields.map(field => (
-                                            <div key={field.key}><Label className="text-xs">{field.label} (cm)</Label><Input type="number" placeholder="0.0" name={`perimetria.${field.key}`} value={formState.perimetria?.[field.key] || ''} onChange={handleInputChange} className="h-9" /></div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {perimetriaFields.map(f => (
+                                            <div key={f.key}><Label className="text-xs">{f.label}</Label><Input type="number" name={`perimetria.${f.key}`} value={formState.perimetria?.[f.key] || ''} onChange={handleInputChange} /></div>
                                         ))}
-                                    </div>
-                                    <div className="mt-6 space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">RCQ (Cintura-Quadril)</Label>
-                                                <div className="font-bold text-lg">{rcq}</div>
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco (RCQ)</Label>
-                                                <div className="font-bold text-lg">{rcqClassification}</div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">RCE (Cintura-Estatura)</Label>
-                                                <div className="font-bold text-lg">{rce}</div>
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Classificação de Risco (RCE)</Label>
-                                                <div className="font-bold text-lg">{rceClassification}</div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Assimetria de Braço</Label>
-                                                <div className="font-bold text-lg">{armAsymmetry}</div>
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Assimetria de Coxa</Label>
-                                                <div className="font-bold text-lg">{thighAsymmetry}</div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="dobras" className="pt-4 space-y-4">
-                                    <Card className="shadow-none border-dashed">
-                                        <CardHeader className="p-4">
-                                            <CardTitle className="text-sm font-medium">Protocolo</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <Label htmlFor="publico-alvo" className="text-xs">Público-Alvo</Label>
-                                                    <Select value={selectedAudience} onValueChange={handleAudienceChange}>
-                                                        <SelectTrigger id="publico-alvo" className="h-9">
-                                                            <SelectValue placeholder="Selecione" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {Object.keys(audienceProtocols).map(audience => (
-                                                                <SelectItem key={audience} value={audience}>{audience}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="protocolo" className="text-xs">Protocolo</Label>
-                                                    <Select value={formState.protocol || ''} onValueChange={(value: string) => handleSelectChange('protocol', value)}>
-                                                        <SelectTrigger id="protocolo" className="h-9">
-                                                            <SelectValue placeholder="Selecione" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {availableProtocols.map(protocol => (
-                                                                <SelectItem key={protocol} value={protocol}>{protocol}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {skinfoldFields.map(f => (
+                                            <div key={f.name}>
+                                                <Label className="text-xs">{f.label}</Label>
+                                                <Input type="number" name={`skinFolds.${f.name}`} value={formState.skinFolds?.[f.name] || ''} onChange={handleInputChange} className={cn(requiredSkinfolds.includes(f.name) && 'border-primary ring-1 ring-primary/30')} />
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                    
-                                    <div className="pt-2">
-                                        <h3 className="text-base font-medium mb-4">Medidas (mm)</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                            {skinfoldFields.map(field => (
-                                                <div key={field.name}>
-                                                    <Label className="text-xs">{field.label}</Label>
-                                                    <Input 
-                                                        type="number" 
-                                                        placeholder="0.0" 
-                                                        name={`skinFolds.${field.name}`} 
-                                                        value={formState.skinFolds?.[field.name] || ''} 
-                                                        onChange={handleInputChange} 
-                                                        className={cn("h-9", requiredSkinfolds.includes(field.name) && 'border-primary bg-primary/10 ring-2 ring-primary/50')}
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold text-sm mb-3">Resultados Estimados</h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="text-[10px] text-muted-foreground uppercase tracking-widest">Soma Dobras</Label>
-                                                <div className="font-bold text-lg">{skinfoldsSum > 0 ? `${skinfoldsSum.toFixed(1)} mm` : '—'}</div>
-                                            </div>
-                                            <div>
-                                                <Label className="text-[10px] text-muted-foreground uppercase tracking-widest">% Gordura</Label>
-                                                <div className="font-bold text-lg">{formState.bodyComposition?.bodyFatPercentage > 0 ? `${formState.bodyComposition.bodyFatPercentage.toFixed(1)}%` : '—'}</div>
-                                            </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="diametros" className="pt-4 space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                        {diametrosFields.map(field => (
-                                            <div key={field.name}>
-                                                <Label className="text-xs">{field.label}</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    placeholder="0.0" 
-                                                    name={`boneDiameters.${field.name}`} 
-                                                    value={formState.boneDiameters?.[field.name] || ''} 
-                                                    onChange={handleInputChange} 
-                                                    className="h-9"
-                                                />
-                                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {diametrosFields.map(f => (
+                                            <div key={f.name}><Label className="text-xs">{f.label}</Label><Input type="number" name={`boneDiameters.${f.name}`} value={formState.boneDiameters?.[f.name] || ''} onChange={handleInputChange} /></div>
                                         ))}
-                                    </div>
-                                    <div className="mt-6 rounded-lg bg-primary/10 p-4">
-                                        <h3 className="font-semibold text-sm mb-2">Massa Óssea (Rocha, 1975)</h3>
-                                        <div className="grid grid-cols-1 gap-4">
-                                            <div>
-                                                <div className="font-bold text-xl text-primary">{bodyComposition.boneMassKg > 0 ? bodyComposition.boneMassKg.toFixed(2) : '—'} <span className="text-sm">kg</span></div>
-                                            </div>
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
-                                            Estimativa estrutural calculada via diâmetros de punho, fêmur e úmero.
-                                        </p>
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="testes" className="pt-4 space-y-6">
-                                    <header className="flex flex-col gap-1 mb-2">
-                                        <h3 className="text-lg font-bold">Avaliação de Aptidão Física</h3>
-                                        <p className="text-xs text-muted-foreground">Registre os resultados dos testes e obtenha a classificação conforme sexo e faixa etária.</p>
-                                    </header>
-
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {functionalTestsConfig.map(config => (
-                                            <FunctionalTestCard key={config.id} config={config} />
-                                        ))}
+                                        {functionalTestsConfig.map(c => <FunctionalTestCard key={f.id} config={c} />)}
                                     </div>
-
-                                    {/* Footer Informativo sobre Classificações */}
                                     <div className="mt-8 p-6 bg-muted/20 rounded-2xl flex flex-wrap lg:flex-nowrap items-center gap-8 border border-muted/50">
                                         <div className="flex items-center gap-4 min-w-[240px] border-r border-muted/50 pr-8">
-                                            <div className="p-3 bg-primary/10 rounded-2xl text-primary">
-                                                <Info size={24} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-black uppercase tracking-widest">Sobre as classificações</h4>
-                                                <p className="text-[10px] text-muted-foreground leading-tight mt-1">As classificações são baseadas em tabelas normativas de acordo com sexo e idade.</p>
-                                            </div>
+                                            <div className="p-3 bg-primary/10 rounded-2xl text-primary"><Info size={24} /></div>
+                                            <div><h4 className="text-xs font-black uppercase">Sobre as classificações</h4><p className="text-[10px] text-muted-foreground leading-tight mt-1">Baseadas em tabelas normativas por sexo e idade.</p></div>
                                         </div>
-
                                         <div className="flex flex-1 flex-wrap gap-x-8 gap-y-4">
                                             {[
-                                                { label: 'FRACO', desc: 'Abaixo do esperado para a faixa etária.', color: 'text-orange-500', icon: AlertCircle },
-                                                { label: 'REGULAR', desc: 'Abaixo da média para a faixa etária.', color: 'text-yellow-500', icon: CheckCircle2 },
-                                                { label: 'BOM', desc: 'Na média para a faixa etária.', color: 'text-green-400', icon: CheckCircle2 },
-                                                { label: 'EXCELENTE', desc: 'Acima da média para a faixa etária.', color: 'text-green-500', icon: Trophy },
+                                                { label: 'FRACO', desc: 'Abaixo do esperado.', color: 'text-orange-500', icon: AlertCircle },
+                                                { label: 'REGULAR', desc: 'Abaixo da média.', color: 'text-yellow-500', icon: CheckCircle2 },
+                                                { label: 'BOM', desc: 'Na média.', color: 'text-green-400', icon: CheckCircle2 },
+                                                { label: 'EXCELENTE', desc: 'Acima da média.', color: 'text-green-500', icon: Trophy },
                                             ].map(item => (
                                                 <div key={item.label} className="flex gap-2.5 max-w-[200px]">
                                                     <item.icon className={cn("size-4 mt-0.5 shrink-0", item.color)} />
-                                                    <div className="space-y-0.5">
-                                                        <p className={cn("text-[10px] font-black uppercase", item.color)}>{item.label}</p>
-                                                        <p className="text-[9px] text-muted-foreground leading-snug">{item.desc}</p>
-                                                    </div>
+                                                    <div className="space-y-0.5"><p className={cn("text-[10px] font-black uppercase", item.color)}>{item.label}</p><p className="text-[9px] text-muted-foreground leading-snug">{item.desc}</p></div>
                                                 </div>
                                             ))}
                                         </div>
@@ -1036,8 +646,7 @@ export default function DashboardPage() {
                     <Card className="shadow-sm border-primary/20 bg-primary/[0.02]">
                         <CardHeader className="pb-2 p-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-[10px] font-bold text-primary uppercase tracking-widest">GORDURA</CardTitle>
-                                {isCompareMode && comparedEvaluations.length > 0 && <p className="text-[10px] text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                                <CardTitle className="text-[10px] font-bold text-primary uppercase">GORDURA</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -1048,8 +657,7 @@ export default function DashboardPage() {
                     <Card className="shadow-sm border-primary/20 bg-primary/[0.02]">
                         <CardHeader className="pb-2 p-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-[10px] font-bold text-primary uppercase tracking-widest">MUSCULAR</CardTitle>
-                                {isCompareMode && comparedEvaluations.length > 0 && <p className="text-[10px] text-muted-foreground">{new Date(comparedEvaluations[0].date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>}
+                                <CardTitle className="text-[10px] font-bold text-primary uppercase">MUSCULAR</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
@@ -1058,58 +666,19 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
                   </div>
-
                   <Card className="shadow-sm">
-                      <CardHeader className="pb-2 p-4">
-                          <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">RESIDUAL</CardTitle>
-                      </CardHeader>
+                      <CardHeader className="pb-2 p-4"><CardTitle className="text-[10px] font-bold opacity-70 uppercase">RESIDUAL</CardTitle></CardHeader>
                       <CardContent className="p-4 pt-0">
                           <p className="text-xl sm:text-2xl font-bold">{bodyComposition.residualMassKg > 0 ? `${bodyComposition.residualMassKg.toFixed(1)} kg` : '—'}</p>
                           <p className="text-[10px] text-muted-foreground">{bodyComposition.residualMassPercentage > 0 ? `${bodyComposition.residualMassPercentage.toFixed(1)}%` : '0.0%'}</p>
                       </CardContent>
                   </Card>
-
                   <Card className="shadow-md border-primary/10">
-                      <CardHeader className="pb-4 p-4">
-                          <CardTitle className="text-sm font-bold uppercase tracking-widest">Resumo Analítico</CardTitle>
-                      </CardHeader>
+                      <CardHeader className="pb-4 p-4"><CardTitle className="text-sm font-bold uppercase">Resumo Analítico</CardTitle></CardHeader>
                       <CardContent className="space-y-3 text-xs p-4 pt-0">
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Classificação % Gordura:</span>
-                              <span className="font-semibold text-primary">{fatClassification}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Classificação IMC:</span>
-                              <span className="font-semibold">{bmiClassification}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Massa gorda:</span>
-                              <span className="font-semibold">
-                                {bodyComposition.fatMassKg > 0 ? `${bodyComposition.fatMassKg.toFixed(1)} kg` : '—'} ({bodyComposition.fatMassPercentage > 0 ? `${bodyComposition.fatMassPercentage.toFixed(1)}%` : '—'})
-                              </span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Massa magra:</span>
-                              <span className="font-semibold">
-                                {bodyComposition.leanMassKg > 0 ? `${bodyComposition.leanMassKg.toFixed(1)} kg` : '—'}
-                              </span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Massa óssea:</span>
-                              <span className="font-semibold">{bodyComposition.boneMassKg > 0 ? `${bodyComposition.boneMassKg.toFixed(2)} kg` : '—'}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Massa muscular:</span>
-                              <span className="font-semibold">{bodyComposition.muscleMassKg > 0 ? `${bodyComposition.muscleMassKg.toFixed(1)} kg` : '—'}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-muted pb-1">
-                              <span className="text-muted-foreground">Peso desejável:</span>
-                              <span className="font-semibold text-primary/80">{bodyComposition.idealWeight > 0 ? `${bodyComposition.idealWeight.toFixed(1)} kg` : '—'}</span>
-                          </div>
-                          <div className="flex justify-between pt-1">
-                              <span className="text-muted-foreground">Perda de gordura necessária:</span>
-                              <span className="font-bold text-destructive">{bodyComposition.fatLossNeeded > 0 ? `${bodyComposition.fatLossNeeded.toFixed(1)} kg` : '0.0 kg'}</span>
-                          </div>
+                          <div className="flex justify-between border-b pb-1"><span className="opacity-70">Classificação % Gordura:</span><span className="font-semibold text-primary">{fatClassification}</span></div>
+                          <div className="flex justify-between border-b pb-1"><span className="opacity-70">Classificação IMC:</span><span className="font-semibold">{bmiClassification}</span></div>
+                          <div className="flex justify-between pt-1"><span className="opacity-70">Perda de gordura necessária:</span><span className="font-bold text-destructive">{bodyComposition.fatLossNeeded > 0 ? `${bodyComposition.fatLossNeeded.toFixed(1)} kg` : '0.0 kg'}</span></div>
                       </CardContent>
                   </Card>
               </div>
@@ -1117,16 +686,9 @@ export default function DashboardPage() {
         </div>
         <Toaster />
     </div>
-    <div className="fixed -left-[9999px] -top-[9999px] bg-white" >
+    <div className="fixed -left-[9999px] -top-[9999px] bg-white">
       {client && (evaluation || comparedEvaluations.length > 0) && (
-        <EvaluationReport 
-            ref={reportRef}
-            client={client}
-            evaluation={evaluation}
-            comparedEvaluations={isCompareMode ? comparedEvaluations : []}
-            perimetriaFields={perimetriaFields}
-            skinfoldFields={skinfoldFields}
-        />
+        <EvaluationReport ref={reportRef} client={client} evaluation={evaluation} comparedEvaluations={isCompareMode ? comparedEvaluations : []} perimetriaFields={perimetriaFields} skinfoldFields={skinfoldFields} />
       )}
     </div>
     </>
