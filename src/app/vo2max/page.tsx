@@ -580,20 +580,23 @@ export default function VO2MaxPage() {
                             </div>
                         </div>
 
-                        <div className="pt-4 space-y-6 border-t border-dashed">
+                        {/* Entrada de Dados e Desempenho (Imagem Referência) */}
+                        <div className="pt-8 space-y-6 border-t border-dashed">
                              <div className="flex items-center gap-2">
                                 <Scale className="size-4 text-primary" />
-                                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Entrada de Dados do Teste</span>
+                                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Protocolo de Teste</span>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <Label className="text-xs font-bold">
-                                        {protocol === 'cooper' ? "Distância Total Percorrida (metros)" : 
-                                         protocol === 'cycling_power' ? "Potência Aeróbica Máxima (Watts)" : 
-                                         protocol === 'conconi' ? "Velocidade/Carga Inicial" : "Tempo de Execução"}
+                            
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                {/* Input Column */}
+                                <div className="lg:col-span-4 space-y-4">
+                                    <Label className="text-xs font-bold text-foreground/80">
+                                        {protocol === 'cooper' ? "Distância Total (metros)" : 
+                                         protocol === 'cycling_power' ? "Potência Máxima (Watts)" : 
+                                         protocol === 'conconi' ? "Velocidade Inicial" : "Tempo de Execução"}
                                     </Label>
                                     <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary group-focus-within:scale-110 transition-transform">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#01baba] group-focus-within:scale-110 transition-transform">
                                             {protocol === 'cycling_power' ? <Bike className="size-6" /> : <Activity className="size-6" />}
                                         </div>
                                         <Input 
@@ -601,11 +604,73 @@ export default function VO2MaxPage() {
                                             placeholder="0" 
                                             value={protocol === 'cycling_power' ? powerWatts : distance}
                                             onChange={(e) => protocol === 'cycling_power' ? setPowerWatts(e.target.value) : setDistance(e.target.value)}
-                                            className="h-16 pl-14 pr-10 text-3xl font-black bg-muted/5 border-muted focus:border-primary shadow-sm" 
+                                            className="h-16 pl-14 pr-10 text-4xl font-black bg-white dark:bg-muted/5 border-muted rounded-2xl focus:border-primary shadow-sm" 
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground/50">
-                                            {protocol === 'cycling_power' ? 'W' : 'm'}
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground/30 text-xl uppercase">
+                                            {protocol === 'cycling_power' ? 'W' : (protocol === 'conconi' ? 'km/h' : 'm')}
                                         </span>
+                                    </div>
+                                </div>
+
+                                {/* Performance Scale Column */}
+                                <div className="lg:col-span-5 space-y-4">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Desempenho</span>
+                                        {testResults?.classification && (
+                                            <Badge variant="outline" className="bg-[#e6f8f8] text-[#01baba] border-[#01baba]/30 font-bold px-4 rounded-full">
+                                                {testResults.classification}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="relative pt-2">
+                                        {/* Gradient Bar */}
+                                        <div className="h-2 w-full rounded-full bg-muted/20 overflow-hidden flex">
+                                            <div className="h-full w-1/5 bg-red-500" />
+                                            <div className="h-full w-1/5 bg-orange-500" />
+                                            <div className="h-full w-1/5 bg-yellow-500" />
+                                            <div className="h-full w-1/5 bg-lime-500" />
+                                            <div className="h-full w-1/5 bg-green-500" />
+                                        </div>
+                                        
+                                        {/* Dynamic Indicator (Triangle) */}
+                                        <div 
+                                            className="absolute top-0 -mt-1 transition-all duration-500 ease-out"
+                                            style={{ 
+                                                left: `${
+                                                    testResults?.classification === 'Muito Fraco' ? '10%' :
+                                                    testResults?.classification === 'Fraco' ? '30%' :
+                                                    testResults?.classification === 'Médio' ? '50%' :
+                                                    testResults?.classification === 'Bom' ? '70%' :
+                                                    testResults?.classification === 'Excelente' ? '90%' :
+                                                    testResults?.classification === 'Elite' ? '95%' : '0%'
+                                                }` 
+                                            }}
+                                        >
+                                            <div className="size-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[#01baba] mx-auto" />
+                                        </div>
+
+                                        <div className="flex justify-between mt-3 px-1">
+                                            {['Muito Abaixo', 'Abaixo', 'Média', 'Acima', 'Excelente'].map(label => (
+                                                <span key={label} className="text-[8px] font-black uppercase text-muted-foreground/60">{label}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Trophy/Classification Column */}
+                                <div className="lg:col-span-3">
+                                    <div className="bg-white dark:bg-card border border-muted/50 rounded-2xl p-4 text-center flex flex-col items-center justify-center min-h-[140px] shadow-sm">
+                                        <div className="p-3 bg-[#e6f8f8] dark:bg-primary/10 rounded-2xl text-[#01baba] mb-2">
+                                            <Trophy className="size-8" />
+                                        </div>
+                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Classificação</p>
+                                        <p className="text-xl font-black text-[#01baba] uppercase tracking-tighter">{testResults?.classification || 'N/A'}</p>
+                                        <p className="text-[9px] text-muted-foreground mt-1 max-w-[120px] leading-tight">
+                                            {testResults?.classification === 'Excelente' || testResults?.classification === 'Elite' ? 'Seu desempenho está muito acima da média para sua idade.' : 
+                                             testResults?.classification === 'Bom' ? 'Seu desempenho está acima da média.' :
+                                             'Continue treinando para melhorar sua performance.'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
