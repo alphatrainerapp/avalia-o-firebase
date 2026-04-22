@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -24,7 +25,10 @@ import {
   Bike,
   Zap,
   Lock,
-  Unlock
+  Unlock,
+  HeartPulse,
+  Scale,
+  Gauge
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -56,6 +60,7 @@ import html2canvas from 'html2canvas';
 import VO2Report from '@/components/VO2Report';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 export default function VO2MaxPage() {
     const { clients, selectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
@@ -412,19 +417,6 @@ export default function VO2MaxPage() {
                                 </Button>
                             </div>
                         </div>
-                        {isCompareMode && (
-                            <div className="flex flex-wrap gap-2 mt-4">
-                                {comparedEvaluations.map(ev => (
-                                    <div key={ev.id} className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                                        {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
-                                        <X className="size-3 cursor-pointer hover:opacity-70" onClick={() => handleCompareSelection(ev.id)} />
-                                    </div>
-                                ))}
-                                {selectedEvalIdsForCompare.length === 0 && (
-                                    <p className="text-xs text-muted-foreground italic">Selecione até 4 avaliações nos cards abaixo...</p>
-                                )}
-                            </div>
-                        )}
                     </CardHeader>
                     <CardContent className="flex gap-4 overflow-x-auto pb-6 px-6 scrollbar-hide">
                         {clientEvaluations.map((ev, idx) => <EvalCard key={ev.id} ev={ev} index={idx} />)}
@@ -491,421 +483,518 @@ export default function VO2MaxPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 space-y-6">
-                            <Card className="shadow-lg border-primary/10">
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle>Cálculo de Frequência Cardíaca</CardTitle>
-                                            <CardDescription>FC Máxima e Reserva baseadas no protocolo de Tanaka (2001).</CardDescription>
+                    <div className="space-y-6">
+                        {/* NOVO CARD: CÁLCULO DE FREQUÊNCIA CARDÍACA - Estilo Referência */}
+                        <Card className="shadow-lg border-primary/20 bg-card overflow-hidden">
+                            <CardHeader className="pb-4 border-b border-muted/50">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-primary/10 rounded-lg border border-primary/20 text-primary">
+                                            <HeartPulse className="size-6" />
                                         </div>
-                                        <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-full border border-primary/10">
-                                            <Label htmlFor="manual-fcmax" className="text-[10px] font-black uppercase cursor-pointer text-primary">Manual</Label>
-                                            <Switch 
-                                                id="manual-fcmax" 
-                                                checked={isManualHRMax} 
-                                                onCheckedChange={setIsManualHRMax}
-                                                className="scale-75"
-                                            />
+                                        <div>
+                                            <CardTitle className="text-xl font-bold">Cálculo de Frequência Cardíaca</CardTitle>
+                                            <CardDescription className="text-xs">FC Máxima e Reserva baseadas no protocolo de Tanaka (2001).</CardDescription>
                                         </div>
                                     </div>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="space-y-4">
-                                            <div className="space-y-1 relative">
-                                                <Label className="text-[10px] uppercase font-bold text-muted-foreground flex items-center justify-between">
-                                                    FC Máxima (bpm)
-                                                    {!isManualHRMax ? <Lock className="size-2.5" /> : <Unlock className="size-2.5 text-primary" />}
-                                                </Label>
+                                    <div className="flex items-center gap-3 bg-muted/20 px-4 py-2 rounded-full border border-muted">
+                                        <span className="text-[10px] font-black uppercase text-primary tracking-widest">Manual</span>
+                                        <Switch 
+                                            checked={isManualHRMax} 
+                                            onCheckedChange={setIsManualHRMax}
+                                            className="data-[state=checked]:bg-primary"
+                                        />
+                                    </div>
+                                </div>
+                            </CardHeader>
+
+                            <CardContent className="pt-6 space-y-8">
+                                {/* Método de Avaliação Full Width */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Timer className="size-4 text-primary" />
+                                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Método de Avaliação</span>
+                                    </div>
+                                    <div className="flex flex-col md:flex-row items-center gap-4">
+                                        <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
+                                            <SelectTrigger className="h-12 text-lg font-bold bg-muted/10 border-muted">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
+                                                <SelectItem value="three_km">Teste de 3km</SelectItem>
+                                                <SelectItem value="five_km">Teste de 5km</SelectItem>
+                                                <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
+                                                <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
+                                                <SelectItem value="cycling_power">Teste de Potência (Bike - Watts)</SelectItem>
+                                                <SelectItem value="step_test">Step Test (Banco)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <div className="flex items-center gap-3 text-muted-foreground bg-muted/5 p-3 rounded-xl border border-dashed border-muted/50 flex-1">
+                                            <Info className="size-5 shrink-0" />
+                                            <p className="text-xs leading-tight">Selecione o método de avaliação para calcular os resultados de performance.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Grade de FC e Hemodinâmica */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {/* FC Máxima */}
+                                    <div className="p-5 rounded-2xl bg-muted/5 border border-muted/30 relative">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Activity className="size-3 text-primary" />
+                                                    <span className="text-[10px] font-black uppercase text-muted-foreground">FC Máxima (BPM)</span>
+                                                </div>
+                                                <div className="text-5xl font-black tabular-nums">
+                                                    {isManualHRMax ? (
+                                                        <Input 
+                                                            type="number" 
+                                                            className="h-12 w-32 border-none p-0 text-5xl font-black bg-transparent focus-visible:ring-0"
+                                                            value={hrMax} 
+                                                            onChange={(e) => setHrMax(e.target.value)} 
+                                                            autoFocus
+                                                        />
+                                                    ) : calculatedFCMax}
+                                                </div>
+                                            </div>
+                                            <div className="p-2.5 bg-background border border-muted/50 rounded-lg text-primary shadow-sm">
+                                                <HeartPulse className="size-6" />
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground italic flex items-center gap-1.5">
+                                            <Info className="size-3" />
+                                            {!isManualHRMax ? "Calculada: 208 - (0,7 × idade)" : "Valor definido manualmente"}
+                                        </p>
+                                    </div>
+
+                                    {/* FC Repouso */}
+                                    <div className="p-5 rounded-2xl bg-muted/5 border border-muted/30 relative">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Heart className="size-3 text-cyan-500" />
+                                                    <span className="text-[10px] font-black uppercase text-muted-foreground">FC Repouso (BPM)</span>
+                                                </div>
                                                 <Input 
                                                     type="number" 
-                                                    className={cn("h-11 font-black text-xl transition-all", !isManualHRMax ? "bg-muted/50 border-transparent text-muted-foreground opacity-70" : "border-primary shadow-sm")}
-                                                    value={isManualHRMax ? hrMax : calculatedFCMax} 
-                                                    onChange={(e) => setHrMax(e.target.value)} 
-                                                    disabled={!isManualHRMax}
+                                                    className="h-12 w-32 border-none p-0 text-5xl font-black bg-transparent focus-visible:ring-0"
+                                                    value={hrRest} 
+                                                    onChange={(e) => setHrRest(e.target.value)} 
                                                 />
-                                                {!isManualHRMax && <p className="text-[9px] text-muted-foreground mt-1 italic">Calculada: 208 - (0.7 × idade)</p>}
+                                            </div>
+                                            <div className="p-2.5 bg-background border border-muted/50 rounded-lg text-cyan-500 shadow-sm">
+                                                <Heart className="size-6" />
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground italic">Mínimo batimento cardíaco basal.</p>
+                                    </div>
+
+                                    {/* Hemodinâmica */}
+                                    <div className="p-5 rounded-2xl bg-muted/5 border border-muted/30 space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <Zap className="size-3 text-primary" />
+                                            <span className="text-[10px] font-black uppercase text-primary tracking-widest">Hemodinâmica</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAS (SIST)</Label>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-10 font-black text-xl bg-background" />
+                                                    <span className="text-[9px] font-bold text-muted-foreground">mmHg</span>
+                                                </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase font-bold text-muted-foreground">FC Repouso (bpm)</Label>
-                                                <Input type="number" className="h-11 font-black text-xl" value={hrRest} onChange={(e) => setHrRest(e.target.value)} />
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex flex-col justify-center text-center space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-primary">FC de Reserva</p>
-                                            <div className="text-4xl font-black text-primary">{hrReserve} <span className="text-xs">bpm</span></div>
-                                            <div className="p-2 bg-white/50 rounded-lg text-[10px] font-medium leading-relaxed italic border border-primary/10">
-                                                "Representa a capacidade de adaptação cardiovascular"
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-dashed relative">
-                                            <Label className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
-                                                <Heart className="size-3" /> Hemodinâmica
-                                            </Label>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAS (Sist)</Label>
-                                                    <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-9 font-bold bg-background text-sm" placeholder="120" />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAD (Diast)</Label>
-                                                    <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-9 font-bold bg-background text-sm" placeholder="80" />
+                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAD (DIAST)</Label>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-10 font-black text-xl bg-background" />
+                                                    <span className="text-[9px] font-bold text-muted-foreground">mmHg</span>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-between items-center bg-background p-2 rounded border border-primary/20 shadow-inner">
-                                                <p className="text-[10px] uppercase font-black text-muted-foreground">Classificação:</p>
-                                                <p className={cn("text-[10px] font-black uppercase", 
-                                                    bpClass.includes('Normal') ? 'text-green-500' : 
-                                                    bpClass.includes('Pré') ? 'text-yellow-500' : 'text-destructive'
-                                                )}>{bpClass}</p>
+                                        </div>
+                                        <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-muted/30">
+                                            <span className="text-[9px] font-black uppercase text-muted-foreground">Classificação:</span>
+                                            <Badge className={cn("text-[9px] font-black uppercase px-2 h-5", 
+                                                bpClass.includes('Normal') ? 'bg-green-500/20 text-green-500 border-green-500/50' : 
+                                                bpClass.includes('Pré') ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' : 'bg-red-500/20 text-red-500 border-red-500/50'
+                                            )} variant="outline">
+                                                {bpClass}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* FC de Reserva - Horizontal Bar Estilo Referência */}
+                                <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col md:flex-row items-center gap-6 shadow-inner relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 h-full w-1 bg-primary"></div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-background rounded-full border border-primary/30 text-primary shadow-sm">
+                                            <Target className="size-8" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase text-primary tracking-widest">FC de Reserva</span>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-5xl font-black text-primary">{hrReserve}</span>
+                                                <span className="text-xs font-bold text-primary opacity-70">bpm</span>
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="flex-1 text-center md:text-left md:border-l md:border-primary/20 md:pl-6">
+                                        <p className="text-sm font-medium leading-relaxed italic opacity-80 max-w-xs">
+                                            "Representa a capacidade de adaptação cardiovascular do indivíduo."
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-background/50 p-3 rounded-xl border border-primary/20">
+                                        <div className="text-right">
+                                            <p className="text-[9px] font-black uppercase text-muted-foreground">Capacidade</p>
+                                            <p className="text-sm font-black text-primary uppercase">Boa</p>
+                                        </div>
+                                        <div className="bg-primary/20 p-2 rounded-full text-primary">
+                                            <Check className="size-5" />
+                                        </div>
+                                    </div>
+                                </div>
 
-                                    <div className="pt-6 border-t space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-xs uppercase font-bold text-muted-foreground">Protocolo de Teste</Label>
-                                            <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
-                                                <SelectTrigger className="h-9 w-64"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="cooper">Teste de Cooper (12 min)</SelectItem>
-                                                    <SelectItem value="three_km">Teste de 3km</SelectItem>
-                                                    <SelectItem value="five_km">Teste de 5km</SelectItem>
-                                                    <SelectItem value="balke">Teste de Balke (Tempo)</SelectItem>
-                                                    <SelectItem value="conconi">Teste de Conconi (Progressivo)</SelectItem>
-                                                    <SelectItem value="cycling_power">Teste de Potência (Bike - Watts)</SelectItem>
-                                                    <SelectItem value="step_test">Step Test (Banco)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                {/* Protocolo de Teste Section */}
+                                <div className="pt-4 space-y-6">
+                                    <div className="flex items-center gap-2">
+                                        <Scale className="size-4 text-primary" />
+                                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Protocolo de Teste</span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                        {/* Input do Protocolo */}
+                                        <div className="space-y-4">
+                                            <Label className="text-xs font-bold">
+                                                {protocol === 'cooper' ? "Distância Total Percorrida (metros)" : 
+                                                 protocol === 'cycling_power' ? "Potência Aeróbica Máxima (Watts)" : "Tempo de Execução"}
+                                            </Label>
+                                            <div className="relative group">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary group-focus-within:scale-110 transition-transform">
+                                                    {protocol === 'cycling_power' ? <Bike className="size-6" /> : <Activity className="size-6" />}
+                                                </div>
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="0" 
+                                                    value={protocol === 'cycling_power' ? powerWatts : distance}
+                                                    onChange={(e) => protocol === 'cycling_power' ? setPowerWatts(e.target.value) : setDistance(e.target.value)}
+                                                    className="h-16 pl-14 pr-10 text-3xl font-black bg-muted/5 border-muted focus:border-primary shadow-sm" 
+                                                />
+                                                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground/50">
+                                                    {protocol === 'cycling_power' ? 'W' : 'm'}
+                                                </span>
+                                            </div>
                                         </div>
 
-                                        {protocol === 'cooper' && (
-                                            <div className="space-y-2 max-w-xs">
-                                                <Label className="font-bold">Distância Total Percorrida (metros)</Label>
-                                                <div className="relative">
-                                                    <Input type="number" placeholder="Ex: 2800" value={distance} onChange={(e) => setDistance(e.target.value)} className="h-12 text-xl font-black pr-12" />
-                                                    <span className="absolute right-4 top-3 text-muted-foreground font-black">m</span>
+                                        {/* Régua de Desempenho */}
+                                        <div className="md:col-span-1 space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Desempenho</span>
+                                                <Badge className="bg-primary/20 text-primary border-primary/50 text-[10px] font-black h-5">
+                                                    {testResults?.classification || '—'}
+                                                </Badge>
+                                            </div>
+                                            <div className="pt-4 space-y-4">
+                                                <div className="h-2 w-full bg-muted/30 rounded-full overflow-hidden relative border border-muted">
+                                                    <div 
+                                                        className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-700" 
+                                                        style={{ width: testResults?.vo2 ? `${Math.min(100, (testResults.vo2 / 60) * 100)}%` : '0%' }}
+                                                    ></div>
+                                                </div>
+                                                <div className="flex justify-between text-[8px] font-black uppercase text-muted-foreground px-0.5">
+                                                    <span>Muito abaixo</span>
+                                                    <span>Abaixo</span>
+                                                    <span>Média</span>
+                                                    <span>Acima</span>
+                                                    <span className="text-primary">Excelente</span>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {protocol === 'cycling_power' && (
-                                            <div className="space-y-2 max-w-xs">
-                                                <Label className="font-bold">Potência Aeróbica Máxima (Watts)</Label>
-                                                <div className="relative">
-                                                    <Input type="number" placeholder="Ex: 250" value={powerWatts} onChange={(e) => setPowerWatts(e.target.value)} className="h-12 text-xl font-black pr-12" />
-                                                    <span className="absolute right-4 top-3 text-muted-foreground font-black">W</span>
-                                                </div>
+                                        {/* Badge Final de Classificação */}
+                                        <div className="p-5 rounded-2xl bg-muted/10 border border-muted/30 flex flex-col justify-center items-center text-center gap-3">
+                                            <div className="p-3 bg-primary/10 rounded-xl border border-primary/20 text-primary">
+                                                <Trophy className="size-8" />
                                             </div>
-                                        )}
+                                            <div>
+                                                <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Classificação</p>
+                                                <p className="text-xl font-black text-primary uppercase">{testResults?.classification || '—'}</p>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[200px]">
+                                                {testResults?.classification === 'Excelente' ? 
+                                                    "Seu desempenho está significativamente acima da média para sua faixa etária." :
+                                                    "Os resultados indicam seu nível de condicionamento cardiorrespiratório atual."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
 
-                                        {(protocol === 'three_km' || protocol === 'five_km' || protocol === 'balke') && (
-                                            <div className="space-y-4">
-                                                <Label className="font-bold">Tempo Total de Execução</Label>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="space-y-1 w-24">
-                                                        <Input type="number" placeholder="Min" value={timeMinutes} onChange={(e) => setTimeMinutes(e.target.value)} className="h-12 text-center text-xl font-black" />
-                                                        <p className="text-[10px] text-center text-muted-foreground uppercase font-bold">Minutos</p>
+                            {/* Footer informativo estilo referência */}
+                            <CardFooter className="bg-muted/5 py-3 border-t border-muted/30 flex flex-wrap items-center gap-6 px-6">
+                                <div className="flex items-center gap-2 text-muted-foreground/60">
+                                    <Info className="size-3.5" />
+                                    <p className="text-[9px] font-medium tracking-wide">
+                                        Fórmula de Tanaka (2001): FCmáx = 208 - (0,7 × idade)
+                                    </p>
+                                </div>
+                                <div className="h-4 w-px bg-muted/30"></div>
+                                <p className="text-[9px] font-medium text-muted-foreground/60">
+                                    Resultados para uso educacional e de avaliação física esportiva.
+                                </p>
+                            </CardFooter>
+                        </Card>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-2 space-y-6">
+                                {/* Gráfico de Conconi - Análise Visual */}
+                                {protocol === 'conconi' && conconiStages.length > 1 && (
+                                    <Card className="shadow-lg border-primary/10 overflow-hidden">
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-lg font-bold">Análise Visual</CardTitle>
+                                            <p className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                                                <Activity className="size-3" /> Curva de Frequência Cardíaca
+                                            </p>
+                                        </CardHeader>
+                                        <CardContent className="pt-4">
+                                            <div className="h-[300px] w-full bg-slate-900/5 rounded-2xl p-4 border shadow-inner">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={conconiStages} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                                        <XAxis 
+                                                            dataKey="velocity" 
+                                                            type="number" 
+                                                            domain={['dataMin', 'dataMax']} 
+                                                            label={{ value: 'Velocidade (km/h)', position: 'bottom', offset: 0, fontSize: 10, fontWeight: 'bold' }}
+                                                            tick={{ fontSize: 10 }}
+                                                        />
+                                                        <YAxis 
+                                                            label={{ value: 'FC (bpm)', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fontWeight: 'bold' }}
+                                                            tick={{ fontSize: 10 }}
+                                                        />
+                                                        <Tooltip 
+                                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                            formatter={(value: any) => [`${value} bpm`, 'FC']}
+                                                            labelFormatter={(label) => `${label} km/h`}
+                                                        />
+                                                        <Line 
+                                                            type="monotone" 
+                                                            dataKey="hr" 
+                                                            stroke="#01baba" 
+                                                            strokeWidth={4} 
+                                                            dot={{ r: 6, fill: '#fff', stroke: '#01baba', strokeWidth: 3 }} 
+                                                            activeDot={{ r: 10 }} 
+                                                        />
+                                                    </LineChart>
+                                                </ResponsiveContainer>
+                                            </div>
+
+                                            {testResults?.conconiThreshold && (
+                                                <div className="mt-6 p-5 bg-slate-900 text-white rounded-2xl flex items-center gap-5 shadow-xl border-l-8 border-primary">
+                                                    <div className="h-12 w-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg">
+                                                        <TrendingUp size={24} />
                                                     </div>
-                                                    <span className="mb-4 font-black text-2xl">:</span>
-                                                    <div className="space-y-1 w-24">
-                                                        <Input type="number" placeholder="Seg" value={timeSeconds} onChange={(e) => setTimeSeconds(e.target.value)} className="h-12 text-center text-xl font-black" />
-                                                        <p className="text-[10px] text-center text-muted-foreground uppercase font-bold">Segundos</p>
+                                                    <div>
+                                                        <p className="text-[10px] uppercase font-black text-primary tracking-widest mb-1">Limiar Anaeróbico Identificado</p>
+                                                        <div className="text-2xl font-black flex items-baseline gap-2">
+                                                            {testResults.conconiThreshold.velocity} <span className="text-xs opacity-60">km/h</span> 
+                                                            <span className="text-primary font-bold text-sm">({velocityToPace(testResults.conconiThreshold.velocity)})</span> 
+                                                            <span className="text-white/40 font-normal">@</span> 
+                                                            {testResults.conconiThreshold.hr} <span className="text-xs opacity-60">bpm</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                )}
 
-                                        {protocol === 'step_test' && (
-                                            <div className="space-y-2 max-w-xs">
-                                                <Label className="font-bold">FC de Recuperação (após 1 min)</Label>
-                                                <Input type="number" placeholder="bpm" value={recoveryHR} onChange={(e) => setRecoveryHR(e.target.value)} className="h-12 text-xl font-black" />
-                                            </div>
-                                        )}
-
-                                        {protocol === 'conconi' && (
-                                            <div className="space-y-4">
-                                                <div className="flex items-center justify-between">
-                                                    <Label className="font-bold">Estágios do Teste (Velocidade x FC)</Label>
-                                                    <Button size="sm" variant="outline" onClick={handleAddStage} className="h-8"><Plus className="mr-2 h-4" /> Adicionar Estágio</Button>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                                    {conconiStages.map((stage, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2 p-2 border rounded-xl bg-muted/20 relative group transition-colors hover:bg-muted/40">
-                                                            <div className="w-full space-y-1">
-                                                                <p className="text-[10px] font-black text-primary uppercase">Estágio {idx + 1}</p>
-                                                                <div className="flex gap-2">
-                                                                    <div className="flex-1">
-                                                                        <Input type="number" value={stage.velocity} onChange={(e) => handleUpdateStage(idx, 'velocity', e.target.value)} step="0.5" className="h-9 font-bold text-sm" />
-                                                                        <p className="text-[8px] text-center text-muted-foreground font-bold">km/h</p>
+                                <Card className="shadow-lg border-primary/5">
+                                    <CardHeader>
+                                        <CardTitle>Zonas de Treinamento (Metodologia Karvonen)</CardTitle>
+                                        <CardDescription>Cálculo: (FC Reserva × intensidade) + FC Repouso</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="hover:bg-transparent bg-muted/30">
+                                                    <TableHead className="text-[10px] h-10 font-black">ZONA</TableHead>
+                                                    <TableHead className="text-[10px] h-10 font-black">INTENSIDADE</TableHead>
+                                                    <TableHead className="text-[10px] h-10 font-black">INTERVALO (BPM)</TableHead>
+                                                    <TableHead className="text-[10px] h-10 font-black">OBJETIVO FISIOLÓGICO</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {testResults?.zones.map((zone, idx) => (
+                                                    <TableRow key={zone.zone} className="hover:bg-muted/10 h-14 border-b last:border-0">
+                                                        <TableCell className="py-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: zone.color }} />
+                                                                <span className="text-xs font-black">{zone.zone}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="py-2">
+                                                            <span className="text-[10px] font-bold bg-muted px-2 py-1 rounded">
+                                                                {(zoneConfigs[idx]?.hrPerc[0] * 100).toFixed(0)}-{(zoneConfigs[idx]?.hrPerc[1] * 100).toFixed(0)}%
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm font-black py-2 text-primary">
+                                                            {zone.minHR} - {zone.maxHR} <span className="text-[9px] opacity-70">bpm</span>
+                                                        </TableCell>
+                                                        <TableCell className="py-2">
+                                                            <div className="flex flex-col">
+                                                                <p className="text-xs font-bold leading-none">{zone.description}</p>
+                                                                <p className="text-[9px] text-muted-foreground font-medium mt-1">
+                                                                    {idx === 0 && "Recuperação ativa e remoção de metabólitos."}
+                                                                    {idx === 1 && "Melhora da oxidação de gorduras e capilarização."}
+                                                                    {idx === 2 && "Aumento da resistência muscular e economia de corrida."}
+                                                                    {idx === 3 && "Melhora da tolerância ao lactato."}
+                                                                    {idx === 4 && "Melhora do consumo máximo de oxigênio (VO2max)."}
+                                                                </p>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                    <CardFooter className="pt-4 border-t flex justify-between items-center">
+                                         <p className="text-[10px] text-muted-foreground italic font-medium">
+                                            Karvonen (FC Reserva) + Metodologia Alpha Trainer
+                                         </p>
+                                         <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-8 text-primary hover:text-primary hover:bg-primary/5">
+                                                    <Settings2 className="mr-2 h-3.5 w-3.5" /> Ajustar Percentuais
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
+                                                    <DialogDescription>Personalize as zonas conforme sua metodologia de treinamento.</DialogDescription>
+                                                </DialogHeader>
+                                                <ScrollArea className="h-[50vh] pr-4">
+                                                    <div className="space-y-6">
+                                                        {zoneConfigs.map((zone, idx) => (
+                                                            <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
+                                                                    onClick={() => handleRemoveZone(idx)}
+                                                                    title="Excluir Zona"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Zona</Label>
+                                                                        <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
                                                                     </div>
-                                                                    <div className="flex-1">
-                                                                        <Input type="number" value={stage.hr} onChange={(e) => handleUpdateStage(idx, 'hr', e.target.value)} className="h-9 font-bold text-sm" />
-                                                                        <p className="text-[8px] text-center text-muted-foreground font-bold">bpm</p>
+                                                                    <div className="md:col-span-2 space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Descrição</Label>
+                                                                        <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
+                                                                            <span>-</span>
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <Label className="text-[10px] font-bold uppercase">Cor</Label>
+                                                                        <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleRemoveStage(idx)}>
-                                                                <Trash2 className="h-3" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Gráfico de Conconi - Análise Visual */}
-                            {protocol === 'conconi' && conconiStages.length > 1 && (
-                                <Card className="shadow-lg border-primary/10 overflow-hidden">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-lg font-bold">Análise Visual</CardTitle>
-                                        <p className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
-                                            <Activity className="size-3" /> Curva de Frequência Cardíaca
-                                        </p>
-                                    </CardHeader>
-                                    <CardContent className="pt-4">
-                                        <div className="h-[300px] w-full bg-slate-900/5 rounded-2xl p-4 border shadow-inner">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={conconiStages} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                                                    <XAxis 
-                                                        dataKey="velocity" 
-                                                        type="number" 
-                                                        domain={['dataMin', 'dataMax']} 
-                                                        label={{ value: 'Velocidade (km/h)', position: 'bottom', offset: 0, fontSize: 10, fontWeight: 'bold' }}
-                                                        tick={{ fontSize: 10 }}
-                                                    />
-                                                    <YAxis 
-                                                        label={{ value: 'FC (bpm)', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fontWeight: 'bold' }}
-                                                        tick={{ fontSize: 10 }}
-                                                    />
-                                                    <Tooltip 
-                                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                                        formatter={(value: any) => [`${value} bpm`, 'FC']}
-                                                        labelFormatter={(label) => `${label} km/h`}
-                                                    />
-                                                    <Line 
-                                                        type="monotone" 
-                                                        dataKey="hr" 
-                                                        stroke="#01baba" 
-                                                        strokeWidth={4} 
-                                                        dot={{ r: 6, fill: '#fff', stroke: '#01baba', strokeWidth: 3 }} 
-                                                        activeDot={{ r: 10 }} 
-                                                    />
-                                                </LineChart>
-                                            </ResponsiveContainer>
-                                        </div>
-
-                                        {testResults?.conconiThreshold && (
-                                            <div className="mt-6 p-5 bg-slate-900 text-white rounded-2xl flex items-center gap-5 shadow-xl border-l-8 border-primary">
-                                                <div className="h-12 w-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg">
-                                                    <TrendingUp size={24} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] uppercase font-black text-primary tracking-widest mb-1">Limiar Anaeróbico Identificado</p>
-                                                    <div className="text-2xl font-black flex items-baseline gap-2">
-                                                        {testResults.conconiThreshold.velocity} <span className="text-xs opacity-60">km/h</span> 
-                                                        <span className="text-primary font-bold text-sm">({velocityToPace(testResults.conconiThreshold.velocity)})</span> 
-                                                        <span className="text-white/40 font-normal">@</span> 
-                                                        {testResults.conconiThreshold.hr} <span className="text-xs opacity-60">bpm</span>
+                                                        ))}
                                                     </div>
-                                                </div>
-                                            </div>
-                                        )}
+                                                </ScrollArea>
+                                                <DialogFooter className="pt-4 border-t">
+                                                    <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Nova Zona</Button>
+                                                    <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar</Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                         </Dialog>
+                                    </CardFooter>
+                                </Card>
+                            </div>
+
+                            <div className="space-y-6">
+                                <Card className="bg-primary text-primary-foreground shadow-2xl overflow-hidden relative border-none">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <Activity size={120} />
+                                    </div>
+                                    <CardHeader className="pb-2 relative z-10">
+                                        <CardTitle className="text-[10px] uppercase font-black tracking-widest opacity-80">VO2 Máximo Estimado</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="relative z-10">
+                                        <div className="text-6xl font-black">{testResults?.vo2 || '0.0'}</div>
+                                        <p className="text-xs font-bold mt-1">ml/kg/min</p>
+                                        <div className="mt-6 px-4 py-1.5 bg-white/20 rounded-full inline-flex items-center gap-2 text-xs font-black uppercase shadow-inner">
+                                            <Target size={14} /> Classificação: {testResults?.classification}
+                                        </div>
                                     </CardContent>
                                 </Card>
-                            )}
 
-                            <Card className="shadow-lg border-primary/5">
-                                <CardHeader>
-                                    <CardTitle>Zonas de Treinamento (Metodologia Karvonen)</CardTitle>
-                                    <CardDescription>Cálculo: (FC Reserva × intensidade) + FC Repouso</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="hover:bg-transparent bg-muted/30">
-                                                <TableHead className="text-[10px] h-10 font-black">ZONA</TableHead>
-                                                <TableHead className="text-[10px] h-10 font-black">INTENSIDADE</TableHead>
-                                                <TableHead className="text-[10px] h-10 font-black">INTERVALO (BPM)</TableHead>
-                                                <TableHead className="text-[10px] h-10 font-black">OBJETIVO FISIOLÓGICO</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {testResults?.zones.map((zone, idx) => (
-                                                <TableRow key={zone.zone} className="hover:bg-muted/10 h-14 border-b last:border-0">
-                                                    <TableCell className="py-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: zone.color }} />
-                                                            <span className="text-xs font-black">{zone.zone}</span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="py-2">
-                                                        <span className="text-[10px] font-bold bg-muted px-2 py-1 rounded">
-                                                            {(zoneConfigs[idx]?.hrPerc[0] * 100).toFixed(0)}-{(zoneConfigs[idx]?.hrPerc[1] * 100).toFixed(0)}%
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell className="text-sm font-black py-2 text-primary">
-                                                        {zone.minHR} - {zone.maxHR} <span className="text-[9px] opacity-70">bpm</span>
-                                                    </TableCell>
-                                                    <TableCell className="py-2">
-                                                        <div className="flex flex-col">
-                                                            <p className="text-xs font-bold leading-none">{zone.description}</p>
-                                                            <p className="text-[9px] text-muted-foreground font-medium mt-1">
-                                                                {idx === 0 && "Recuperação ativa e remoção de metabólitos."}
-                                                                {idx === 1 && "Melhora da oxidação de gorduras e capilarização."}
-                                                                {idx === 2 && "Aumento da resistência muscular e economia de corrida."}
-                                                                {idx === 3 && "Melhora da tolerância ao lactato."}
-                                                                {idx === 4 && "Melhora do consumo máximo de oxigênio (VO2max)."}
-                                                            </p>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </CardContent>
-                                <CardFooter className="pt-4 border-t flex justify-between items-center">
-                                     <p className="text-[10px] text-muted-foreground italic font-medium">
-                                        Karvonen (FC Reserva) + Metodologia Alpha Trainer
-                                     </p>
-                                     <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-8 text-primary hover:text-primary hover:bg-primary/5">
-                                                <Settings2 className="mr-2 h-3.5 w-3.5" /> Ajustar Percentuais
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
-                                            <DialogHeader>
-                                                <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
-                                                <DialogDescription>Personalize as zonas conforme sua metodologia de treinamento.</DialogDescription>
-                                            </DialogHeader>
-                                            <ScrollArea className="h-[50vh] pr-4">
-                                                <div className="space-y-6">
-                                                    {zoneConfigs.map((zone, idx) => (
-                                                        <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
-                                                                onClick={() => handleRemoveZone(idx)}
-                                                                title="Excluir Zona"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase">Zona</Label>
-                                                                    <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
-                                                                </div>
-                                                                <div className="md:col-span-2 space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase">Descrição</Label>
-                                                                    <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
-                                                                        <span>-</span>
-                                                                        <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-bold uppercase">Cor</Label>
-                                                                    <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                            <DialogFooter className="pt-4 border-t">
-                                                <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Nova Zona</Button>
-                                                <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                     </Dialog>
-                                </CardFooter>
-                            </Card>
-                        </div>
-
-                        <div className="space-y-6">
-                            <Card className="bg-primary text-primary-foreground shadow-2xl overflow-hidden relative border-none">
-                                <div className="absolute top-0 right-0 p-4 opacity-10">
-                                    <Activity size={120} />
-                                </div>
-                                <CardHeader className="pb-2 relative z-10">
-                                    <CardTitle className="text-[10px] uppercase font-black tracking-widest opacity-80">VO2 Máximo Estimado</CardTitle>
-                                </CardHeader>
-                                <CardContent className="relative z-10">
-                                    <div className="text-6xl font-black">{testResults?.vo2 || '0.0'}</div>
-                                    <p className="text-xs font-bold mt-1">ml/kg/min</p>
-                                    <div className="mt-6 px-4 py-1.5 bg-white/20 rounded-full inline-flex items-center gap-2 text-xs font-black uppercase shadow-inner">
-                                        <Target size={14} /> Classificação: {testResults?.classification}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="shadow-lg border-primary/5">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-black uppercase">{protocol === 'cycling_power' ? 'Potência Aeróbica' : 'Aeróbico Máximo'}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex justify-between items-end border-b pb-4">
-                                        {protocol === 'cycling_power' ? (
-                                            <div>
-                                                <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Carga Máxima</p>
-                                                <p className="text-3xl font-black text-primary">{powerWatts || '--'} <span className="text-xs text-muted-foreground uppercase">Watts</span></p>
-                                            </div>
-                                        ) : (
-                                            <>
+                                <Card className="shadow-lg border-primary/5">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm font-black uppercase">{protocol === 'cycling_power' ? 'Potência Aeróbica' : 'Aeróbico Máximo'}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex justify-between items-end border-b pb-4">
+                                            {protocol === 'cycling_power' ? (
                                                 <div>
-                                                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">vAM (Velocidade)</p>
-                                                    <p className="text-3xl font-black text-primary">{testResults?.vAM?.toFixed(1) || '--'} <span className="text-xs text-muted-foreground uppercase">km/h</span></p>
+                                                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Carga Máxima</p>
+                                                    <p className="text-3xl font-black text-primary">{powerWatts || '--'} <span className="text-xs text-muted-foreground uppercase">Watts</span></p>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Pace Máximo</p>
-                                                    <p className="text-2xl font-black">{testResults ? velocityToPace(testResults.vAM) : '--:--'}</p>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                    <div className="p-4 bg-muted/20 rounded-xl text-[11px] leading-relaxed border-l-2 border-primary italic">
-                                        <Info className="size-4 inline-block mr-2 text-primary" />
-                                        {protocol === 'cycling_power' 
-                                            ? 'A potência máxima sustentada é a base para o treinamento de ciclistas, permitindo o cálculo exato da carga de trabalho.'
-                                            : 'A vAM é a menor velocidade na qual o consumo máximo de oxigênio é atingido. Essencial para treinos intervalados.'
-                                        }
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            ) : (
+                                                <>
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">vAM (Velocidade)</p>
+                                                        <p className="text-3xl font-black text-primary">{testResults?.vAM?.toFixed(1) || '--'} <span className="text-xs text-muted-foreground uppercase">km/h</span></p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Pace Máximo</p>
+                                                        <p className="text-2xl font-black">{testResults ? velocityToPace(testResults.vAM) : '--:--'}</p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="p-4 bg-muted/20 rounded-xl text-[11px] leading-relaxed border-l-2 border-primary italic">
+                                            <Info className="size-4 inline-block mr-2 text-primary" />
+                                            {protocol === 'cycling_power' 
+                                                ? 'A potência máxima sustentada é a base para o treinamento de ciclistas, permitindo o cálculo exato da carga de trabalho.'
+                                                : 'A vAM é a menor velocidade na qual o consumo máximo de oxigênio é atingido. Essencial para treinos intervalados.'
+                                            }
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-                            <Card className="shadow-lg border-primary/5">
-                                <CardHeader className="pb-4 border-b">
-                                    <CardTitle className="text-xs font-black uppercase text-primary">Resumo das Zonas (Pace)</CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    <Table>
-                                        <TableBody>
-                                            {testResults?.zones.map((zone) => (
-                                                <TableRow key={`pace-${zone.zone}`} className="hover:bg-muted/5 h-10 border-b last:border-0">
-                                                    <TableCell className="py-1 font-bold text-[10px] text-muted-foreground">{zone.zone}</TableCell>
-                                                    <TableCell className="py-1 text-right font-black text-xs">
-                                                        {protocol === 'cycling_power' ? zone.minPace : `${zone.maxPace}-${zone.minPace} min/km`}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </CardContent>
-                            </Card>
+                                <Card className="shadow-lg border-primary/5">
+                                    <CardHeader className="pb-4 border-b">
+                                        <CardTitle className="text-xs font-black uppercase text-primary">Resumo das Zonas (Pace)</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        <Table>
+                                            <TableBody>
+                                                {testResults?.zones.map((zone) => (
+                                                    <TableRow key={`pace-${zone.zone}`} className="hover:bg-muted/5 h-10 border-b last:border-0">
+                                                        <TableCell className="py-1 font-bold text-[10px] text-muted-foreground">{zone.zone}</TableCell>
+                                                        <TableCell className="py-1 text-right font-black text-xs">
+                                                            {protocol === 'cycling_power' ? zone.minPace : `${zone.maxPace}-${zone.minPace} min/km`}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
                     </div>
                 )}
