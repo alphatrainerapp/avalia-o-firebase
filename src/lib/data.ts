@@ -1,3 +1,4 @@
+
 'use client';
 import { getPlaceholderImage } from './placeholder-images';
 
@@ -6,6 +7,13 @@ export type SkinfoldKeys = 'subscapular' | 'tricipital' | 'bicipital' | 'peitora
 export type BoneDiameterKeys = 'biestiloidal' | 'bicondilarFemur' | 'bicondilarUmero';
 
 export type BioimpedanceScale = 'omron' | 'inbody' | null;
+
+export type FunctionalTests = {
+  pushUps?: number;
+  sitUps?: number;
+  handgrip?: number;
+  wells?: number;
+};
 
 export type BioimpedanceOmron = {
     weight?: number;
@@ -111,6 +119,7 @@ export type Evaluation = {
     posturalPhotos?: { [key: string]: string | undefined };
     posturalDeviations?: { [key: string]: string[] };
     vo2MaxData?: VO2MaxData;
+    functionalTests?: FunctionalTests;
 };
 
 export type Client = {
@@ -181,6 +190,12 @@ export const evaluations: Evaluation[] = [
             bloodPressureDiastolic: 80,
             distance: 2200
         },
+        functionalTests: {
+          pushUps: 25,
+          sitUps: 35,
+          handgrip: 38.5,
+          wells: 12
+        },
         observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
     },
     {
@@ -217,6 +232,12 @@ export const evaluations: Evaluation[] = [
             bloodPressureDiastolic: 78,
             distance: 2400
         },
+        functionalTests: {
+          pushUps: 28,
+          sitUps: 40,
+          handgrip: 40,
+          wells: 15
+        },
         observations: 'Ótima evolução. Redução significativa de medidas na cintura e melhora na inclinação da cabeça.'
     },
     {
@@ -252,6 +273,12 @@ export const evaluations: Evaluation[] = [
             bloodPressureSystolic: 115,
             bloodPressureDiastolic: 75,
             distance: 2650
+        },
+        functionalTests: {
+          pushUps: 32,
+          sitUps: 45,
+          handgrip: 48.5,
+          wells: 8
         },
         observations: 'Meta de peso atingida. Postura muito mais alinhada, restando apenas leve projeção cervical.'
     }
@@ -350,4 +377,42 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
         idealWeight: Math.max(0, idealWeight),
         fatLossNeeded: Math.max(0, fatLossNeeded),
     };
+}
+
+export type ClassificationType = 'EXCELENTE' | 'BOM' | 'REGULAR' | 'FRACO' | 'MUITO FRACO';
+
+export function getFunctionalClassification(test: keyof FunctionalTests, value: number, age: number, gender: string): { classification: ClassificationType, percentile: string, description: string } {
+  if (value === 0) return { classification: 'FRACO', percentile: 'N/A', description: 'Abaixo do esperado para a faixa etária.' };
+
+  // Placeholder logic for classifications based on general norms
+  if (test === 'pushUps') {
+    if (value > 30) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Acima da média para sua faixa etária.' };
+    if (value > 20) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Nível satisfatório de força.' };
+    if (value > 10) return { classification: 'REGULAR', percentile: 'Entre 25% e 50%', description: 'Dentro da média esperada.' };
+    return { classification: 'FRACO', percentile: 'Abaixo de 25%', description: 'Abaixo do esperado para a faixa etária.' };
+  }
+
+  if (test === 'sitUps') {
+    if (value > 40) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Excelente resistência abdominal.' };
+    if (value > 30) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Bom nível de resistência abdominal.' };
+    if (value > 20) return { classification: 'REGULAR', percentile: 'Entre 25% e 50%', description: 'Resistência abdominal média.' };
+    return { classification: 'FRACO', percentile: 'Abaixo de 25%', description: 'Abaixo do esperado para a faixa etária.' };
+  }
+
+  if (test === 'handgrip') {
+    const threshold = gender === 'Masculino' ? 45 : 25;
+    if (value > threshold + 10) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Força de preensão superior.' };
+    if (value > threshold) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Força de preensão dentro da média.' };
+    if (value > threshold - 10) return { classification: 'REGULAR', percentile: 'Entre 25% e 50%', description: 'Força de preensão moderada.' };
+    return { classification: 'FRACO', percentile: 'Abaixo de 25%', description: 'Abaixo do esperado para a faixa etária.' };
+  }
+
+  if (test === 'wells') {
+    if (value > 15) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Excelente flexibilidade.' };
+    if (value > 5) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Boa flexibilidade.' };
+    if (value > -5) return { classification: 'REGULAR', percentile: 'Entre 25% e 50%', description: 'Flexibilidade média.' };
+    return { classification: 'FRACO', percentile: 'Abaixo de 25%', description: 'Flexibilidade abaixo da média.' };
+  }
+
+  return { classification: 'REGULAR', percentile: '50%', description: 'Dentro dos parâmetros normais.' };
 }

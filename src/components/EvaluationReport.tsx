@@ -1,11 +1,12 @@
+
 'use client';
 import React, { forwardRef, useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import type { Evaluation, Client, SkinfoldKeys } from '@/lib/data';
-import { calculateBodyComposition } from '@/lib/data';
+import { calculateBodyComposition, getFunctionalClassification } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { User, BarChart, PieChart as PieChartIcon, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { User, BarChart, PieChart as PieChartIcon, Target, TrendingDown, TrendingUp, Activity } from 'lucide-react';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Bar, XAxis, YAxis, Tooltip, BarChart as RechartsBarChart, Legend } from 'recharts';
 
@@ -81,6 +82,13 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
 
     if (!mainEvaluation) return <div ref={ref}></div>;
 
+    const functionalTests = [
+        { id: 'pushUps', label: 'Flexão de Braço (reps)' },
+        { id: 'sitUps', label: 'Abdominal 1 min (reps)' },
+        { id: 'handgrip', label: 'Handgrip (kgf)' },
+        { id: 'wells', label: 'Banco de Wells (cm)' },
+    ];
+
     return (
         <div ref={ref} className="p-6 font-sans bg-white text-gray-900 text-xs w-[800px]">
             {/* Header */}
@@ -140,6 +148,36 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                                     else value = masses[metric.key as keyof typeof masses];
 
                                     return <TableCell key={ev.id} className="text-center py-1.5">{typeof value === 'number' ? metric.format(value) : '-'}</TableCell>
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </Section>
+
+            {/* Aptidão Física Section */}
+            <Section title="Avaliação de Aptidão Física" icon={<Activity size={14} className="text-gray-600"/>}>
+                <Table className="mt-1 text-xs">
+                    <TableHeader>
+                        <TableRow className="bg-gray-100">
+                            <TableHead className="font-bold text-gray-600">Teste</TableHead>
+                            {headerDates.map((date, index) => (
+                                <TableHead key={index} className="text-center font-bold text-gray-600">Valor / Classe</TableHead>
+                            ))}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {functionalTests.map(test => (
+                            <TableRow key={test.id}>
+                                <TableCell className="font-medium py-1.5">{test.label}</TableCell>
+                                {evaluationsToDisplay.map(ev => {
+                                    const value = ev.functionalTests?.[test.id as keyof typeof ev.functionalTests] || 0;
+                                    const { classification } = getFunctionalClassification(test.id as any, value, client.age, client.gender);
+                                    return (
+                                        <TableCell key={ev.id} className="text-center py-1.5">
+                                            {value} <span className="text-[10px] text-primary font-bold">({classification})</span>
+                                        </TableCell>
+                                    )
                                 })}
                             </TableRow>
                         ))}

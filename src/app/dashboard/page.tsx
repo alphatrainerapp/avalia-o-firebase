@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown, Info, Star, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -15,7 +16,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { type Evaluation, type Client, audienceProtocols, protocolSkinfolds, type SkinfoldKeys, type BoneDiameterKeys, calculateBodyComposition, type BodyComposition } from '@/lib/data';
+import { 
+    type Evaluation, 
+    type Client, 
+    audienceProtocols, 
+    protocolSkinfolds, 
+    type SkinfoldKeys, 
+    type BoneDiameterKeys, 
+    calculateBodyComposition, 
+    type BodyComposition,
+    getFunctionalClassification,
+    type ClassificationType
+} from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,6 +47,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Image from 'next/image';
+import { getPlaceholderImage } from '@/lib/placeholder-images';
 
 
 export default function DashboardPage() {
@@ -46,7 +60,7 @@ export default function DashboardPage() {
     const [selectedAudience, setSelectedAudience] = useState<string>(Object.keys(audienceProtocols)[0]);
     const [requiredSkinfolds, setRequiredSkinfolds] = useState<SkinfoldKeys[]>([]);
     const reportRef = useRef<HTMLDivElement>(null);
-    const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros'>('perimetria');
+    const [activeTab, setActiveTab] = useState<'perimetria' | 'dobras' | 'diametros' | 'testes'>('perimetria');
     const [formattedDate, setFormattedDate] = useState('');
 
 
@@ -99,6 +113,7 @@ export default function DashboardPage() {
                 bodyMeasurements: { height: client.height, weight: 0 },
                 perimetria: {},
                 skinFolds: {},
+                functionalTests: {},
              };
         }
         setFormState(initialState);
@@ -472,6 +487,13 @@ export default function DashboardPage() {
         { name: 'bicondilarFemur', label: 'Biestiloidal do Fêmur (cm)' },
     ];
 
+    const functionalTestsConfig = [
+        { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
+        { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência de membros abdominais', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
+        { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima. Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
+        { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de membros inferiores', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
+    ];
+
     const EvalCard = ({ ev, index }: { ev: Evaluation; index: number }) => {
         const [date, setDate] = useState('');
         const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
@@ -510,6 +532,91 @@ export default function DashboardPage() {
                             <p className={cn("text-xs", isSelected ? "text-muted-foreground" : "text-card-foreground")}>Gordura</p>
                         </>
                      )}
+                </CardContent>
+            </Card>
+        );
+    };
+
+    const FunctionalTestCard = ({ config }: { config: typeof functionalTestsConfig[0] }) => {
+        const value = formState.functionalTests?.[config.id] || 0;
+        const { classification, percentile, description } = getFunctionalClassification(config.id as any, value, client?.age || 30, client?.gender || 'Masculino');
+        const img = getPlaceholderImage(config.icon);
+
+        const getStatusColor = (cls: ClassificationType) => {
+            switch(cls) {
+                case 'EXCELENTE': return 'text-green-500';
+                case 'BOM': return 'text-green-400';
+                case 'REGULAR': return 'text-yellow-500';
+                case 'FRACO': return 'text-orange-500';
+                case 'MUITO FRACO': return 'text-red-500';
+                default: return 'text-muted-foreground';
+            }
+        };
+
+        const getStatusBg = (cls: ClassificationType) => {
+            switch(cls) {
+                case 'EXCELENTE': return 'bg-green-500/10 border-green-500/20';
+                case 'BOM': return 'bg-green-500/5 border-green-500/10';
+                case 'REGULAR': return 'bg-yellow-500/10 border-yellow-500/20';
+                default: return 'bg-muted/50 border-muted';
+            }
+        };
+
+        return (
+            <Card className="overflow-hidden border-none shadow-md bg-muted/5">
+                <CardHeader className="p-4 flex flex-row items-start justify-between">
+                    <div>
+                        <CardTitle className="text-sm font-black text-primary flex items-center gap-2">
+                            {config.title}
+                            <Info className="size-3 text-muted-foreground cursor-help" />
+                        </CardTitle>
+                        <CardDescription className="text-[10px] uppercase font-bold">{config.subtitle}</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                            {img && (
+                                <div className="relative aspect-video rounded-lg overflow-hidden border shadow-inner">
+                                    <Image src={img.imageUrl} alt={config.title} fill className="object-cover" />
+                                </div>
+                            )}
+                            <div className="flex gap-2 items-start">
+                                <Activity className="size-3 text-primary shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-muted-foreground leading-tight">{config.instruction}</p>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="space-y-1">
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Resultado ({config.detail})</Label>
+                                <div className="relative">
+                                    <Input 
+                                        type="number" 
+                                        name={`functionalTests.${config.id}`}
+                                        value={formState.functionalTests?.[config.id] || ''}
+                                        onChange={handleInputChange}
+                                        className="h-12 text-2xl font-black bg-background border-muted text-center pr-10"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">{config.unit}</span>
+                                </div>
+                            </div>
+
+                            <div className={cn("rounded-xl border p-3 transition-all", getStatusBg(classification))}>
+                                <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-2">Classificação</Label>
+                                <div className="flex items-center gap-2">
+                                    {classification === 'EXCELENTE' ? <Star className="size-4 fill-green-500 text-green-500" /> : <CheckCircle2 className={cn("size-4", getStatusColor(classification))} />}
+                                    <span className={cn("text-sm font-black", getStatusColor(classification))}>{classification}</span>
+                                </div>
+                                <div className="mt-2 space-y-1">
+                                    <p className="text-[10px] font-bold flex items-center gap-1.5">
+                                        <TrendingUp className="size-3 text-primary" />
+                                        Percentil: <span className="text-primary">{percentile}</span>
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground leading-tight">{description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         );
@@ -731,10 +838,11 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="perimetria" onValueChange={(value: string) => setActiveTab(value as any)}>
-                                <TabsList className="grid w-full grid-cols-3">
+                                <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger value="perimetria" className="text-xs sm:text-sm">Perimetria</TabsTrigger>
                                     <TabsTrigger value="dobras" className="text-xs sm:text-sm">Dobras</TabsTrigger>
                                     <TabsTrigger value="diametros" className="text-xs sm:text-sm">Diâmetros</TabsTrigger>
+                                    <TabsTrigger value="testes" className="text-xs sm:text-sm">Testes Funcionais</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="perimetria" className="pt-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
@@ -871,6 +979,48 @@ export default function DashboardPage() {
                                         <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
                                             Estimativa estrutural calculada via diâmetros de punho, fêmur e úmero.
                                         </p>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="testes" className="pt-4 space-y-6">
+                                    <header className="flex flex-col gap-1 mb-2">
+                                        <h3 className="text-lg font-bold">Avaliação de Aptidão Física</h3>
+                                        <p className="text-xs text-muted-foreground">Registre os resultados dos testes e obtenha a classificação conforme sexo e faixa etária.</p>
+                                    </header>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {functionalTestsConfig.map(config => (
+                                            <FunctionalTestCard key={config.id} config={config} />
+                                        ))}
+                                    </div>
+
+                                    {/* Footer Informativo sobre Classificações */}
+                                    <div className="mt-8 p-6 bg-muted/20 rounded-2xl flex flex-wrap lg:flex-nowrap items-center gap-8 border border-muted/50">
+                                        <div className="flex items-center gap-4 min-w-[240px] border-r border-muted/50 pr-8">
+                                            <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                                                <Info size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-black uppercase tracking-widest">Sobre as classificações</h4>
+                                                <p className="text-[10px] text-muted-foreground leading-tight mt-1">As classificações são baseadas em tabelas normativas de acordo com sexo e idade.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-1 flex-wrap gap-x-8 gap-y-4">
+                                            {[
+                                                { label: 'FRACO', desc: 'Abaixo do esperado para a faixa etária.', color: 'text-orange-500', icon: AlertCircle },
+                                                { label: 'REGULAR', desc: 'Abaixo da média para a faixa etária.', color: 'text-yellow-500', icon: CheckCircle2 },
+                                                { label: 'BOM', desc: 'Na média para a faixa etária.', color: 'text-green-400', icon: CheckCircle2 },
+                                                { label: 'EXCELENTE', desc: 'Acima da média para a faixa etária.', color: 'text-green-500', icon: Trophy },
+                                            ].map(item => (
+                                                <div key={item.label} className="flex gap-2.5 max-w-[200px]">
+                                                    <item.icon className={cn("size-4 mt-0.5 shrink-0", item.color)} />
+                                                    <div className="space-y-0.5">
+                                                        <p className={cn("text-[10px] font-black uppercase", item.color)}>{item.label}</p>
+                                                        <p className="text-[9px] text-muted-foreground leading-snug">{item.desc}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </TabsContent>
                             </Tabs>

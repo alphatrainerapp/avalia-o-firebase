@@ -47,6 +47,30 @@
       "description": "A generic human body model for segmental analysis.",
       "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/4042/body-model.png",
       "imageHint": "human body"
+    },
+    {
+      "id": "push-ups-test",
+      "description": "Athlete performing push-ups.",
+      "imageUrl": "https://picsum.photos/seed/pushups/600/400",
+      "imageHint": "pushup exercise"
+    },
+    {
+      "id": "abdominal-test",
+      "description": "Athlete performing sit-ups.",
+      "imageUrl": "https://picsum.photos/seed/situps/600/400",
+      "imageHint": "situp exercise"
+    },
+    {
+      "id": "handgrip-test",
+      "description": "Handgrip dynamometer.",
+      "imageUrl": "https://picsum.photos/seed/handgrip/600/400",
+      "imageHint": "handgrip test"
+    },
+    {
+      "id": "wells-test",
+      "description": "Sit and reach test box.",
+      "imageUrl": "https://picsum.photos/seed/wells/600/400",
+      "imageHint": "flexibility test"
     }
   ]
 }
