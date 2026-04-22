@@ -50,7 +50,7 @@ import {
   getBPClassification,
   calculateTanakaFCMax
 } from '@/lib/vo2-logic';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, Cell } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import VO2Report from '@/components/VO2Report';
@@ -58,7 +58,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function VO2MaxPage() {
-    const { clients, selectedClientId, setSelectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
+    const { clients, selectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
     const { toast } = useToast();
     const reportRef = useRef<HTMLDivElement>(null);
 
@@ -660,6 +660,68 @@ export default function VO2MaxPage() {
                                     </div>
                                 </CardContent>
                             </Card>
+
+                            {/* Gráfico de Conconi - Análise Visual */}
+                            {protocol === 'conconi' && conconiStages.length > 1 && (
+                                <Card className="shadow-lg border-primary/10 overflow-hidden">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-lg font-bold">Análise Visual</CardTitle>
+                                        <p className="text-[10px] uppercase font-black text-primary tracking-widest flex items-center gap-2">
+                                            <Activity className="size-3" /> Curva de Frequência Cardíaca
+                                        </p>
+                                    </CardHeader>
+                                    <CardContent className="pt-4">
+                                        <div className="h-[300px] w-full bg-slate-900/5 rounded-2xl p-4 border shadow-inner">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={conconiStages} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                                                    <XAxis 
+                                                        dataKey="velocity" 
+                                                        type="number" 
+                                                        domain={['dataMin', 'dataMax']} 
+                                                        label={{ value: 'Velocidade (km/h)', position: 'bottom', offset: 0, fontSize: 10, fontWeight: 'bold' }}
+                                                        tick={{ fontSize: 10 }}
+                                                    />
+                                                    <YAxis 
+                                                        label={{ value: 'FC (bpm)', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fontWeight: 'bold' }}
+                                                        tick={{ fontSize: 10 }}
+                                                    />
+                                                    <Tooltip 
+                                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                                        formatter={(value: any) => [`${value} bpm`, 'FC']}
+                                                        labelFormatter={(label) => `${label} km/h`}
+                                                    />
+                                                    <Line 
+                                                        type="monotone" 
+                                                        dataKey="hr" 
+                                                        stroke="#01baba" 
+                                                        strokeWidth={4} 
+                                                        dot={{ r: 6, fill: '#fff', stroke: '#01baba', strokeWidth: 3 }} 
+                                                        activeDot={{ r: 10 }} 
+                                                    />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        {testResults?.conconiThreshold && (
+                                            <div className="mt-6 p-5 bg-slate-900 text-white rounded-2xl flex items-center gap-5 shadow-xl border-l-8 border-primary">
+                                                <div className="h-12 w-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shadow-lg">
+                                                    <TrendingUp size={24} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black text-primary tracking-widest mb-1">Limiar Anaeróbico Identificado</p>
+                                                    <div className="text-2xl font-black flex items-baseline gap-2">
+                                                        {testResults.conconiThreshold.velocity} <span className="text-xs opacity-60">km/h</span> 
+                                                        <span className="text-primary font-bold text-sm">({velocityToPace(testResults.conconiThreshold.velocity)})</span> 
+                                                        <span className="text-white/40 font-normal">@</span> 
+                                                        {testResults.conconiThreshold.hr} <span className="text-xs opacity-60">bpm</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             <Card className="shadow-lg border-primary/5">
                                 <CardHeader>
