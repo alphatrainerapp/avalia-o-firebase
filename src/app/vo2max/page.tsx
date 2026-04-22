@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -509,7 +508,7 @@ export default function VO2MaxPage() {
                             </CardHeader>
 
                             <CardContent className="pt-6 space-y-8">
-                                {/* Método de Avaliação Full Width */}
+                                {/* Método de Avaliação Redimensionado */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Timer className="size-4 text-primary" />
@@ -517,7 +516,7 @@ export default function VO2MaxPage() {
                                     </div>
                                     <div className="flex flex-col md:flex-row items-center gap-4">
                                         <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
-                                            <SelectTrigger className="h-12 text-lg font-bold bg-muted/10 border-muted">
+                                            <SelectTrigger className="h-11 w-full md:w-[320px] text-base font-bold bg-muted/10 border-muted">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -530,9 +529,9 @@ export default function VO2MaxPage() {
                                                 <SelectItem value="step_test">Step Test (Banco)</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        <div className="flex items-center gap-3 text-muted-foreground bg-muted/5 p-3 rounded-xl border border-dashed border-muted/50 flex-1">
-                                            <Info className="size-5 shrink-0" />
-                                            <p className="text-xs leading-tight">Selecione o método de avaliação para calcular os resultados de performance.</p>
+                                        <div className="flex items-center gap-2 text-muted-foreground bg-muted/5 px-3 py-2 rounded-lg border border-dashed border-muted/50">
+                                            <Info className="size-4 shrink-0" />
+                                            <p className="text-[11px] font-medium leading-none">Selecione o método para iniciar os cálculos.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -968,8 +967,8 @@ export default function VO2MaxPage() {
                                         <div className="p-4 bg-muted/20 rounded-xl text-[11px] leading-relaxed border-l-2 border-primary italic">
                                             <Info className="size-4 inline-block mr-2 text-primary" />
                                             {protocol === 'cycling_power' 
-                                                ? 'A potência máxima sustentada é a base para o treinamento de ciclistas, permitindo o cálculo exato da carga de trabalho.'
-                                                : 'A vAM é a menor velocidade na qual o consumo máximo de oxigênio é atingido. Essencial para treinos intervalados.'
+                                                ? 'A potência máxima sustentada é a base para o treinamento de ciclistas.'
+                                                : 'A vAM é a menor velocidade na qual o consumo máximo de oxigênio é atingido.'
                                             }
                                         </div>
                                     </CardContent>
