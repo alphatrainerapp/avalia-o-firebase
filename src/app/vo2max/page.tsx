@@ -75,12 +75,10 @@ export default function VO2MaxPage() {
     const [timeMinutes, setTimeMinutes] = useState<string>('');
     const [timeSeconds, setTimeSeconds] = useState<string>('');
     
-    // Heart Rate State
     const [hrMax, setHrMax] = useState<string>('');
     const [isManualHRMax, setIsManualHRMax] = useState(false);
     const [hrRest, setHrRest] = useState<string>('60');
     
-    // Hemodynamics
     const [pas, setPas] = useState<string>('120');
     const [pad, setPad] = useState<string>('80');
     
@@ -101,13 +99,11 @@ export default function VO2MaxPage() {
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     
-    // Automatic FCMax using Tanaka (2001)
     const calculatedFCMax = useMemo(() => {
         if (!client) return 190;
         return calculateTanakaFCMax(client.age);
     }, [client]);
 
-    // Current effective FCMax based on mode
     const effectiveFCMax = useMemo(() => {
         if (isManualHRMax) return parseInt(hrMax) || calculatedFCMax;
         return calculatedFCMax;
@@ -159,18 +155,6 @@ export default function VO2MaxPage() {
             if (data.stages) setConconiStages(data.stages);
             if (data.zoneConfig) setZoneConfigs(data.zoneConfig);
             else setZoneConfigs(DEFAULT_ZONES);
-        } else {
-            setDistance('');
-            setTimeMinutes('');
-            setTimeSeconds('');
-            setRecoveryHR('');
-            setPowerWatts('');
-            setHrMax('');
-            setIsManualHRMax(false);
-            setHrRest('60');
-            setPas('120');
-            setPad('80');
-            setZoneConfigs(DEFAULT_ZONES);
         }
     }, [evaluation]);
 
@@ -300,7 +284,7 @@ export default function VO2MaxPage() {
 
     const handleAddStage = () => {
         const lastStage = conconiStages[conconiStages.length - 1];
-        setConconiStages([...conconiStages, { velocity: (lastStage?.velocity || 8) + 0.5, hr: (lastStage?.hr || 120) + 5 }]);
+        setConconiStages([...conconiStages, { velocity: (lastStage?.velocity || 8) + 1, hr: (lastStage?.hr || 120) + 10 }]);
     };
 
     const handleUpdateStage = (index: number, field: keyof VO2Stage, value: string) => {
@@ -483,7 +467,7 @@ export default function VO2MaxPage() {
                     </Card>
                 ) : (
                     <div className="space-y-6">
-                        {/* NOVO CARD: CÁLCULO DE FREQUÊNCIA CARDÍACA - Estilo Referência */}
+                        {/* CÁLCULO DE FREQUÊNCIA CARDÍACA */}
                         <Card className="shadow-lg border-primary/20 bg-card overflow-hidden">
                             <CardHeader className="pb-4 border-b border-muted/50">
                                 <div className="flex items-center justify-between">
@@ -508,7 +492,6 @@ export default function VO2MaxPage() {
                             </CardHeader>
 
                             <CardContent className="pt-6 space-y-8">
-                                {/* Método de Avaliação Redimensionado */}
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Timer className="size-4 text-primary" />
@@ -516,7 +499,7 @@ export default function VO2MaxPage() {
                                     </div>
                                     <div className="flex flex-col md:flex-row items-center gap-4">
                                         <Select value={protocol} onValueChange={(v) => setProtocol(v as VO2Protocol)}>
-                                            <SelectTrigger className="h-11 w-full md:w-[320px] text-base font-bold bg-muted/10 border-muted">
+                                            <SelectTrigger className="h-11 w-full md:w-[280px] text-base font-bold bg-muted/10 border-muted">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -531,12 +514,11 @@ export default function VO2MaxPage() {
                                         </Select>
                                         <div className="flex items-center gap-2 text-muted-foreground bg-muted/5 px-3 py-2 rounded-lg border border-dashed border-muted/50">
                                             <Info className="size-4 shrink-0" />
-                                            <p className="text-[11px] font-medium leading-none">Selecione o método para iniciar os cálculos.</p>
+                                            <p className="text-[11px] font-medium leading-none">Selecione o método.</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Grade de FC e Hemodinâmica */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {/* FC Máxima */}
                                     <div className="p-5 rounded-2xl bg-muted/5 border border-muted/30 relative">
@@ -564,7 +546,7 @@ export default function VO2MaxPage() {
                                         </div>
                                         <p className="text-[10px] text-muted-foreground italic flex items-center gap-1.5">
                                             <Info className="size-3" />
-                                            {!isManualHRMax ? "Calculada: 208 - (0,7 × idade)" : "Valor definido manualmente"}
+                                            {!isManualHRMax ? "Calculada: 208 - (0,7 × idade)" : "Valor manual"}
                                         </p>
                                     </div>
 
@@ -587,7 +569,7 @@ export default function VO2MaxPage() {
                                                 <Heart className="size-6" />
                                             </div>
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground italic">Mínimo batimento cardíaco basal.</p>
+                                        <p className="text-[10px] text-muted-foreground italic">Mínimo basal.</p>
                                     </div>
 
                                     {/* Hemodinâmica */}
@@ -598,14 +580,14 @@ export default function VO2MaxPage() {
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1">
-                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAS (SIST)</Label>
+                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAS</Label>
                                                 <div className="flex items-baseline gap-1.5">
                                                     <Input type="number" value={pas} onChange={(e) => setPas(e.target.value)} className="h-10 font-black text-xl bg-background" />
                                                     <span className="text-[9px] font-bold text-muted-foreground">mmHg</span>
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAD (DIAST)</Label>
+                                                <Label className="text-[9px] font-bold text-muted-foreground uppercase">PAD</Label>
                                                 <div className="flex items-baseline gap-1.5">
                                                     <Input type="number" value={pad} onChange={(e) => setPad(e.target.value)} className="h-10 font-black text-xl bg-background" />
                                                     <span className="text-[9px] font-bold text-muted-foreground">mmHg</span>
@@ -613,7 +595,7 @@ export default function VO2MaxPage() {
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center bg-background p-2 rounded-lg border border-muted/30">
-                                            <span className="text-[9px] font-black uppercase text-muted-foreground">Classificação:</span>
+                                            <span className="text-[9px] font-black uppercase text-muted-foreground">Classe:</span>
                                             <Badge className={cn("text-[9px] font-black uppercase px-2 h-5", 
                                                 bpClass.includes('Normal') ? 'bg-green-500/20 text-green-500 border-green-500/50' : 
                                                 bpClass.includes('Pré') ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' : 'bg-red-500/20 text-red-500 border-red-500/50'
@@ -624,7 +606,6 @@ export default function VO2MaxPage() {
                                     </div>
                                 </div>
 
-                                {/* FC de Reserva - Horizontal Bar Estilo Referência */}
                                 <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col md:flex-row items-center gap-6 shadow-inner relative overflow-hidden">
                                     <div className="absolute top-0 left-0 h-full w-1 bg-primary"></div>
                                     <div className="flex items-center gap-4">
@@ -655,7 +636,6 @@ export default function VO2MaxPage() {
                                     </div>
                                 </div>
 
-                                {/* Protocolo de Teste Section */}
                                 <div className="pt-4 space-y-6">
                                     <div className="flex items-center gap-2">
                                         <Scale className="size-4 text-primary" />
@@ -663,7 +643,6 @@ export default function VO2MaxPage() {
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                        {/* Input do Protocolo */}
                                         <div className="space-y-4">
                                             <Label className="text-xs font-bold">
                                                 {protocol === 'cooper' ? "Distância Total Percorrida (metros)" : 
@@ -686,7 +665,6 @@ export default function VO2MaxPage() {
                                             </div>
                                         </div>
 
-                                        {/* Régua de Desempenho */}
                                         <div className="md:col-span-1 space-y-4">
                                             <div className="flex justify-between items-center">
                                                 <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Desempenho</span>
@@ -711,7 +689,6 @@ export default function VO2MaxPage() {
                                             </div>
                                         </div>
 
-                                        {/* Badge Final de Classificação */}
                                         <div className="p-5 rounded-2xl bg-muted/10 border border-muted/30 flex flex-col justify-center items-center text-center gap-3">
                                             <div className="p-3 bg-primary/10 rounded-xl border border-primary/20 text-primary">
                                                 <Trophy className="size-8" />
@@ -722,16 +699,14 @@ export default function VO2MaxPage() {
                                             </div>
                                             <p className="text-[10px] text-muted-foreground leading-relaxed max-w-[200px]">
                                                 {testResults?.classification === 'Excelente' ? 
-                                                    "Seu desempenho está significativamente acima da média para sua faixa etária." :
-                                                    "Os resultados indicam seu nível de condicionamento cardiorrespiratório atual."
+                                                    "Seu desempenho está acima da média para sua idade." :
+                                                    "Resultado atual do condicionamento cardiorrespiratório."
                                                 }
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </CardContent>
-
-                            {/* Footer informativo estilo referência */}
                             <CardFooter className="bg-muted/5 py-3 border-t border-muted/30 flex flex-wrap items-center gap-6 px-6">
                                 <div className="flex items-center gap-2 text-muted-foreground/60">
                                     <Info className="size-3.5" />
@@ -741,14 +716,76 @@ export default function VO2MaxPage() {
                                 </div>
                                 <div className="h-4 w-px bg-muted/30"></div>
                                 <p className="text-[9px] font-medium text-muted-foreground/60">
-                                    Resultados para uso educacional e de avaliação física esportiva.
+                                    Uso educacional e esportivo.
                                 </p>
                             </CardFooter>
                         </Card>
 
+                        {/* REGISTRO DOS ESTÁGIOS - TESTE DE CONCONI */}
+                        {protocol === 'conconi' && (
+                            <Card className="shadow-lg border-primary/10 bg-card overflow-hidden">
+                                <CardHeader className="pb-4 border-b border-muted/50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                                <Gauge className="size-6" />
+                                            </div>
+                                            <CardTitle className="text-lg font-bold">Estágios do Teste (Velocidade x FC)</CardTitle>
+                                        </div>
+                                        <Button onClick={handleAddStage} variant="outline" size="sm" className="h-9 px-4 font-bold border-muted">
+                                            <Plus className="mr-2 h-4 w-4" /> Adicionar Estágio
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="pt-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {conconiStages.map((stage, index) => (
+                                            <div key={index} className="p-4 rounded-xl border border-primary/20 bg-muted/5 group relative">
+                                                <button 
+                                                    onClick={() => handleRemoveStage(index)}
+                                                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-white items-center justify-center hidden group-hover:flex shadow-md transition-all"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                                <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-3">Estágio {index + 1}</p>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1 space-y-1">
+                                                        <div className="flex items-center bg-background border border-muted rounded-lg px-2 shadow-sm focus-within:ring-1 focus-within:ring-primary/30 transition-all">
+                                                            <Input 
+                                                                type="number" 
+                                                                value={stage.velocity} 
+                                                                onChange={(e) => handleUpdateStage(index, 'velocity', e.target.value)}
+                                                                className="h-10 border-none bg-transparent p-0 text-center font-bold text-base focus-visible:ring-0"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[9px] text-center font-bold text-muted-foreground uppercase">km/h</p>
+                                                    </div>
+                                                    <div className="flex-1 space-y-1">
+                                                        <div className="flex items-center bg-background border border-muted rounded-lg px-2 shadow-sm focus-within:ring-1 focus-within:ring-primary/30 transition-all">
+                                                            <Input 
+                                                                type="number" 
+                                                                value={stage.hr} 
+                                                                onChange={(e) => handleUpdateStage(index, 'hr', e.target.value)}
+                                                                className="h-10 border-none bg-transparent p-0 text-center font-bold text-base focus-visible:ring-0"
+                                                            />
+                                                        </div>
+                                                        <p className="text-[9px] text-center font-bold text-muted-foreground uppercase">bpm</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {conconiStages.length === 0 && (
+                                        <div className="py-12 text-center border-2 border-dashed border-muted rounded-2xl bg-muted/5">
+                                            <p className="text-muted-foreground font-medium italic">Nenhum estágio registrado. Clique em adicionar para começar.</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2 space-y-6">
-                                {/* Gráfico de Conconi - Análise Visual */}
                                 {protocol === 'conconi' && conconiStages.length > 1 && (
                                     <Card className="shadow-lg border-primary/10 overflow-hidden">
                                         <CardHeader className="pb-2">
@@ -812,7 +849,7 @@ export default function VO2MaxPage() {
 
                                 <Card className="shadow-lg border-primary/5">
                                     <CardHeader>
-                                        <CardTitle>Zonas de Treinamento (Metodologia Karvonen)</CardTitle>
+                                        <CardTitle>Zonas de Treinamento (Karvonen)</CardTitle>
                                         <CardDescription>Cálculo: (FC Reserva × intensidade) + FC Repouso</CardDescription>
                                     </CardHeader>
                                     <CardContent className="p-0">
@@ -822,7 +859,7 @@ export default function VO2MaxPage() {
                                                     <TableHead className="text-[10px] h-10 font-black">ZONA</TableHead>
                                                     <TableHead className="text-[10px] h-10 font-black">INTENSIDADE</TableHead>
                                                     <TableHead className="text-[10px] h-10 font-black">INTERVALO (BPM)</TableHead>
-                                                    <TableHead className="text-[10px] h-10 font-black">OBJETIVO FISIOLÓGICO</TableHead>
+                                                    <TableHead className="text-[10px] h-10 font-black">OBJETIVO</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -845,13 +882,6 @@ export default function VO2MaxPage() {
                                                         <TableCell className="py-2">
                                                             <div className="flex flex-col">
                                                                 <p className="text-xs font-bold leading-none">{zone.description}</p>
-                                                                <p className="text-[9px] text-muted-foreground font-medium mt-1">
-                                                                    {idx === 0 && "Recuperação ativa e remoção de metabólitos."}
-                                                                    {idx === 1 && "Melhora da oxidação de gorduras e capilarização."}
-                                                                    {idx === 2 && "Aumento da resistência muscular e economia de corrida."}
-                                                                    {idx === 3 && "Melhora da tolerância ao lactato."}
-                                                                    {idx === 4 && "Melhora do consumo máximo de oxigênio (VO2max)."}
-                                                                </p>
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
@@ -860,9 +890,7 @@ export default function VO2MaxPage() {
                                         </Table>
                                     </CardContent>
                                     <CardFooter className="pt-4 border-t flex justify-between items-center">
-                                         <p className="text-[10px] text-muted-foreground italic font-medium">
-                                            Karvonen (FC Reserva) + Metodologia Alpha Trainer
-                                         </p>
+                                         <p className="text-[10px] text-muted-foreground italic font-medium">Karvonen + Metodologia Alpha</p>
                                          <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button variant="ghost" size="sm" className="h-8 text-primary hover:text-primary hover:bg-primary/5">
@@ -872,22 +900,16 @@ export default function VO2MaxPage() {
                                             <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
                                                 <DialogHeader>
                                                     <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
-                                                    <DialogDescription>Personalize as zonas conforme sua metodologia de treinamento.</DialogDescription>
+                                                    <DialogDescription>Personalize as zonas.</DialogDescription>
                                                 </DialogHeader>
                                                 <ScrollArea className="h-[50vh] pr-4">
                                                     <div className="space-y-6">
                                                         {zoneConfigs.map((zone, idx) => (
                                                             <div key={idx} className="p-4 border rounded-xl bg-muted/10 relative group">
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
-                                                                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors" 
-                                                                    onClick={() => handleRemoveZone(idx)}
-                                                                    title="Excluir Zona"
-                                                                >
+                                                                <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={() => handleRemoveZone(idx)}>
                                                                     <Trash2 className="h-4 w-4" />
                                                                 </Button>
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pr-6">
+                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                                     <div className="space-y-2">
                                                                         <Label className="text-[10px] font-bold uppercase">Zona</Label>
                                                                         <Input value={zone.zone} onChange={(e) => handleUpdateZone(idx, { zone: e.target.value })} className="h-9 font-bold" />
@@ -897,23 +919,18 @@ export default function VO2MaxPage() {
                                                                         <Input value={zone.desc} onChange={(e) => handleUpdateZone(idx, { desc: e.target.value })} className="h-9" />
                                                                     </div>
                                                                     <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">% FC Reserva (Min-Max)</Label>
+                                                                        <Label className="text-[10px] font-bold uppercase">% FC Reserva</Label>
                                                                         <div className="flex items-center gap-2">
-                                                                            <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9 text-xs" />
-                                                                            <span>-</span>
-                                                                            <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9 text-xs" />
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[0]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [parseFloat(e.target.value), zone.hrPerc[1]] })} className="h-9" />
+                                                                            <Input type="number" step="0.01" value={zone.hrPerc[1]} onChange={(e) => handleUpdateZone(idx, { hrPerc: [zone.hrPerc[0], parseFloat(e.target.value)] })} className="h-9" />
                                                                         </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label className="text-[10px] font-bold uppercase">Cor</Label>
-                                                                        <Input type="color" value={zone.color} onChange={(e) => handleUpdateZone(idx, { color: e.target.value })} className="h-9 p-1 w-full" />
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </ScrollArea>
-                                                <DialogFooter className="pt-4 border-t">
+                                                <DialogFooter>
                                                     <Button variant="outline" onClick={handleAddZone}><Plus className="mr-2 h-4 w-4" /> Nova Zona</Button>
                                                     <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar</Button>
                                                 </DialogFooter>
@@ -935,14 +952,14 @@ export default function VO2MaxPage() {
                                         <div className="text-6xl font-black">{testResults?.vo2 || '0.0'}</div>
                                         <p className="text-xs font-bold mt-1">ml/kg/min</p>
                                         <div className="mt-6 px-4 py-1.5 bg-white/20 rounded-full inline-flex items-center gap-2 text-xs font-black uppercase shadow-inner">
-                                            <Target size={14} /> Classificação: {testResults?.classification}
+                                            <Target size={14} /> Classe: {testResults?.classification}
                                         </div>
                                     </CardContent>
                                 </Card>
 
                                 <Card className="shadow-lg border-primary/5">
                                     <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-black uppercase">{protocol === 'cycling_power' ? 'Potência Aeróbica' : 'Aeróbico Máximo'}</CardTitle>
+                                        <CardTitle className="text-sm font-black uppercase">{protocol === 'cycling_power' ? 'Potência' : 'Aeróbico Máximo'}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div className="flex justify-between items-end border-b pb-4">
@@ -954,29 +971,22 @@ export default function VO2MaxPage() {
                                             ) : (
                                                 <>
                                                     <div>
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">vAM (Velocidade)</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">vAM</p>
                                                         <p className="text-3xl font-black text-primary">{testResults?.vAM?.toFixed(1) || '--'} <span className="text-xs text-muted-foreground uppercase">km/h</span></p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Pace Máximo</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black mb-1">Pace Máx</p>
                                                         <p className="text-2xl font-black">{testResults ? velocityToPace(testResults.vAM) : '--:--'}</p>
                                                     </div>
                                                 </>
                                             )}
-                                        </div>
-                                        <div className="p-4 bg-muted/20 rounded-xl text-[11px] leading-relaxed border-l-2 border-primary italic">
-                                            <Info className="size-4 inline-block mr-2 text-primary" />
-                                            {protocol === 'cycling_power' 
-                                                ? 'A potência máxima sustentada é a base para o treinamento de ciclistas.'
-                                                : 'A vAM é a menor velocidade na qual o consumo máximo de oxigênio é atingido.'
-                                            }
                                         </div>
                                     </CardContent>
                                 </Card>
 
                                 <Card className="shadow-lg border-primary/5">
                                     <CardHeader className="pb-4 border-b">
-                                        <CardTitle className="text-xs font-black uppercase text-primary">Resumo das Zonas (Pace)</CardTitle>
+                                        <CardTitle className="text-xs font-black uppercase text-primary">Zonas (Pace)</CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-0">
                                         <Table>
