@@ -50,9 +50,9 @@
     },
     {
       "id": "push-ups-test",
-      "description": "Athlete performing push-ups.",
-      "imageUrl": "https://picsum.photos/seed/pushups/600/400",
-      "imageHint": "pushup exercise"
+      "description": "Desenho técnico de atleta realizando flexão de braço com eixos de movimento.",
+      "imageUrl": "https://picsum.photos/seed/pushups-tech/600/400",
+      "imageHint": "pushup diagram"
     },
     {
       "id": "abdominal-test",
