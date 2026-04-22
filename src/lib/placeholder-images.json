@@ -68,9 +68,9 @@
     },
     {
       "id": "wells-test",
-      "description": "Sit and reach test box.",
-      "imageUrl": "https://picsum.photos/seed/wells/600/400",
-      "imageHint": "flexibility test"
+      "description": "Desenho técnico do Banco de Wells destacando alongamento de cadeia posterior e eixos de flexibilidade.",
+      "imageUrl": "https://picsum.photos/seed/wells-tech/600/400",
+      "imageHint": "flexibility technical"
     }
   ]
 }

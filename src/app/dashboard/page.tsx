@@ -157,7 +157,7 @@ export default function DashboardPage() {
             }
         } else if (protocol.includes('Pollock 3 dobras')) {
             const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
-            const sum3 = getSkinfoldSum(skinfoldKeys);
+            const sum3 = getSkinfoldSum(skfoldKeys);
             if (sum3 > 0) {
                 if (gender === 'Masculino') {
                     bodyDensity = 1.10938 - 0.0008267 * sum3 + 0.0000016 * sum3 * sum3 - 0.0002574 * age;
@@ -1132,3 +1132,4 @@ export default function DashboardPage() {
     </>
   );
 }
+
