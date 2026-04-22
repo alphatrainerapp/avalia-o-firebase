@@ -27,7 +27,7 @@ import {
   Unlock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -769,7 +769,7 @@ export default function VO2MaxPage() {
                                                 <Button onClick={() => setIsZoneDialogOpen(false)}><Check className="mr-2 h-4 w-4" /> Aplicar</Button>
                                             </DialogFooter>
                                         </DialogContent>
-                                    </Dialog>
+                                     </Dialog>
                                 </CardFooter>
                             </Card>
                         </div>
@@ -789,6 +789,7 @@ export default function VO2MaxPage() {
                                         <Target size={14} /> Classificação: {testResults?.classification}
                                     </div>
                                 </CardContent>
+                            </Card>
 
                             <Card className="shadow-lg border-primary/5">
                                 <CardHeader className="pb-2">
