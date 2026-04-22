@@ -419,7 +419,7 @@ export default function VO2MaxPage() {
                                     <Label htmlFor="compare-mode" className="text-xs font-bold uppercase cursor-pointer">Comparar</Label>
                                     <Switch id="compare-mode" checked={isCompareMode} onCheckedChange={handleCompareToggle} />
                                 </div>
-                                <Button onClick={handleNewEvaluation} size="sm" className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                                <Button onClick={handleNewEvaluation} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                     <Plus className="mr-2 h-4 w-4" /> Nova Avaliação
                                 </Button>
                             </div>
@@ -775,11 +775,22 @@ export default function VO2MaxPage() {
                         <Card className="lg:col-span-2 shadow-sm border-none rounded-2xl overflow-hidden">
                             <CardHeader className="bg-white dark:bg-card pb-2">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <CardTitle className="text-lg font-bold">Zonas de Treinamento (Karvonen)</CardTitle>
-                                        <Info size={14} className="text-muted-foreground cursor-help" />
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <CardTitle className="text-lg font-bold">Zonas de Treinamento (Karvonen)</CardTitle>
+                                            <Info size={14} className="text-muted-foreground cursor-help" />
+                                        </div>
+                                        <p className="text-[10px] font-medium text-muted-foreground italic">Cálculo: (FC Reserva × intensidade) + FC Repouso</p>
                                     </div>
-                                    <p className="text-[10px] font-medium text-muted-foreground italic">Cálculo: (FC Reserva × intensidade) + FC Repouso</p>
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="border-primary text-primary hover:bg-primary/5 rounded-xl h-9 px-4 gap-2"
+                                        onClick={() => setIsZoneDialogOpen(true)}
+                                    >
+                                        <Settings2 className="size-4" />
+                                        Ajustar Zonas
+                                    </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
@@ -790,7 +801,7 @@ export default function VO2MaxPage() {
                                             <TableHead className="text-[10px] font-black uppercase text-muted-foreground text-center">Intensidade</TableHead>
                                             <TableHead className="text-[10px] font-black uppercase text-muted-foreground text-center">Intervalo (BPM)</TableHead>
                                             <TableHead className="text-[10px] font-black uppercase text-muted-foreground">Objetivo</TableHead>
-                                            <TableHead className="text-[10px] font-black uppercase text-muted-foreground px-6 text-center">Visual</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase text-muted-foreground px-6 text-center">Visualização</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -825,7 +836,7 @@ export default function VO2MaxPage() {
                                                                 }}
                                                             ></div>
                                                         </div>
-                                                        <div className="flex justify-between text-[8px] font-black text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity uppercase">
+                                                        <div className="flex justify-between text-[8px] font-black text-muted-foreground/50 uppercase">
                                                             <span>{(zoneConfigs[idx]?.hrPerc[0] * 100)}%</span>
                                                             <span>{(zoneConfigs[idx]?.hrPerc[1] * 100)}%</span>
                                                         </div>
@@ -1042,7 +1053,7 @@ export default function VO2MaxPage() {
                 <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Configurar Metodologia de Zonas</DialogTitle>
-                        <DialogDescription>Personalize as zonas.</DialogDescription>
+                        <DialogDescription>Personalize as faixas de intensidade e as cores das zonas.</DialogDescription>
                     </DialogHeader>
                     <ScrollArea className="h-[50vh] pr-4">
                         <div className="space-y-6">
