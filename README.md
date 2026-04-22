@@ -18,12 +18,14 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Protocolo ISAK**: Suporte completo ao perfil de 8 dobras e 3 diâmetros ósseos (Punho, Fêmur e Úmero) para máxima precisão.
 - **Relatórios em PDF**: Exportação de relatórios profissionais com gráficos de composição corporal e tabelas comparativas.
 
-### 3. Avaliação de Performance e VO2max (Elite)
-- **Ciclismo de Elite**: Inclusão do **Teste de Potência (Bike - Watts)** com cálculo de VO2max via fórmula ACSM e análise de Watts/kg.
-- **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km, Step Test e o avançado **Teste de Conconi**.
-- **Análise Fisiológica Completa**: Medição de **Pressão Arterial de Repouso** com classificação automática (Diretrizes SBC) e cálculo de **FCT (FC de Trabalho)** via fórmula de Karvonen.
-- **Zonas de Treinamento Customizáveis**: Editor flexível que permite ao treinador definir nomes, cores e percentuais de carga (% vAM ou % Potência) para cada zona.
-- **Identificação Visual**: Cabeçalho de avaliação com foto e dados biométricos do atleta para conferência rápida.
+### 3. Fisiologia do Exercício e VO2max (Elite)
+- **Motor Cardiovascular Avançado**:
+    - **FC Máxima**: Cálculo automático via fórmula de Tanaka (2001): `208 - (0.7 x idade)`.
+    - **FC de Reserva**: Identificação da capacidade de adaptação cardiovascular.
+    - **Zonas de Karvonen**: Prescrição de treinamento baseada na Frequência Cardíaca de Reserva (Z1 a Z5).
+- **Múltiplos Protocolos**: Suporte para Teste de Cooper (12 min), Balke, 3km, 5km, Step Test e Ciclismo (Watts).
+- **Teste de Conconi**: Registro de estágios progressivos com gráfico de curva de FC e detecção automática do Limiar Anaeróbico.
+- **Régua de Performance**: Visualização intuitiva do nível de condicionamento do atleta comparado a tabelas normativas.
 
 ### 4. Bioimpedância Sincronizada
 - **Múltiplos Equipamentos**: Suporte para balanças Omron e InBody com campos específicos e análise de evolução segmentar.
