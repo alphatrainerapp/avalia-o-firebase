@@ -51,25 +51,25 @@
     {
       "id": "push-ups-test",
       "description": "Desenho técnico de atleta realizando flexão de braço com eixos de movimento.",
-      "imageUrl": "https://picsum.photos/seed/push-ups-tech/600/400",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/4567/push-ups-tech.png",
       "imageHint": "pushup exercise"
     },
     {
       "id": "abdominal-test",
       "description": "Desenho técnico de teste abdominal com destaque para musculatura do core.",
-      "imageUrl": "https://picsum.photos/seed/abdominal-tech/600/400",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/1234/abdominal-tech.png",
       "imageHint": "abdominal exercise"
     },
     {
       "id": "handgrip-test",
       "description": "Desenho técnico de preensão manual com dinamômetro.",
-      "imageUrl": "https://picsum.photos/seed/handgrip-tech/600/400",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/5678/handgrip-tech.png",
       "imageHint": "handgrip strength"
     },
     {
       "id": "wells-test",
       "description": "Desenho técnico do Banco de Wells destacando alongamento.",
-      "imageUrl": "https://picsum.photos/seed/wells-tech/600/400",
+      "imageUrl": "https://firebasestudio.ai/public-hosting/projects/2654/assets/9012/wells-tech.png",
       "imageHint": "flexibility test"
     }
   ]

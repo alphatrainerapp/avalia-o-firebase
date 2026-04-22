@@ -611,7 +611,7 @@ export default function DashboardPage() {
                                 </TabsContent>
                                 <TabsContent value="testes" className="pt-4 space-y-6">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {functionalTestsConfig.map(c => <FunctionalTestCard key={f.id} config={c} />)}
+                                        {functionalTestsConfig.map(c => <FunctionalTestCard key={c.id} config={c} />)}
                                     </div>
                                     <div className="mt-8 p-6 bg-muted/20 rounded-2xl flex flex-wrap lg:flex-nowrap items-center gap-8 border border-muted/50">
                                         <div className="flex items-center gap-4 min-w-[240px] border-r border-muted/50 pr-8">
