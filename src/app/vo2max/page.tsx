@@ -590,26 +590,68 @@ export default function VO2MaxPage() {
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                                 {/* Input Column */}
                                 <div className="lg:col-span-4 space-y-4">
-                                    <Label className="text-xs font-bold text-foreground/80">
-                                        {protocol === 'cooper' ? "Distância Total (metros)" : 
-                                         protocol === 'cycling_power' ? "Potência Máxima (Watts)" : 
-                                         protocol === 'conconi' ? "Velocidade Inicial" : "Tempo de Execução"}
+                                    <Label className="text-xs font-bold text-foreground/80 uppercase tracking-wider">
+                                        {protocol === 'cooper' && "Distância Percorrida (m)"}
+                                        {(protocol === 'three_km' || protocol === 'five_km' || protocol === 'balke') && "Tempo de Execução"}
+                                        {protocol === 'cycling_power' && "Potência Máxima (W)"}
+                                        {protocol === 'step_test' && "FC de Recuperação (bpm)"}
+                                        {protocol === 'conconi' && "Velocidade Inicial (km/h)"}
                                     </Label>
-                                    <div className="relative group">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#01baba] group-focus-within:scale-110 transition-transform">
-                                            {protocol === 'cycling_power' ? <Bike className="size-6" /> : <Activity className="size-6" />}
+                                    
+                                    {(protocol === 'three_km' || protocol === 'five_km' || protocol === 'balke') ? (
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1 group">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#01baba]">
+                                                    <Timer className="size-6" />
+                                                </div>
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="min" 
+                                                    value={timeMinutes}
+                                                    onChange={(e) => setTimeMinutes(e.target.value)}
+                                                    className="h-16 pl-14 pr-4 text-3xl font-black bg-white dark:bg-muted/5 border-muted rounded-2xl focus:border-primary shadow-sm" 
+                                                />
+                                                <span className="absolute right-3 bottom-2 font-bold text-[8px] text-muted-foreground uppercase opacity-40">Minutos</span>
+                                            </div>
+                                            <div className="relative flex-1 group">
+                                                <Input 
+                                                    type="number" 
+                                                    placeholder="seg" 
+                                                    value={timeSeconds}
+                                                    onChange={(e) => setTimeSeconds(e.target.value)}
+                                                    className="h-16 px-4 text-3xl font-black bg-white dark:bg-muted/5 border-muted rounded-2xl focus:border-primary shadow-sm text-center" 
+                                                />
+                                                <span className="absolute right-3 bottom-2 font-bold text-[8px] text-muted-foreground uppercase opacity-40">Segundos</span>
+                                            </div>
                                         </div>
-                                        <Input 
-                                            type="number" 
-                                            placeholder="0" 
-                                            value={protocol === 'cycling_power' ? powerWatts : distance}
-                                            onChange={(e) => protocol === 'cycling_power' ? setPowerWatts(e.target.value) : setDistance(e.target.value)}
-                                            className="h-16 pl-14 pr-10 text-4xl font-black bg-white dark:bg-muted/5 border-muted rounded-2xl focus:border-primary shadow-sm" 
-                                        />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground/30 text-xl uppercase">
-                                            {protocol === 'cycling_power' ? 'W' : (protocol === 'conconi' ? 'km/h' : 'm')}
-                                        </span>
-                                    </div>
+                                    ) : (
+                                        <div className="relative group">
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#01baba] group-focus-within:scale-110 transition-transform">
+                                                {protocol === 'cycling_power' ? <Bike className="size-6" /> : 
+                                                 protocol === 'step_test' ? <HeartPulse className="size-6" /> : <Activity className="size-6" />}
+                                            </div>
+                                            <Input 
+                                                type="number" 
+                                                placeholder="0" 
+                                                value={
+                                                    protocol === 'cycling_power' ? powerWatts : 
+                                                    protocol === 'step_test' ? recoveryHR : distance
+                                                }
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    if (protocol === 'cycling_power') setPowerWatts(val);
+                                                    else if (protocol === 'step_test') setRecoveryHR(val);
+                                                    else setDistance(val);
+                                                }}
+                                                className="h-16 pl-14 pr-10 text-4xl font-black bg-white dark:bg-muted/5 border-muted rounded-2xl focus:border-primary shadow-sm" 
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-muted-foreground/30 text-xl uppercase">
+                                                {protocol === 'cycling_power' ? 'W' : 
+                                                 protocol === 'step_test' ? 'BPM' : 
+                                                 protocol === 'conconi' ? 'km/h' : 'm'}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Performance Scale Column */}
