@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -49,6 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
+import { Badge } from '@/components/ui/badge';
 
 const functionalTestsConfig = [
     { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
@@ -662,6 +662,60 @@ export default function DashboardPage() {
                                     </div>
                                 </TabsContent>
                             </Tabs>
+
+                            {/* Setor de Indicadores Restaurado */}
+                            <div className="mt-8 pt-6 border-t border-dashed space-y-6">
+                                <div className="flex items-center gap-2">
+                                    <TrendingUp className="size-4 text-primary" />
+                                    <h3 className="text-sm font-bold uppercase tracking-wider">Indicadores e Simetria</h3>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Soma das Dobras</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-2xl font-black text-foreground">{skinfoldsSum.toFixed(1)}</p>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">mm</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">RCQ (Cintura/Quadril)</p>
+                                        <p className="text-2xl font-black text-foreground">{rcq}</p>
+                                        <Badge variant="outline" className="mt-1 text-[8px] font-black uppercase bg-primary/10 text-primary border-primary/20">
+                                            {rcqClassification}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">RCE (Cintura/Estatura)</p>
+                                        <p className="text-2xl font-black text-foreground">{rce}</p>
+                                        <Badge variant="outline" className="mt-1 text-[8px] font-black uppercase bg-primary/10 text-primary border-primary/20">
+                                            {rceClassification}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Assimetria (Braços)</p>
+                                        <p className="text-sm font-black text-foreground uppercase">{armAsymmetry}</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground mt-1">D: {formState.perimetria?.bracoDRelaxado || 0} / E: {formState.perimetria?.bracoERelaxado || 0}</p>
+                                    </div>
+
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Assimetria (Coxas)</p>
+                                        <p className="text-sm font-black text-foreground uppercase">{thighAsymmetry}</p>
+                                        <p className="text-[9px] font-bold text-muted-foreground mt-1">D: {formState.perimetria?.coxaMedialD || 0} / E: {formState.perimetria?.coxaMedialE || 0}</p>
+                                    </div>
+
+                                    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20">
+                                        <p className="text-[10px] font-black text-primary uppercase mb-1">Gordura Calculada</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-2xl font-black text-primary">{bodyComposition.fatMassPercentage.toFixed(1)}%</p>
+                                        </div>
+                                        <p className="text-[9px] font-black text-primary uppercase opacity-70 mt-1">{fatClassification}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                   </>
