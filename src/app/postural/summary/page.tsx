@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, User, Camera, ArrowRight, Edit, Dumbbell, Download, Info } from 'lucide-react';
+import { ArrowLeft, Check, Camera, Download, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePosturalContext } from '../context';
 import { muscleMappings } from '@/lib/postural-data';
 import { useEvaluationContext } from '@/context/EvaluationContext';
@@ -25,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import PosturalReport from '@/components/PosturalReport';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 
 const viewTitles: { [key: string]: string } = {
@@ -45,7 +44,7 @@ const photoViewMapping: { [key in PhotoType]: { title: string; viewKey: keyof ty
 
 
 export default function PosturalSummaryPage() {
-    const { photos, deviations, clearPosturalData, isSaved, saveAnalysis } = usePosturalContext();
+    const { photos, deviations, saveAnalysis } = usePosturalContext();
     const { clients, allEvaluations, selectedClientId, setSelectedClientId } = useEvaluationContext();
     const { toast } = useToast();
     const router = useRouter();
@@ -61,13 +60,12 @@ export default function PosturalSummaryPage() {
             .sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
     }, [selectedClientId, allEvaluations]);
 
-    // Pre-select evaluations that have postural data when client changes
     useEffect(() => {
         const evalsWithData = clientEvaluations
             .filter(e => e.posturalPhotos && Object.keys(e.posturalPhotos).length > 0)
             .map(e => e.id);
         
-        setSelectedEvalIds(evalsWithData.slice(-4)); // Select last 4 for comparison
+        setSelectedEvalIds(evalsWithData.slice(-4));
     }, [clientEvaluations]);
 
     const comparedEvaluations = useMemo(() => {
@@ -77,14 +75,12 @@ export default function PosturalSummaryPage() {
     }, [selectedEvalIds, clientEvaluations]);
 
     const analysisData = useMemo(() => {
-      // If comparing exactly 1 historical evaluation, use its data
       if (comparedEvaluations.length === 1) {
           return {
               photos: comparedEvaluations[0].posturalPhotos || {},
               deviations: comparedEvaluations[0].posturalDeviations || {},
           }
       }
-      // Otherwise use the current session data
       return { photos, deviations };
     }, [comparedEvaluations, photos, deviations]);
 
@@ -107,7 +103,6 @@ export default function PosturalSummaryPage() {
             });
         });
 
-        // Remove duplicates
         for (const deviation in analysis) {
             analysis[deviation].shortened = [...new Set(analysis[deviation].shortened)];
             analysis[deviation].lengthened = [...new Set(analysis[deviation].lengthened)];
@@ -143,10 +138,6 @@ export default function PosturalSummaryPage() {
         saveAnalysis();
         toast({ title: 'Análise Salva', description: 'A análise postural foi finalizada e salva.' });
         router.push('/dashboard');
-    };
-    
-    const handleBackToEvaluation = () => {
-       router.push('/dashboard');
     };
 
     const handleExportPdf = async () => {
@@ -235,7 +226,7 @@ export default function PosturalSummaryPage() {
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis')}><ArrowLeft /></Button>
-                    <User className="size-8 text-primary" />
+                    <Camera className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Resumo da Avaliação Postural</h1>
                         <p className="text-muted-foreground">{client?.name} - Histórico e Comparação</p>
@@ -243,7 +234,7 @@ export default function PosturalSummaryPage() {
                 </div>
                  <div className="flex items-center gap-2">
                     <Button onClick={handleExportPdf} variant="outline"><Download className="mr-2" /> Gerar Relatório PDF</Button>
-                    <Button onClick={handleBackToEvaluation} variant="ghost">
+                    <Button onClick={() => router.push('/dashboard')} variant="ghost">
                         Voltar ao Dashboard
                     </Button>
                 </div>
@@ -425,7 +416,6 @@ export default function PosturalSummaryPage() {
                 </Button>
             </div>
 
-            {/* Hidden Report for PDF Generation */}
             <div className="fixed -left-[9999px] -top-[9999px] w-[800px] bg-white">
                 {client && (
                     <PosturalReport

@@ -64,7 +64,7 @@ export type VO2MaxData = {
     totalTimeSeconds?: number;
     recoveryHR?: number;
     stages?: any[];
-    zoneConfig?: any[]; // Armazena a configuração de zonas customizada
+    zoneConfig?: any[];
 };
 
 
@@ -155,6 +155,47 @@ export const clients: Client[] = [
 ];
 
 export const evaluations: Evaluation[] = [
+    {
+        id: 'eval_joao_1',
+        clientId: 'cli_1',
+        clientName: 'João da Silva',
+        date: '2023-10-05',
+        protocol: 'Pollock 7 dobras',
+        bodyMeasurements: { weight: 88.5, height: 180, waistCircumference: 92, hipCircumference: 104 },
+        bodyComposition: { bodyFatPercentage: 22.5 },
+        perimetria: { ombro: 118, torax: 106, cintura: 92, abdomen: 98, quadril: 104, bracoDRelaxado: 36, bracoERelaxado: 35.5, coxaMedialD: 62, coxaMedialE: 61.5 },
+        skinFolds: { peitoral: 14, abdominal: 24, coxa: 18, tricipital: 12, subscapular: 16, axilarMedia: 15, supraIliaca: 20 },
+        boneDiameters: { biestiloidal: 5.8, bicondilarUmero: 7.2, bicondilarFemur: 10.1 },
+        bioimpedance: { scaleType: null },
+        posturalPhotos: {
+            front: 'https://picsum.photos/seed/joao1front/600/800',
+            back: 'https://picsum.photos/seed/joao1back/600/800',
+            right: 'https://picsum.photos/seed/joao1right/600/800',
+            left: 'https://picsum.photos/seed/joao1left/600/800'
+        },
+        posturalDeviations: {
+            anterior: ['Cabeça inclinada', 'Ombro elevado'],
+            posterior: ['Escápula alada D'],
+            lateral_direita: ['Cabeça projetada', 'Hipercifose torácica'],
+            lateral_esquerda: ['Cabeça projetada']
+        },
+        vo2MaxData: {
+            protocol: 'cooper',
+            vo2: 42.5,
+            vAM: 12.8,
+            classification: 'Médio',
+            hrMax: 185,
+            hrRest: 64,
+            distance: 2400
+        },
+        functionalTests: {
+          pushUps: 20,
+          sitUps: 32,
+          handgrip: 48,
+          wells: 5
+        },
+        observations: 'Avaliação inicial João. Foco em hipertrofia e melhora da postura cervical.'
+    },
     {
         id: 'eval_maria_1',
         clientId: 'cli_2',
@@ -313,13 +354,13 @@ export const protocolSkinfolds: { [key: string]: SkinfoldKeys[] } = {
     
 export function calculateBodyComposition(evaluation: Evaluation, client: Client): BodyComposition {
     const weight = evaluation.bodyMeasurements?.weight || 0;
-    const height = evaluation.bodyMeasurements?.height || 0; // in cm
+    const height = evaluation.bodyMeasurements?.height || 0;
     const gender = client.gender;
     const fatPercentage = evaluation.bodyComposition?.bodyFatPercentage || 0;
     
-    const wristDiameter = evaluation.boneDiameters?.biestiloidal || 0; // cm
-    const femurDiameter = evaluation.boneDiameters?.bicondilarFemur || 0; // cm
-    const humerusDiameter = evaluation.boneDiameters?.bicondilarUmero || 0; // cm
+    const wristDiameter = evaluation.boneDiameters?.biestiloidal || 0;
+    const femurDiameter = evaluation.boneDiameters?.bicondilarFemur || 0;
+    const humerusDiameter = evaluation.boneDiameters?.bicondilarUmero || 0;
 
     if (weight === 0) {
         return { fatMassKg: 0, leanMassKg: 0, muscleMassKg: 0, boneMassKg: 0, residualMassKg: 0, fatMassPercentage: 0, muscleMassPercentage: 0, boneMassPercentage: 0, residualMassPercentage: 0, idealWeight: 0, fatLossNeeded: 0 };
@@ -328,30 +369,24 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
     const fatMassKg = (weight * fatPercentage) / 100;
     const leanMassKg = weight - fatMassKg;
 
-    // Bone Mass (Massa Óssea) - Rocha (1975) adaptado de Von Dobeln
-    // Utiliza diâmetros de Punho, Fêmur e Úmero para maior precisão
     let boneMassKg = 0;
     if (height > 0 && wristDiameter > 0 && femurDiameter > 0) {
         const heightInM = height / 100;
         const wristInM = wristDiameter / 100;
         const femurInM = femurDiameter / 100;
-        const humerusInM = humerusDiameter > 0 ? humerusDiameter / 100 : wristInM; // Fallback se úmero não preenchido
+        const humerusInM = humerusDiameter > 0 ? humerusDiameter / 100 : wristInM;
         
-        // Fórmula de Von Dobeln modificada por Rocha
         boneMassKg = 3.02 * Math.pow(Math.pow(heightInM, 2) * wristInM * femurInM * 400, 0.712);
         
-        // Ajuste leve se tivermos o úmero para média de membros superiores
         if (humerusDiameter > 0) {
             const boneMassWithHumerus = 3.02 * Math.pow(Math.pow(heightInM, 2) * humerusInM * femurInM * 400, 0.712);
             boneMassKg = (boneMassKg + boneMassWithHumerus) / 2;
         }
     }
     
-    // Residual Mass (Massa Residual) - Würch (1974)
     const residualFactor = gender === 'Feminino' ? 0.21 : 0.24;
     const residualMassKg = weight * residualFactor;
 
-    // Muscle Mass (Massa Muscular) - Estratégia de 4 componentes
     const muscleMassKg = weight - fatMassKg - boneMassKg - residualMassKg;
 
     const fatMassPercentage = fatPercentage;
@@ -359,11 +394,9 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
     const boneMassPercentage = weight > 0 ? (boneMassKg / weight) * 100 : 0;
     const residualMassPercentage = weight > 0 ? (residualMassKg / weight) * 100 : 0;
 
-    // Ideal Weight (Considerando gordura desejável: Homens 15%, Mulheres 25%)
     const idealLeanMassPercentage = gender === 'Masculino' ? 0.85 : 0.75;
     const idealWeight = leanMassKg / idealLeanMassPercentage;
     
-    // Fat Loss Needed
     const fatLossNeeded = Math.max(0, weight - idealWeight);
     
     return {
@@ -386,7 +419,6 @@ export type ClassificationType = 'EXCELENTE' | 'BOM' | 'REGULAR' | 'FRACO' | 'MU
 export function getFunctionalClassification(test: keyof FunctionalTests, value: number, age: number, gender: string): { classification: ClassificationType, percentile: string, description: string } {
   if (value === 0) return { classification: 'FRACO', percentile: 'N/A', description: 'Abaixo do esperado para a faixa etária.' };
 
-  // Placeholder logic for classifications based on general norms
   if (test === 'pushUps') {
     if (value > 30) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Acima da média para sua faixa etária.' };
     if (value > 20) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Nível satisfatório de força.' };
