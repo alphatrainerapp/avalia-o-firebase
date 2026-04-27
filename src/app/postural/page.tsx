@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePosturalContext } from './context';
 import { Label } from '@/components/ui/label';
 import { useEvaluationContext } from '@/context/EvaluationContext';
+import { Badge } from '@/components/ui/badge';
 
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
@@ -170,29 +171,37 @@ export default function PosturalPage() {
                     </CardHeader>
                      <CardContent>
                         <Label className="text-[10px] font-black uppercase text-muted-foreground mb-3 block">Histórico de Avaliações (Selecione para editar)</Label>
-                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                        <div className="flex gap-6 overflow-x-auto pb-6 pt-4 px-4 scrollbar-hide">
                             {clientEvaluations.length > 0 ? (
                                 clientEvaluations.map((ev, index) => {
                                     const isSelected = activeEvaluationId === ev.id;
                                     return (
-                                        <Card 
-                                            key={ev.id} 
-                                            className={cn(
-                                                "shrink-0 w-40 text-center cursor-pointer transition-all shadow-md rounded-2xl border-none",
-                                                isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-lg' : 'bg-white hover:bg-muted/50'
+                                        <div key={ev.id} className="relative shrink-0">
+                                            {ev.id === activeEvaluationId && (
+                                                <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black border-none font-black text-[8px] h-5 shadow-sm px-2">EDITANDO</Badge>
                                             )}
-                                            onClick={() => handleSelectEvaluation(isSelected ? null : ev.id)}
-                                        >
-                                            <CardHeader className="p-4 pb-1">
-                                                    <CardTitle className={cn("text-[10px] font-black uppercase tracking-widest", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                                                    {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="p-4 pt-0">
-                                                <p className="text-3xl font-black">{index + 1}</p>
-                                                <p className={cn("text-[9px] font-bold uppercase mt-1", isSelected ? "text-primary-foreground/60" : "text-muted-foreground/50")}>Avaliação</p>
-                                            </CardContent>
-                                        </Card>
+                                            <Card 
+                                                className={cn(
+                                                    "w-44 text-center cursor-pointer transition-all shadow-md rounded-2xl border-none relative overflow-hidden",
+                                                    isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-xl ring-4 ring-primary/10' : 'bg-white hover:bg-muted/50'
+                                                )}
+                                                onClick={() => handleSelectEvaluation(isSelected ? null : ev.id)}
+                                            >
+                                                <CardHeader className="p-4 pb-2">
+                                                        <CardTitle className={cn("text-[10px] font-black uppercase tracking-[0.2em]", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                                                        {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                                    </CardTitle>
+                                                </CardHeader>
+                                                <CardContent className="p-4 pt-0">
+                                                    <div className="flex items-center justify-center gap-3">
+                                                        <div className={cn("h-10 w-[1px]", isSelected ? "bg-white/20" : "bg-muted")} />
+                                                        <p className="text-5xl font-black leading-none">{index + 1}</p>
+                                                        <div className={cn("h-10 w-[1px]", isSelected ? "bg-white/20" : "bg-muted")} />
+                                                    </div>
+                                                    <p className={cn("text-[9px] font-bold uppercase mt-2 tracking-widest", isSelected ? "text-primary-foreground/60" : "text-muted-foreground/50")}>Avaliação</p>
+                                                </CardContent>
+                                            </Card>
+                                        </div>
                                     )
                                 })
                             ) : (
