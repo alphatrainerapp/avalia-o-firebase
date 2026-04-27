@@ -2,7 +2,24 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown, Info, Star, CheckCircle2, AlertCircle, TrendingUp, Trophy, Bone } from 'lucide-react';
+import { 
+    Download, 
+    Plus, 
+    Save, 
+    Activity, 
+    User, 
+    BarChart, 
+    Wind, 
+    X, 
+    ChevronDown, 
+    Info, 
+    Star, 
+    CheckCircle2, 
+    AlertCircle, 
+    TrendingUp, 
+    Trophy, 
+    Bone 
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -26,7 +43,13 @@ import {
     type BodyComposition,
     getFunctionalClassification,
     type ClassificationType,
-    getBoneDensityClassification
+    getBoneDensityClassification,
+    getFatClassification,
+    getAsymmetryClassification,
+    calculateRCQ,
+    getRcqClassification,
+    calculateRCE,
+    getRceClassification
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -241,27 +264,6 @@ export default function DashboardPage() {
         return 'Obesidade Grau III';
     };
 
-    const calculateRCQ = (waist?: number, hip?: number) => (waist && hip && hip > 0 && waist > 0) ? (waist / hip).toFixed(2) : '—';
-    const getRcqClassification = (rcq?: string, gender?: 'Masculino' | 'Feminino') => {
-        if (!rcq || rcq === '—' || !gender) return '—';
-        const v = parseFloat(rcq);
-        if (gender === 'Feminino') return v < 0.80 ? 'Baixo Risco' : (v <= 0.85 ? 'Risco Moderado' : 'Alto Risco');
-        return v < 0.95 ? 'Baixo Risco' : (v <= 1.0 ? 'Risco Moderado' : 'Alto Risco');
-    };
-
-    const calculateRCE = (waist?: number, height?: number) => (waist && height && waist > 0 && height > 0) ? (waist / height).toFixed(2) : '—';
-    const getRceClassification = (rce?: string) => (!rce || rce === '—') ? '—' : (parseFloat(rce) <= 0.50 ? 'Baixo Risco' : 'Risco Aumentado');
-
-    const getAsymmetryClassification = (val1?: number, val2?: number) => {
-        if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '—';
-        const diff = Math.abs(val1 - val2);
-        const p = (diff / Math.max(val1, val2)) * 100;
-        if (p < 1.5) return 'Sem diferença';
-        if (p <= 5) return 'Diferença';
-        if (p <= 10) return 'Diferença grande';
-        return 'Diferença severa';
-    };
-
     const bmi = useMemo(() => calculateBMI(formState.bodyMeasurements?.weight, formState.bodyMeasurements?.height), [formState.bodyMeasurements]);
     const bmiClassification = useMemo(() => getBmiClassification(bmi), [bmi]);
     const rcq = useMemo(() => calculateRCQ(formState.perimetria?.cintura, formState.perimetria?.quadril), [formState.perimetria]);
@@ -283,14 +285,7 @@ export default function DashboardPage() {
         return calculateBodyComposition(formState as Evaluation, client);
     }, [formState, client]);
 
-    const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
-        if (!percentage || percentage === 0 || !gender) return '—';
-        if (gender === 'Feminino') return percentage < 20 ? 'Atleta' : (percentage <= 24 ? 'Bom' : (percentage <= 30 ? 'Aceitável' : 'Obeso'));
-        return percentage < 12 ? 'Atleta' : (percentage <= 16 ? 'Bom' : (percentage <= 22 ? 'Aceitável' : 'Obeso'));
-    };
-    
     const fatClassification = useMemo(() => getFatClassification(bodyComposition.fatMassPercentage, formState.gender), [bodyComposition.fatMassPercentage, formState.gender]);
-    
     const boneClassification = useMemo(() => getBoneDensityClassification(bodyComposition.boneMassPercentage, formState.gender), [bodyComposition.boneMassPercentage, formState.gender]);
 
     const handleNewEvaluation = () => {

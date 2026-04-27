@@ -432,3 +432,48 @@ export function getBoneDensityClassification(bonePercentage: number, gender: str
         return 'Robusta';
     }
 }
+
+export const getFatClassification = (percentage?: number, gender?: 'Masculino' | 'Feminino') => {
+    if (!percentage || percentage === 0 || !gender) return '—';
+    if (gender === 'Feminino') {
+        if (percentage < 20) return 'Atleta';
+        if (percentage <= 24) return 'Bom';
+        if (percentage <= 30) return 'Aceitável';
+        return 'Obeso';
+    } else {
+        if (percentage < 12) return 'Atleta';
+        if (percentage <= 16) return 'Bom';
+        if (percentage <= 22) return 'Aceitável';
+        return 'Obeso';
+    }
+};
+
+export const getBPClassification = (pas: number, pad: number): string => {
+    if (!pas || !pad) return '—';
+    if (pas <= 120 && pad <= 80) return 'Normal';
+    if (pas <= 139 || pad <= 89) return 'Pré-hipertensão';
+    if (pas <= 159 || pad <= 99) return 'Hipertensão Estágio 1';
+    if (pas <= 179 || pad <= 109) return 'Hipertensão Estágio 2';
+    return 'Hipertensão Estágio 3';
+};
+
+export const getAsymmetryClassification = (val1?: number, val2?: number) => {
+    if (val1 === undefined || val2 === undefined || val1 <= 0 || val2 <= 0) return '—';
+    const diff = Math.abs(val1 - val2);
+    const p = (diff / Math.max(val1, val2)) * 100;
+    if (p < 1.5) return 'Sem diferença';
+    if (p <= 5) return 'Diferença';
+    if (p <= 10) return 'Diferença grande';
+    return 'Diferença severa';
+};
+
+export const calculateRCQ = (waist?: number, hip?: number) => (waist && hip && hip > 0 && waist > 0) ? (waist / hip).toFixed(2) : '—';
+export const getRcqClassification = (rcq?: string, gender?: 'Masculino' | 'Feminino') => {
+    if (!rcq || rcq === '—' || !gender) return '—';
+    const v = parseFloat(rcq);
+    if (gender === 'Feminino') return v < 0.80 ? 'Baixo Risco' : (v <= 0.85 ? 'Risco Moderado' : 'Alto Risco');
+    return v < 0.95 ? 'Baixo Risco' : (v <= 1.0 ? 'Risco Moderado' : 'Alto Risco');
+};
+
+export const calculateRCE = (waist?: number, height?: number) => (waist && height && waist > 0 && height > 0) ? (waist / height).toFixed(2) : '—';
+export const getRceClassification = (rce?: string) => (!rce || rce === '—') ? '—' : (parseFloat(rce) <= 0.50 ? 'Baixo Risco' : 'Risco Aumentado');
