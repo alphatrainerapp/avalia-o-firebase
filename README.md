@@ -1,6 +1,6 @@
-# Alpha Insights - Alpha Trainer
+# Alpha Insights - Alpha Trainer (Elite Version)
 
-Sistema avançado de avaliação física e insights de treinamento desenvolvido com Next.js 15, Tailwind CSS e Shadcn UI. Projetado para profissionais que exigem precisão científica e relatórios de alta fidelidade.
+Sistema avançado de avaliação física e insights de treinamento desenvolvido com Next.js 15, Tailwind CSS e Shadcn UI. Projetado para profissionais que exigem precisão científica, agilidade técnica e relatórios de alta fidelidade.
 
 ## 🚀 Repositório Oficial
 Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](https://github.com/alphatrainerapp/avalia-o-firebase)
@@ -14,13 +14,13 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 ### 2. Dashboard de Avaliação Física (Protocolo ISAK & Rocha)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
 - **Indicadores de Saúde em Tempo Real**: 
+    - **Soma de Dobras**: Total acumulado conforme o protocolo selecionado.
     - **RCE (Relação Cintura-Estatura)**: Classificação de risco cardiometabólico.
-    - **RCQ (Relação Cintura-Quadril)**: Avaliação de gordura visceral.
+    - **RCQ (Relação Cintura-Quadril)**: Avaliação de gordura visceral por gênero.
     - **Densidade Óssea**: Classificação automática (Baixa, Normal, Robusta).
     - **Simetria Corporal**: Mapeamento de assimetrias entre membros (Braços e Coxas).
-- **Protocolo ISAK**: Suporte completo ao perfil de 8 dobras e diâmetros ósseos.
 
-### 3. Aptidão Física e Testes Funcionais 🆕
+### 3. Aptidão Física e Testes Funcionais
 - **Galeria Técnica de Alta Fidelidade**: Registro com imagens de referência técnica para:
     - **Flexão de Braço**: Resistência de membros superiores.
     - **Abdominal em 1 Minuto**: Resistência do core.
@@ -34,16 +34,18 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
     - **Zonas de Karvonen**: Prescrição de treinamento baseada na Frequência Cardíaca de Reserva (Z1 a Z5).
     - **Zonas de Pace**: Tradução automática de intensidade para ritmo de corrida (min/km).
 - **Múltiplos Protocolos**: Cooper (12 min), Balke, 3km, 5km, Step Test e Ciclismo (Watts).
-- **Teste de Conconi**: Detecção automática do Limiar Anaeróbico via ponto de deflexão da FC.
+- **Teste de Conconi**: Detecção automática do Limiar Anaeróbico via ponto de deflexão da FC com gráfico interativo.
 
 ### 5. Bioimpedância Sincronizada
-- **Análise Segmentar**: Suporte para balanças Omron e InBody com mapeamento de tecidos por segmento corporal e análise de evolução.
+- **Análise Segmentar**: Suporte para balanças Omron e InBody com mapeamento de tecidos por segmento corporal e análise de evolução histórica.
 
-### 6. Avaliação Postural Avançada
-- **Interface Mobile-First**: Carrossel otimizado para marcação de desvios e análise muscular automática (identificação de músculos encurtados e alongados).
+### 6. Avaliação Postural de Alta Fidelidade
+- **Análise Visual Inteligente**: Ferramentas de Zoom, Pan e Grade (Grid) para identificação precisa de desvios.
+- **Laudo Muscular Automático**: Identificação instantânea de músculos encurtados/superativos e alongados/inibidos baseada nos desvios marcados.
+- **Interface Otimizada**: Fluxo de preenchimento com seções expandidas por padrão e visual simétrico.
 
 ### 7. Relatórios PDF Profissionais
-- **Geração de Documentos de Alta Fidelidade**: Inclui análise de composição corporal, gráficos evolutivos, dados brutos de perimetria/dobras e um resumo executivo de indicadores de saúde.
+- **Geração de Documentos de Alta Fidelidade**: Inclui análise de composição corporal, evolução gráfica, dados brutos de perimetria/dobras e um resumo executivo de indicadores de saúde.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
