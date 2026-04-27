@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { useEvaluationContext } from '@/context/EvaluationContext';
 
 export type Deviations = { [key: string]: string[] };
 
@@ -12,15 +13,19 @@ type PosturalContextType = {
   clearPosturalData: () => void;
   loadPosturalData: (data: { photos: { [key: string]: string | undefined }, deviations: Deviations }) => void;
   isSaved: boolean;
-  saveAnalysis: () => void;
+  saveAnalysis: (evaluationId: string | null) => void;
+  activeEvaluationId: string | null;
+  setActiveEvaluationId: (id: string | null) => void;
 };
 
 const PosturalContext = createContext<PosturalContextType | undefined>(undefined);
 
 export const PosturalContextProvider = ({ children }: { children: ReactNode }) => {
+  const { setAllEvaluations } = useEvaluationContext();
   const [photos, setPhotos] = useState<{ [key: string]: string | undefined }>({});
   const [deviations, setDeviations] = useState<Deviations>({});
   const [isSaved, setIsSaved] = useState(true);
+  const [activeEvaluationId, setActiveEvaluationId] = useState<string | null>(null);
 
   const setPhoto = useCallback((type: string, url: string) => {
     setPhotos(prev => ({ ...prev, [type]: url }));
@@ -33,11 +38,9 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
         const isSelected = currentDeviations.includes(deviation);
 
         if (isSelected) {
-            // Remove if already selected
             const newViewDeviations = currentDeviations.filter(d => d !== deviation);
             return { ...prev, [view]: newViewDeviations };
         } else {
-            // Add if not selected
             const newViewDeviations = [...currentDeviations, deviation];
             return { ...prev, [view]: newViewDeviations };
         }
@@ -49,6 +52,7 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
     setPhotos({});
     setDeviations({});
     setIsSaved(true);
+    setActiveEvaluationId(null);
   }, []);
   
   const loadPosturalData = useCallback((data: { photos: { [key: string]: string | undefined }, deviations: Deviations }) => {
@@ -57,14 +61,32 @@ export const PosturalContextProvider = ({ children }: { children: ReactNode }) =
     setIsSaved(true);
   }, []);
 
-  const saveAnalysis = useCallback(() => {
-    // In a real app, this would save to a database.
-    console.log("Saving analysis data...", { photos, deviations });
+  const saveAnalysis = useCallback((evaluationId: string | null) => {
+    if (!evaluationId) return;
+
+    setAllEvaluations(prevEvals =>
+        prevEvals.map(ev =>
+            ev.id === evaluationId
+                ? { ...ev, posturalPhotos: photos, posturalDeviations: deviations }
+                : ev
+        )
+    );
     setIsSaved(true);
-  }, [photos, deviations]);
+  }, [photos, deviations, setAllEvaluations]);
 
   return (
-    <PosturalContext.Provider value={{ photos, setPhoto, deviations, toggleDeviation, clearPosturalData, loadPosturalData, isSaved, saveAnalysis }}>
+    <PosturalContext.Provider value={{ 
+        photos, 
+        setPhoto, 
+        deviations, 
+        toggleDeviation, 
+        clearPosturalData, 
+        loadPosturalData, 
+        isSaved, 
+        saveAnalysis,
+        activeEvaluationId,
+        setActiveEvaluationId
+    }}>
       {children}
     </PosturalContext.Provider>
   );

@@ -10,17 +10,14 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { usePosturalContext } from './context';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { type Evaluation } from '@/lib/data';
 import { useEvaluationContext } from '@/context/EvaluationContext';
-
 
 type PhotoType = 'front' | 'back' | 'right' | 'left';
 
 export default function PosturalPage() {
-    const { photos, setPhoto, deviations, clearPosturalData, loadPosturalData } = usePosturalContext();
-    const { clients, allEvaluations, addEvaluation, setAllEvaluations, selectedClientId, setSelectedClientId } = useEvaluationContext();
+    const { photos, setPhoto, deviations, clearPosturalData, loadPosturalData, saveAnalysis, activeEvaluationId, setActiveEvaluationId } = usePosturalContext();
+    const { clients, allEvaluations, addEvaluation, selectedClientId } = useEvaluationContext();
 
     const fileInputRefs = {
         front: useRef<HTMLInputElement>(null),
@@ -30,7 +27,6 @@ export default function PosturalPage() {
     };
     const { toast } = useToast();
     const [currentDate, setCurrentDate] = useState('');
-    const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => allEvaluations.filter(e => e.clientId === selectedClientId).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()), [selectedClientId, allEvaluations]);
@@ -52,7 +48,7 @@ export default function PosturalPage() {
     };
     
     const handleSelectEvaluation = useCallback((evalId: string | null) => {
-        setSelectedEvaluationId(evalId);
+        setActiveEvaluationId(evalId);
         if (!evalId) {
             clearPosturalData();
             return;
@@ -66,44 +62,19 @@ export default function PosturalPage() {
         } else {
              clearPosturalData();
         }
-    }, [allEvaluations, clearPosturalData, loadPosturalData]);
-
-    const handleManualSelectEvaluation = (evalId: string) => {
-        if (selectedEvaluationId === evalId) {
-            handleSelectEvaluation(null); // Deselect
-        } else {
-            handleSelectEvaluation(evalId); // Select
-        }
-    }
+    }, [allEvaluations, clearPosturalData, loadPosturalData, setActiveEvaluationId]);
 
     useEffect(() => {
         setCurrentDate(new Date().toLocaleDateString('pt-BR'));
-    }, []);
-
-    useEffect(() => {
-        const mostRecentEval = clientEvaluations.at(-1);
-        if (mostRecentEval) {
-            handleSelectEvaluation(mostRecentEval.id);
-        } else {
-            handleSelectEvaluation(null);
+        
+        // Selecionar a avaliação mais recente por padrão se nenhuma estiver ativa
+        if (!activeEvaluationId && clientEvaluations.length > 0) {
+            handleSelectEvaluation(clientEvaluations[clientEvaluations.length - 1].id);
         }
-    }, [clientEvaluations, handleSelectEvaluation]);
+    }, [clientEvaluations, activeEvaluationId, handleSelectEvaluation]);
 
     const handleNewEvaluation = () => {
         if (client) {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const localDateString = `${year}-${month}-${day}`;
-
-            const todaysEval = clientEvaluations.find(e => e.date === localDateString && e.clientId === client.id);
-            if (todaysEval) {
-                handleSelectEvaluation(todaysEval.id);
-                toast({ title: "Avaliação já existente", description: "Uma avaliação para a data de hoje já existe e foi selecionada." });
-                return;
-            }
-            
             const newEvaluation = addEvaluation(client.id);
             handleSelectEvaluation(newEvaluation.id);
             toast({ title: "Nova Avaliação Postural", description: "Um novo registro de avaliação foi criado para hoje." });
@@ -111,19 +82,13 @@ export default function PosturalPage() {
     };
     
     const handleSave = () => {
-        if (selectedEvaluationId) {
-            setAllEvaluations(prevEvals =>
-                prevEvals.map(ev =>
-                    ev.id === selectedEvaluationId
-                        ? { ...ev, posturalPhotos: photos, posturalDeviations: deviations }
-                        : ev
-                )
-            );
-            const evalObj = allEvaluations.find(e => e.id === selectedEvaluationId);
+        if (activeEvaluationId) {
+            saveAnalysis(activeEvaluationId);
+            const evalObj = allEvaluations.find(e => e.id === activeEvaluationId);
             const formattedDate = evalObj ? new Date(evalObj.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : '';
             toast({
-                title: 'Análise Salva',
-                description: `A análise postural foi salva na avaliação de ${formattedDate}.`,
+                title: 'Fotos e Dados Salvos',
+                description: `A análise postural foi sincronizada com a avaliação de ${formattedDate}.`,
             });
         } else {
              toast({
@@ -136,14 +101,14 @@ export default function PosturalPage() {
 
     const PhotoUploadCard = ({ type, title }: { type: PhotoType, title: string }) => (
         <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="text-center text-lg font-medium">{title}</CardTitle>
+            <CardHeader className="p-4">
+                <CardTitle className="text-center text-sm font-bold uppercase tracking-tight text-primary/80">{title}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0">
                 <div
                     className={cn(
-                        'w-full h-64 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors',
-                        { 'border-primary': photos[type] }
+                        'w-full h-64 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer bg-muted/20 hover:bg-muted/40 transition-all group overflow-hidden',
+                        { 'border-primary/50 bg-primary/5': photos[type] }
                     )}
                     onClick={() => triggerFileInput(type)}
                 >
@@ -155,11 +120,18 @@ export default function PosturalPage() {
                         className="hidden"
                     />
                     {photos[type] ? (
-                        <Image src={photos[type]!} alt={`${title} preview`} width={200} height={256} className="h-full w-auto object-contain rounded-md" />
+                        <div className="relative w-full h-full">
+                            <Image src={photos[type]!} alt={`${title} preview`} fill className="object-contain p-2" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <UploadCloud className="text-white size-8" />
+                            </div>
+                        </div>
                     ) : (
-                        <div className="text-center text-muted-foreground">
-                            <UploadCloud className="mx-auto h-12 w-12" />
-                            <p>Clique para adicionar/modificar</p>
+                        <div className="text-center space-y-2">
+                            <div className="p-3 bg-white rounded-full inline-block shadow-sm group-hover:scale-110 transition-transform">
+                                <UploadCloud className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Clique para adicionar</p>
                         </div>
                     )}
                 </div>
@@ -168,94 +140,95 @@ export default function PosturalPage() {
     );
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="min-h-screen bg-background text-foreground pb-12">
             <header className="flex flex-wrap items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-3">
                     <Link href="/dashboard"><Button variant="outline" size="icon"><ArrowLeft /></Button></Link>
                     <User className="size-8 text-primary" />
                     <div>
                         <h1 className="text-2xl font-bold">Avaliação Postural</h1>
-                        <p className="text-muted-foreground">Data: {currentDate}</p>
+                        <p className="text-muted-foreground text-xs uppercase font-bold tracking-widest">Sincronização de Imagens</p>
                     </div>
                 </div>
-                 <p className="text-sm font-semibold text-primary uppercase">UPLOAD / AVALIAÇÃO / RESUMO</p>
+                 <p className="text-[10px] font-black text-primary uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">UPLOAD / AVALIAÇÃO / RESUMO</p>
             </header>
 
             <div className="space-y-8">
-                <Card>
+                <Card className="border-none shadow-sm bg-muted/10">
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="grid gap-2 w-full sm:max-w-sm">
-                                <Label htmlFor="name">Aluno</Label>
-                                <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">
+                            <div className="grid gap-1">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Aluno em Análise</Label>
+                                <div className="h-10 flex items-center px-4 rounded-xl border bg-white font-bold text-sm shadow-sm">
                                     {client?.name || 'Nenhum aluno selecionado'}
                                 </div>
-                                <p className="text-[10px] text-muted-foreground">Para trocar de aluno, utilize o menu lateral "Alunos".</p>
                             </div>
-                            <Button onClick={handleNewEvaluation} variant="outline" className="w-full sm:w-auto">
-                                <Plus className="mr-2" /> Nova Avaliação
+                            <Button onClick={handleNewEvaluation} variant="outline" className="w-full sm:w-auto h-11 px-6 rounded-xl border-primary/30 text-primary hover:bg-primary/5 font-bold">
+                                <Plus className="mr-2 size-4" /> Nova Avaliação
                             </Button>
                         </div>
                     </CardHeader>
                      <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Selecione uma avaliação física existente para vincular esta análise postural, ou crie uma nova.
-                        </p>
-                        <div className="flex gap-4 overflow-x-auto pb-4">
-                            {clientEvaluations.map((ev, index) => {
-                                const isSelected = selectedEvaluationId === ev.id;
-                                return (
-                                    <Card 
-                                        key={ev.id} 
-                                        className={cn(
-                                            "shrink-0 w-36 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
-                                            isSelected ? 'bg-primary text-primary-foreground border-transparent shadow-lg' : 'bg-card'
-                                        )}
-                                        onClick={() => handleManualSelectEvaluation(ev.id)}
-                                    >
-                                        <CardHeader className="p-4 relative">
-                                                <CardTitle className={cn("text-sm font-normal capitalize", isSelected ? "text-primary-foreground" : "text-card-foreground")}>
-                                                {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <p className={cn("text-4xl font-bold", isSelected ? "text-primary-foreground" : "text-card-foreground")}>{index + 1}</p>
-                                        </CardContent>
-                                    </Card>
-                                )
-                            })}
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground mb-3 block">Histórico de Avaliações (Selecione para editar)</Label>
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                            {clientEvaluations.length > 0 ? (
+                                clientEvaluations.map((ev, index) => {
+                                    const isSelected = activeEvaluationId === ev.id;
+                                    return (
+                                        <Card 
+                                            key={ev.id} 
+                                            className={cn(
+                                                "shrink-0 w-40 text-center cursor-pointer transition-all shadow-md rounded-2xl border-none",
+                                                isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-lg' : 'bg-white hover:bg-muted/50'
+                                            )}
+                                            onClick={() => handleSelectEvaluation(isSelected ? null : ev.id)}
+                                        >
+                                            <CardHeader className="p-4 pb-1">
+                                                    <CardTitle className={cn("text-[10px] font-black uppercase tracking-widest", isSelected ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                                                    {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-4 pt-0">
+                                                <p className="text-3xl font-black">{index + 1}</p>
+                                                <p className={cn("text-[9px] font-bold uppercase mt-1", isSelected ? "text-primary-foreground/60" : "text-muted-foreground/50")}>Avaliação</p>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })
+                            ) : (
+                                <p className="text-sm text-muted-foreground italic p-4">Nenhuma avaliação encontrada. Clique em "Nova Avaliação" para começar.</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
 
+                {activeEvaluationId && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <UploadCloud className="size-5 text-primary" />
+                                Fotos da Avaliação selecionada
+                            </h3>
+                            <div className="flex gap-2">
+                                <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-lg h-11 px-6 rounded-xl font-bold">
+                                    <Save className="mr-2 size-4" /> Salvar Fotos
+                                </Button>
+                                <Link href="/postural/analysis">
+                                    <Button variant="outline" className="h-11 px-6 rounded-xl font-bold">
+                                        Próximo <ArrowRight className="ml-2 size-4" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Upload de Fotos</CardTitle>
-                        <CardDescription>
-                            {selectedEvaluationId ? `Anexando fotos à avaliação de ${clientEvaluations.find(e => e.id === selectedEvaluationId)?.date ? new Date(clientEvaluations.find(e => e.id === selectedEvaluationId)!.date.replace(/-/g, '/')).toLocaleDateString('pt-BR') : ''}.` : 'Nenhuma avaliação selecionada. Crie uma nova avaliação.'}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <PhotoUploadCard type="front" title="Foto Frente" />
-                        <PhotoUploadCard type="back" title="Foto Costas" />
-                        <PhotoUploadCard type="right" title="Foto Lado Direito" />
-                        <PhotoUploadCard type="left" title="Foto Lado Esquerdo" />
-                    </CardContent>
-                </Card>
-
-                <div className="flex justify-end gap-4">
-                    <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
-                        <Save className="mr-2" />
-                        Salvar
-                    </Button>
-                    <Link href="/postural/analysis">
-                        <Button variant="outline">
-                            Próximo
-                            <ArrowRight className="ml-2" />
-                        </Button>
-                    </Link>
-                </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <PhotoUploadCard type="front" title="Frente" />
+                            <PhotoUploadCard type="back" title="Costas" />
+                            <PhotoUploadCard type="right" title="Lado Direito" />
+                            <PhotoUploadCard type="left" title="Lado Esquerdo" />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
