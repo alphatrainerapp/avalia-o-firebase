@@ -222,27 +222,38 @@ export default function PosturalAnalysisPage() {
         }
 
         return (
-            <Accordion type="multiple" defaultValue={analysisSections.map(s => s.title)} className="w-full space-y-4">
+            <Accordion 
+                key={viewKey}
+                type="multiple" 
+                defaultValue={analysisSections.map(s => s.title)} 
+                className="w-full space-y-4"
+            >
                 {analysisSections.map((section) => (
-                     <Card key={section.title} className="overflow-hidden">
-                        <AccordionItem value={section.title} className="border-b-0">
-                            <AccordionTrigger className="text-base font-semibold px-6 py-4 bg-muted/30 hover:bg-muted/50">
+                     <Card key={section.title} className="overflow-hidden border-none shadow-md">
+                        <AccordionItem value={section.title} className="border-none">
+                            <AccordionTrigger className="text-sm font-bold px-6 py-4 bg-white hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-muted/50">
                                 {section.title}
                             </AccordionTrigger>
-                            <AccordionContent className="p-6 pt-2">
-                                <div className="space-y-4 pl-2">
+                            <AccordionContent className="p-6 pt-4 bg-white/50">
+                                <div className="space-y-6">
                                     {section.items.map((item, itemIndex) => (
-                                        <div key={itemIndex}>
-                                            {item.subtitle && <Label className="font-medium text-sm">{item.subtitle}</Label>}
-                                            <div className="grid gap-2 mt-2">
+                                        <div key={itemIndex} className="space-y-3">
+                                            {item.subtitle && <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">{item.subtitle}</Label>}
+                                            <div className="grid gap-3">
                                                 {item.options.map(option => (
-                                                    <div key={option} className="flex items-center space-x-2">
+                                                    <div key={option} className="flex items-center space-x-3 group">
                                                         <Checkbox 
                                                             id={`${section.title}-${itemIndex}-${option}`}
                                                             checked={deviations[viewKey]?.includes(option)}
                                                             onCheckedChange={() => toggleDeviation(viewKey, option)}
+                                                            className="size-5 rounded-full border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                         />
-                                                        <Label htmlFor={`${section.title}-${itemIndex}-${option}`} className="font-normal text-sm">{option}</Label>
+                                                        <Label 
+                                                            htmlFor={`${section.title}-${itemIndex}-${option}`} 
+                                                            className="font-medium text-sm text-foreground/80 group-hover:text-primary cursor-pointer transition-colors"
+                                                        >
+                                                            {option}
+                                                        </Label>
                                                     </div>
                                                 ))}
                                             </div>
