@@ -17,6 +17,7 @@ import PosturalReport from '@/components/PosturalReport';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
 
 const viewTitles: { [key: string]: string } = {
     anterior: 'Foto Frente',
@@ -51,10 +52,6 @@ export default function PosturalSummaryPage() {
             .sort((a, b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
     }, [selectedClientId, allEvaluations]);
 
-    // Lógica para carregar as fotos e desvios:
-    // Se estivermos vendo apenas uma avaliação e for a avaliação ativa (em edição), 
-    // priorizamos o estado do PosturalContext (fotos/deviations).
-    // Caso contrário, usamos o que está salvo em comparedEvaluations.
     const comparedEvaluations = useMemo(() => {
         return clientEvaluations
             .filter(e => selectedEvalIds.includes(e.id))
@@ -65,17 +62,15 @@ export default function PosturalSummaryPage() {
         if (selectedEvalIds.length === 0 && activeEvaluationId) {
             setSelectedEvalIds([activeEvaluationId]);
         } else if (selectedEvalIds.length === 0 && clientEvaluations.length > 0) {
-            const lastWithData = [...clientEvaluations].reverse().find(e => e.posturalPhotos && Object.keys(e.posturalPhotos).length > 0);
+            const lastWithData = [...clientEvaluations].reverse().find(e => (e.posturalPhotos && Object.keys(e.posturalPhotos).length > 0) || e.id === activeEvaluationId);
             if (lastWithData) setSelectedEvalIds([lastWithData.id]);
         }
     }, [clientEvaluations, activeEvaluationId, selectedEvalIds.length]);
 
     const displayData = useMemo(() => {
-        // Se a avaliação selecionada for a ativa, use os dados do context para refletir mudanças em tempo real
         if (selectedEvalIds.length === 1 && selectedEvalIds[0] === activeEvaluationId) {
             return { photos, deviations };
         }
-        // Se houver apenas uma avaliação selecionada (mas não for a ativa), pegue os dados dela
         if (selectedEvalIds.length === 1) {
             const ev = clientEvaluations.find(e => e.id === selectedEvalIds[0]);
             return {
@@ -83,7 +78,6 @@ export default function PosturalSummaryPage() {
                 deviations: ev?.posturalDeviations || {},
             };
         }
-        // Para múltiplos ou nenhum, retorne context como fallback ou vazio
         return { photos, deviations };
     }, [selectedEvalIds, activeEvaluationId, photos, deviations, clientEvaluations]);
 
@@ -105,7 +99,6 @@ export default function PosturalSummaryPage() {
             });
         });
 
-        // Unique values
         for (const deviation in analysis) {
             analysis[deviation].shortened = Array.from(new Set(analysis[deviation].shortened));
             analysis[deviation].lengthened = Array.from(new Set(analysis[deviation].lengthened));
@@ -117,10 +110,10 @@ export default function PosturalSummaryPage() {
     const handleCompareSelection = (evalId: string) => {
         setSelectedEvalIds(prev => {
             if (prev.includes(evalId)) return prev.filter(id => id !== evalId);
-            if (prev.length < 4) return [...prev].sort((a,b) => {
+            if (prev.length < 4) return [...prev, evalId].sort((a,b) => {
                 const evA = clientEvaluations.find(e => e.id === a);
                 const evB = clientEvaluations.find(e => e.id === b);
-                return new Date(evA!.date).getTime() - new Date(evB!.date).getTime();
+                return new Date(evA!.date.replace(/-/g, '/')).getTime() - new Date(evB!.date.replace(/-/g, '/')).getTime();
             });
             toast({variant: 'destructive', title: 'Aviso', description: 'Máximo 4 avaliações.'});
             return prev;
