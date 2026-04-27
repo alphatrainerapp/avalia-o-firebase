@@ -667,7 +667,6 @@ export default function DashboardPage() {
                                 </TabsContent>
                             </Tabs>
 
-                            {/* Setor de Indicadores Restaurado */}
                             <div className="mt-8 pt-6 border-t border-dashed space-y-6">
                                 <div className="flex items-center gap-2">
                                     <TrendingUp className="size-4 text-primary" />
