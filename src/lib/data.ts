@@ -1,4 +1,3 @@
-
 'use client';
 import { getPlaceholderImage } from './placeholder-images';
 
@@ -166,6 +165,7 @@ export const evaluations: Evaluation[] = [
         bodyComposition: { bodyFatPercentage: 32.4 },
         perimetria: { ombro: 102, torax: 94, cintura: 84, abdomen: 92, quadril: 105, bracoDRelaxado: 31, bracoERelaxado: 30.5, coxaMedialD: 58, coxaMedialE: 57.5 },
         skinFolds: { tricipital: 18, supraIliaca: 22, coxa: 28 },
+        boneDiameters: { biestiloidal: 5.2, bicondilarUmero: 6.4, bicondilarFemur: 9.2 },
         bioimpedance: { scaleType: null },
         posturalPhotos: {
             front: 'https://picsum.photos/seed/maria1front/600/800',
@@ -208,6 +208,7 @@ export const evaluations: Evaluation[] = [
         bodyComposition: { bodyFatPercentage: 28.1 },
         perimetria: { ombro: 100, torax: 92, cintura: 79, abdomen: 88, quadril: 101, bracoDRelaxado: 29.5, bracoERelaxado: 29.5, coxaMedialD: 56, coxaMedialE: 56 },
         skinFolds: { tricipital: 15, supraIliaca: 18, coxa: 24 },
+        boneDiameters: { biestiloidal: 5.2, bicondilarUmero: 6.4, bicondilarFemur: 9.2 },
         bioimpedance: { scaleType: null },
         posturalPhotos: {
             front: 'https://picsum.photos/seed/maria2front/600/800',
@@ -250,6 +251,7 @@ export const evaluations: Evaluation[] = [
         bodyComposition: { bodyFatPercentage: 24.2 },
         perimetria: { ombro: 98, torax: 90, cintura: 74, abdomen: 82, quadril: 98, bracoDRelaxado: 28, bracoERelaxado: 28, coxaMedialD: 54, coxaMedialE: 54 },
         skinFolds: { tricipital: 12, supraIliaca: 14, coxa: 20 },
+        boneDiameters: { biestiloidal: 5.2, bicondilarUmero: 6.4, bicondilarFemur: 9.2 },
         bioimpedance: { scaleType: null },
         posturalPhotos: {
             front: 'https://picsum.photos/seed/maria3front/600/800',
@@ -415,4 +417,18 @@ export function getFunctionalClassification(test: keyof FunctionalTests, value: 
   }
 
   return { classification: 'REGULAR', percentile: '50%', description: 'Dentro dos parâmetros normais.' };
+}
+
+export function getBoneDensityClassification(bonePercentage: number, gender: string): string {
+    if (bonePercentage <= 0) return '—';
+    
+    if (gender === 'Masculino') {
+        if (bonePercentage < 13) return 'Baixa';
+        if (bonePercentage <= 17) return 'Normal';
+        return 'Robusta';
+    } else {
+        if (bonePercentage < 10) return 'Baixa';
+        if (bonePercentage <= 14) return 'Normal';
+        return 'Robusta';
+    }
 }

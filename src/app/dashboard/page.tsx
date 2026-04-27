@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown, Info, Star, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
+import { Download, Plus, Save, Activity, User, BarChart, Wind, X, ChevronDown, Info, Star, CheckCircle2, AlertCircle, TrendingUp, Trophy, Bone } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -25,7 +25,8 @@ import {
     calculateBodyComposition, 
     type BodyComposition,
     getFunctionalClassification,
-    type ClassificationType
+    type ClassificationType,
+    getBoneDensityClassification
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -52,9 +53,9 @@ import { Badge } from '@/components/ui/badge';
 
 const functionalTestsConfig = [
     { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
-    { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência de membros abdominais', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
+    { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência do core', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
     { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima. Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
-    { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de membros inferiores', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
+    { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de cadeia posterior', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
 ];
 
 export default function DashboardPage() {
@@ -119,6 +120,7 @@ export default function DashboardPage() {
                 perimetria: {},
                 skinFolds: {},
                 functionalTests: {},
+                boneDiameters: {},
              };
         }
         setFormState(initialState);
@@ -289,6 +291,8 @@ export default function DashboardPage() {
     
     const fatClassification = useMemo(() => getFatClassification(bodyComposition.fatMassPercentage, formState.gender), [bodyComposition.fatMassPercentage, formState.gender]);
     
+    const boneClassification = useMemo(() => getBoneDensityClassification(bodyComposition.boneMassPercentage, formState.gender), [bodyComposition.boneMassPercentage, formState.gender]);
+
     const handleNewEvaluation = () => {
         if(client){
             const newEval = addEvaluation(client.id);
@@ -692,6 +696,20 @@ export default function DashboardPage() {
                                         <p className="text-2xl font-black text-foreground">{rce}</p>
                                         <Badge variant="outline" className="mt-1 text-[8px] font-black uppercase bg-primary/10 text-primary border-primary/20">
                                             {rceClassification}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="p-4 bg-muted/10 rounded-2xl border border-muted/50">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Bone className="size-3 text-muted-foreground" />
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase">Densidade Óssea</p>
+                                        </div>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-2xl font-black text-foreground">{bodyComposition.boneMassKg.toFixed(1)}</p>
+                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">kg</span>
+                                        </div>
+                                        <Badge variant="outline" className="mt-1 text-[8px] font-black uppercase bg-muted/20 text-foreground border-muted">
+                                            {boneClassification}
                                         </Badge>
                                     </div>
 
