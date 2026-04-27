@@ -593,6 +593,34 @@ export default function DashboardPage() {
                                     </div>
                                 </TabsContent>
                                 <TabsContent value="dobras" className="pt-4 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-dashed">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-black uppercase text-primary tracking-widest">Público Alvo</Label>
+                                            <Select value={selectedAudience} onValueChange={handleAudienceChange}>
+                                                <SelectTrigger className="h-10 bg-muted/20">
+                                                    <SelectValue placeholder="Selecione o público" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.keys(audienceProtocols).map(audience => (
+                                                        <SelectItem key={audience} value={audience}>{audience}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-black uppercase text-primary tracking-widest">Protocolo de Cálculo</Label>
+                                            <Select value={formState.protocol || ''} onValueChange={(v) => handleSelectChange('protocol', v)}>
+                                                <SelectTrigger className="h-10 bg-muted/20">
+                                                    <SelectValue placeholder="Selecione o protocolo" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availableProtocols.map(p => (
+                                                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {skinfoldFields.map(f => (
                                             <div key={f.name}>
