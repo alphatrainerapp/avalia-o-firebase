@@ -43,9 +43,10 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Análise Visual Inteligente**: Ferramentas de Zoom, Pan e Grade (Grid) para identificação precisa de desvios.
 - **Laudo Muscular Automático**: Identificação instantânea de músculos encurtados/superativos e alongados/inibidos baseada nos desvios marcados.
 - **Interface Otimizada**: Fluxo de preenchimento com seções expandidas por padrão e visual simétrico.
+- **Elite Dark Mode**: Interface totalmente otimizada para o tema escuro, garantindo contraste e sofisticação visual.
 
 ### 7. Relatórios PDF Profissionais
-- **Geração de Documentos de Alta Fidelidade**: Inclui análise de composição corporal, evolução gráfica, dados brutos de perimetria/dobras e um resumo executivo de indicadores de saúde.
+- **Geração de Documentos de Alta Fidelidade**: Inclui análise de composição corporal, evolução gráfica, dados brutos de perimetria/dobras e um resumo executivo de indicadores de saúde e simetria corporal.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
