@@ -174,7 +174,7 @@ export default function PosturalSummaryPage() {
                     if (!analysis) return null;
 
                     return (
-                        <div key={deviationName} className="bg-muted/30 p-4 rounded-xl border border-muted/50">
+                        <div key={deviationName} className="bg-muted/30 dark:bg-muted/10 p-4 rounded-xl border border-muted/50">
                             <h5 className="font-black text-sm text-foreground mb-3 uppercase tracking-tighter">{deviationName}</h5>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
@@ -211,7 +211,7 @@ export default function PosturalSummaryPage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
-            <header className="flex flex-wrap items-center justify-between mb-8 gap-4">
+            <header className="flex flex-wrap items-center justify-between mb-8 gap-4 px-4 sm:px-0">
                 <div className="flex items-center gap-3">
                     <Button variant="outline" size="icon" onClick={() => router.push('/postural/analysis')}><ArrowLeft className="size-4" /></Button>
                     <Camera className="size-8 text-primary" />
@@ -221,8 +221,8 @@ export default function PosturalSummaryPage() {
                     </div>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button onClick={handleExportPdf} variant="outline" className="h-11 px-6 rounded-xl font-bold"><Download className="mr-2 size-4" /> Exportar PDF</Button>
-                    <Button onClick={handleFinish} className="bg-primary text-primary-foreground shadow-lg h-11 px-6 rounded-xl font-bold">
+                    <Button onClick={handleExportPdf} variant="outline" className="h-11 px-6 rounded-xl font-bold shadow-sm"><Download className="mr-2 size-4" /> Exportar PDF</Button>
+                    <Button onClick={handleFinish} className="bg-primary text-primary-foreground shadow-lg h-11 px-6 rounded-xl font-bold hover:bg-primary/90">
                         <Check className="mr-2 size-4" /> Finalizar e Salvar
                     </Button>
                 </div>
@@ -250,7 +250,7 @@ export default function PosturalSummaryPage() {
                                         <Card 
                                             className={cn(
                                                 "w-44 text-center cursor-pointer transition-all shadow-md rounded-2xl border-none relative overflow-hidden",
-                                                isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-xl ring-4 ring-primary/10' : 'bg-white hover:bg-muted/50',
+                                                isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-xl ring-4 ring-primary/10' : 'bg-card hover:bg-muted/50',
                                                 !hasData && 'opacity-40 grayscale pointer-events-none'
                                             )}
                                             onClick={() => handleCompareSelection(ev.id)}
@@ -328,10 +328,10 @@ export default function PosturalSummaryPage() {
                             if (viewDeviations.length === 0 && !photoSrc) return null;
 
                             return (
-                                <Card key={viewKey} className="overflow-hidden border-none shadow-lg bg-card rounded-3xl group">
+                                <Card key={viewKey} className="overflow-hidden border-none shadow-lg bg-card/95 rounded-3xl group">
                                     <CardContent className="p-0">
                                         <div className="flex flex-col sm:flex-row h-full">
-                                            <div className="w-full sm:w-52 bg-muted/30 flex items-center justify-center relative aspect-[3/4] sm:aspect-auto border-r border-muted/50 overflow-hidden shadow-inner">
+                                            <div className="w-full sm:w-52 bg-muted/30 flex items-center justify-center relative aspect-[3/4] sm:aspect-auto border-r border-border/50 overflow-hidden shadow-inner">
                                                 {photoSrc ? (
                                                     <Image src={photoSrc} alt={title} fill className="object-contain p-2 group-hover:scale-110 transition-transform duration-700" />
                                                 ) : (
@@ -342,7 +342,7 @@ export default function PosturalSummaryPage() {
                                                 <div className="space-y-6">
                                                     <div className="flex items-center justify-between">
                                                         <h3 className="font-black text-xl uppercase tracking-tighter text-primary">{title}</h3>
-                                                        <Badge variant="outline" className="text-[9px] font-black px-2 py-0 border-muted">VISTA {viewKey.split('_')[0].toUpperCase()}</Badge>
+                                                        <Badge variant="outline" className="text-[9px] font-black px-2 py-0 border-muted-foreground/30 text-muted-foreground">VISTA {viewKey.split('_')[0].toUpperCase()}</Badge>
                                                     </div>
                                                     
                                                     <div className="space-y-4">

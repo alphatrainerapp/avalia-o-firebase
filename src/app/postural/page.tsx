@@ -101,7 +101,7 @@ export default function PosturalPage() {
     };
 
     const PhotoUploadCard = ({ type, title }: { type: PhotoType, title: string }) => (
-        <Card className="shadow-lg">
+        <Card className="shadow-lg border-muted/50 bg-card">
             <CardHeader className="p-4">
                 <CardTitle className="text-center text-sm font-bold uppercase tracking-tight text-primary/80">{title}</CardTitle>
             </CardHeader>
@@ -129,7 +129,7 @@ export default function PosturalPage() {
                         </div>
                     ) : (
                         <div className="text-center space-y-2">
-                            <div className="p-3 bg-white rounded-full inline-block shadow-sm group-hover:scale-110 transition-transform">
+                            <div className="p-3 bg-background rounded-full inline-block shadow-sm group-hover:scale-110 transition-transform">
                                 <UploadCloud className="h-8 w-8 text-muted-foreground" />
                             </div>
                             <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">Clique para adicionar</p>
@@ -160,7 +160,7 @@ export default function PosturalPage() {
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="grid gap-1">
                                 <Label className="text-[10px] font-black uppercase text-muted-foreground">Aluno em Análise</Label>
-                                <div className="h-10 flex items-center px-4 rounded-xl border bg-white font-bold text-sm shadow-sm">
+                                <div className="h-10 flex items-center px-4 rounded-xl border bg-card font-bold text-sm shadow-sm">
                                     {client?.name || 'Nenhum aluno selecionado'}
                                 </div>
                             </div>
@@ -183,7 +183,7 @@ export default function PosturalPage() {
                                             <Card 
                                                 className={cn(
                                                     "w-44 text-center cursor-pointer transition-all shadow-md rounded-2xl border-none relative overflow-hidden",
-                                                    isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-xl ring-4 ring-primary/10' : 'bg-white hover:bg-muted/50'
+                                                    isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-xl ring-4 ring-primary/10' : 'bg-card hover:bg-muted/50'
                                                 )}
                                                 onClick={() => handleSelectEvaluation(isSelected ? null : ev.id)}
                                             >

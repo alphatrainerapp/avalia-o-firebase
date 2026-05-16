@@ -229,12 +229,12 @@ export default function PosturalAnalysisPage() {
                 className="w-full space-y-4"
             >
                 {analysisSections.map((section) => (
-                     <Card key={section.title} className="overflow-hidden border-none shadow-md">
+                     <Card key={section.title} className="overflow-hidden border-none shadow-md bg-card">
                         <AccordionItem value={section.title} className="border-none">
-                            <AccordionTrigger className="text-sm font-bold px-6 py-4 bg-white hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-muted/50">
+                            <AccordionTrigger className="text-sm font-bold px-6 py-4 hover:no-underline [&[data-state=open]]:border-b [&[data-state=open]]:border-muted/50">
                                 {section.title}
                             </AccordionTrigger>
-                            <AccordionContent className="p-6 pt-4 bg-white/50">
+                            <AccordionContent className="p-6 pt-4 bg-muted/5">
                                 <div className="space-y-6">
                                     {section.items.map((item, itemIndex) => (
                                         <div key={itemIndex} className="space-y-3">
@@ -309,15 +309,15 @@ export default function PosturalAnalysisPage() {
                                 )}
                                 {showGrid && (
                                      <div className="absolute inset-0 pointer-events-none">
-                                        {[...Array(9)].map((_, i) => (<div key={`v-${i}`} className="absolute bg-black/30" style={{ left: `${(i + 1) * 10}%`, top: 0, bottom: 0, width: '1px' }} />))}
-                                        {[...Array(14)].map((_, i) => (<div key={`h-${i}`} className="absolute bg-black/30" style={{ top: `${(i + 1) * (100 / 15)}%`, left: 0, right: 0, height: '1px' }} />))}
+                                        {[...Array(9)].map((_, i) => (<div key={`v-${i}`} className="absolute bg-black/30 dark:bg-white/20" style={{ left: `${(i + 1) * 10}%`, top: 0, bottom: 0, width: '1px' }} />))}
+                                        {[...Array(14)].map((_, i) => (<div key={`h-${i}`} className="absolute bg-black/30 dark:bg-white/20" style={{ top: `${(i + 1) * (100 / 15)}%`, left: 0, right: 0, height: '1px' }} />))}
                                     </div>
                                 )}
                                 <div className="absolute top-2 left-2 flex flex-col gap-2">
-                                    <Button variant="secondary" size="icon" className="size-8 opacity-80" onClick={() => setShowGrid(!showGrid)}>
+                                    <Button variant="secondary" size="icon" className="size-8 opacity-90 shadow-md" onClick={() => setShowGrid(!showGrid)}>
                                         <Grid className={cn("size-4", showGrid && "text-primary")} />
                                     </Button>
-                                    <Button variant="secondary" size="icon" className="size-8 opacity-80" onClick={() => setZoom(1)}>
+                                    <Button variant="secondary" size="icon" className="size-8 opacity-90 shadow-md" onClick={() => setZoom(1)}>
                                         <Maximize className="size-4" />
                                     </Button>
                                 </div>
