@@ -14,41 +14,34 @@ export type FunctionalTests = {
   wells?: number;
 };
 
-export type BioimpedanceOmron = {
-    weight?: number;
-    bmi?: number;
-    bodyFatPercentage?: number;
-    skeletalMusclePercentage?: number;
-    visceralFatLevel?: number;
-    basalMetabolicRate?: number;
-    metabolicAge?: number;
-    leanBodyMass?: number;
-    bodyFatMass?: number;
+export type IsometricTest = {
+    attempts: number[]; // em kgf
+    unit: 'kgf' | 'N';
+    peakForce: number;
+    averageForce: number;
+    relativeForce: number; // Força/Peso Corp
 };
 
-export type BioimpedanceInBody = {
-    totalBodyWeight?: number;
-    skeletalMuscleMass?: number;
-    bodyFatMass?: number;
-    totalBodyWater?: number;
-    bodyProtein?: number;
-    bodyMinerals?: number;
-    fatFreeMass?: number;
-    rightArmLeanMass?: number;
-    leftArmLeanMass?: number;
-    rightLegLeanMass?: number;
-    leftLegLeanMass?: number;
-    trunkLeanMass?: number;
-    trunkFat?: number;
-    rightArmFat?: number;
-    leftArmFat?: number;
-    rightLegFat?: number;
-    leftLegFat?: number;
-    waistHipRatio?: number;
-    bmi?: number;
-    bodyFatPercentage?: number;
-    visceralFatArea?: number;
-    basalMetabolicRate?: number;
+export type DynamicTest = {
+    exercise: string;
+    weight: number;
+    reps: number;
+    estimated1RM: number;
+    method: 'brzycki' | 'epley';
+};
+
+export type StrengthData = {
+    isometric?: {
+        imtp?: IsometricTest;
+        squat?: IsometricTest;
+        benchPress?: IsometricTest;
+        row?: IsometricTest;
+        evaluator?: string;
+    };
+    dynamic: DynamicTest[];
+    alphaForceScore?: number;
+    totalTonnage?: number;
+    relativeStrengthIndex?: number;
 };
 
 export type VO2MaxData = {
@@ -66,20 +59,6 @@ export type VO2MaxData = {
     stages?: any[];
     zoneConfig?: any[];
 };
-
-export type StrengthLift = {
-    exercise: string;
-    weight: number;
-    reps: number;
-    estimated1RM: number;
-};
-
-export type StrengthData = {
-    lifts: StrengthLift[];
-    totalTonnage?: number;
-    relativeStrengthIndex?: number;
-};
-
 
 export type Evaluation = {
     id: string;
@@ -125,8 +104,8 @@ export type Evaluation = {
     };
     bioimpedance: {
       scaleType: BioimpedanceScale;
-      omron?: BioimpedanceOmron;
-      inbody?: BioimpedanceInBody;
+      omron?: any;
+      inbody?: any;
     };
     posturalPhotos?: { [key: string]: string | undefined };
     posturalDeviations?: { [key: string]: string[] };
@@ -203,12 +182,13 @@ export const evaluations: Evaluation[] = [
             distance: 2400
         },
         strengthData: {
-            lifts: [
-                { exercise: 'Supino Reto', weight: 80, reps: 5, estimated1RM: 92 },
-                { exercise: 'Agachamento', weight: 100, reps: 5, estimated1RM: 115 },
-                { exercise: 'Levantamento Terra', weight: 120, reps: 3, estimated1RM: 132 }
+            dynamic: [
+                { exercise: 'Supino Reto', weight: 80, reps: 5, estimated1RM: 92, method: 'brzycki' },
+                { exercise: 'Agachamento', weight: 100, reps: 5, estimated1RM: 115, method: 'brzycki' },
+                { exercise: 'Levantamento Terra', weight: 120, reps: 3, estimated1RM: 132, method: 'brzycki' }
             ],
-            relativeStrengthIndex: 1.45
+            relativeStrengthIndex: 1.45,
+            alphaForceScore: 65
         },
         functionalTests: {
           pushUps: 20,
@@ -254,11 +234,12 @@ export const evaluations: Evaluation[] = [
             distance: 2200
         },
         strengthData: {
-            lifts: [
-                { exercise: 'Supino Reto', weight: 30, reps: 10, estimated1RM: 40 },
-                { exercise: 'Agachamento', weight: 45, reps: 8, estimated1RM: 58 }
+            dynamic: [
+                { exercise: 'Supino Reto', weight: 30, reps: 10, estimated1RM: 40, method: 'epley' },
+                { exercise: 'Agachamento', weight: 45, reps: 8, estimated1RM: 58, method: 'epley' }
             ],
-            relativeStrengthIndex: 0.85
+            relativeStrengthIndex: 0.85,
+            alphaForceScore: 42
         },
         functionalTests: {
           pushUps: 25,
