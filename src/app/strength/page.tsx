@@ -557,14 +557,14 @@ export default function StrengthPage() {
                 {/* Área Central: Tabs de Avaliação */}
                 <div className="lg:col-span-3 space-y-6">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 bg-muted/10 h-14 p-1.5 rounded-2xl border border-muted/50">
-                            <TabsTrigger value="profile" className="rounded-xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-card data-[state=active]:shadow-lg">
+                        <TabsList className="grid w-full grid-cols-3 bg-muted/20 h-14 p-1.5 rounded-2xl border border-muted/50">
+                            <TabsTrigger value="profile" className="rounded-xl font-black uppercase text-[10px] tracking-widest text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
                                 <Activity className="mr-2 size-4" /> Perfil de Força
                             </TabsTrigger>
-                            <TabsTrigger value="isometric" className="rounded-xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-card data-[state=active]:shadow-lg">
+                            <TabsTrigger value="isometric" className="rounded-xl font-black uppercase text-[10px] tracking-widest text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
                                 <Zap className="mr-2 size-4" /> Isométricos
                             </TabsTrigger>
-                            <TabsTrigger value="dynamic" className="rounded-xl font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-card data-[state=active]:shadow-lg">
+                            <TabsTrigger value="dynamic" className="rounded-xl font-black uppercase text-[10px] tracking-widest text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
                                 <Dumbbell className="mr-2 size-4" /> Testes 1RM
                             </TabsTrigger>
                         </TabsList>
