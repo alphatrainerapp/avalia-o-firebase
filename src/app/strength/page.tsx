@@ -21,7 +21,9 @@ import {
     User,
     Calendar,
     Settings2,
-    RefreshCw
+    RefreshCw,
+    X,
+    PlusCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -44,6 +46,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 interface LocalLift {
     exercise: string;
@@ -52,7 +55,10 @@ interface LocalLift {
 }
 
 interface IsometricEntry {
+    title: string;
+    subtitle: string;
     attempts: string[];
+    isCustom?: boolean;
 }
 
 export default function StrengthPage() {
@@ -70,12 +76,17 @@ export default function StrengthPage() {
     ]);
 
     // Isometric Tests
-    const [isometricData, setIsometricData] = useState<Record<string, IsometricEntry>>({
-        imtp: { attempts: ['', '', ''] },
-        squat: { attempts: ['', '', ''] },
-        bench: { attempts: ['', '', ''] },
-        row: { attempts: ['', '', ''] }
+    const [isometricTests, setIsometricTests] = useState<Record<string, IsometricEntry>>({
+        imtp: { title: 'Mid-Thigh Pull (IMTP)', subtitle: 'Força de Cadeia Posterior', attempts: ['', '', ''] },
+        squat: { title: 'Agachamento Isométrico', subtitle: 'Membros Inferiores Isolados', attempts: ['', '', ''] },
+        bench: { title: 'Supino Isométrico', subtitle: 'Empurre Horizontal', attempts: ['', '', ''] },
+        row: { title: 'Remada Isométrica', subtitle: 'Puxada Horizontal', attempts: ['', '', ''] }
     });
+
+    // Custom Exercise States
+    const [newIsoName, setNewIsoName] = useState('');
+    const [newIsoSubtitle, setNewIsoSubtitle] = useState('');
+    const [isAddIsoOpen, setIsAddIsoOpen] = useState(false);
 
     const client = useMemo(() => clients.find(c => c.id === selectedClientId), [selectedClientId, clients]);
     const clientEvaluations = useMemo(() => {
@@ -102,12 +113,19 @@ export default function StrengthPage() {
             }
             if (evaluation.strengthData.isometric) {
                 const iso = evaluation.strengthData.isometric;
-                setIsometricData({
-                    imtp: { attempts: (iso as any).imtp?.attempts.map(String) || ['', '', ''] },
-                    squat: { attempts: (iso as any).squat?.attempts.map(String) || ['', '', ''] },
-                    bench: { attempts: (iso as any).benchPress?.attempts.map(String) || ['', '', ''] },
-                    row: { attempts: (iso as any).row?.attempts.map(String) || ['', '', ''] }
+                const loadedTests: Record<string, IsometricEntry> = { ...isometricTests };
+                
+                Object.entries(iso).forEach(([key, data]) => {
+                    if (key === 'evaluator') return;
+                    const testData = data as any;
+                    loadedTests[key] = {
+                        title: testData.title || isometricTests[key]?.title || key.toUpperCase(),
+                        subtitle: testData.subtitle || isometricTests[key]?.subtitle || '',
+                        attempts: testData.attempts?.map(String) || ['', '', ''],
+                        isCustom: testData.isCustom || !isometricTests[key]
+                    };
                 });
+                setIsometricTests(loadedTests);
             }
         }
     }, [evaluation]);
@@ -123,7 +141,7 @@ export default function StrengthPage() {
 
     const isometricAnalysis = useMemo(() => {
         const result: any = {};
-        Object.entries(isometricData).forEach(([key, entry]) => {
+        Object.entries(isometricTests).forEach(([key, entry]) => {
             const nums = entry.attempts.map(a => parseFloat(a) || 0);
             const peak = Math.max(...nums);
             const avg = nums.filter(n => n > 0).reduce((a, b) => a + b, 0) / (nums.filter(n => n > 0).length || 1);
@@ -134,7 +152,7 @@ export default function StrengthPage() {
             };
         });
         return result;
-    }, [isometricData, client]);
+    }, [isometricTests, client]);
 
     const total1RM = useMemo(() => {
         return calculatedLifts.reduce((sum, l) => sum + l.estimated1RM, 0);
@@ -151,12 +169,39 @@ export default function StrengthPage() {
     };
 
     const handleUpdateIsometric = (testKey: string, attemptIdx: number, value: string) => {
-        setIsometricData(prev => ({
+        setIsometricTests(prev => ({
             ...prev,
             [testKey]: {
+                ...prev[testKey],
                 attempts: prev[testKey].attempts.map((a, i) => i === attemptIdx ? value : a)
             }
         }));
+    };
+
+    const handleAddIsoTest = () => {
+        if (!newIsoName) return;
+        const key = `custom_${Date.now()}`;
+        setIsometricTests(prev => ({
+            ...prev,
+            [key]: {
+                title: newIsoName,
+                subtitle: newIsoSubtitle || 'Teste Personalizado',
+                attempts: ['', '', ''],
+                isCustom: true
+            }
+        }));
+        setNewIsoName('');
+        setNewIsoSubtitle('');
+        setIsAddIsoOpen(false);
+        toast({ title: 'Teste Adicionado', description: `${newIsoName} incluído na avaliação.` });
+    };
+
+    const handleRemoveIsoTest = (key: string) => {
+        setIsometricTests(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
     };
 
     const handleNewEvaluation = () => {
@@ -174,6 +219,20 @@ export default function StrengthPage() {
             return;
         }
 
+        const isometricToSave: any = {};
+        Object.entries(isometricTests).forEach(([key, data]) => {
+            const analysis = isometricAnalysis[key];
+            isometricToSave[key] = {
+                title: data.title,
+                subtitle: data.subtitle,
+                attempts: data.attempts.map(Number),
+                peakForce: analysis.peak,
+                averageForce: analysis.avg,
+                relativeForce: analysis.rel,
+                isCustom: data.isCustom
+            };
+        });
+
         const strengthData = {
             dynamic: calculatedLifts.map(l => ({
                 exercise: l.exercise,
@@ -182,15 +241,7 @@ export default function StrengthPage() {
                 estimated1RM: l.estimated1RM,
                 method: 'brzycki'
             })),
-            isometric: {
-                imtp: { 
-                    attempts: isometricData.imtp.attempts.map(Number),
-                    peakForce: isometricAnalysis.imtp.peak,
-                    averageForce: isometricAnalysis.imtp.avg,
-                    relativeForce: isometricAnalysis.imtp.rel
-                }
-                // ... outros isométricos salvos aqui
-            },
+            isometric: isometricToSave,
             alphaForceScore: alphaForce.score,
             totalTonnage: total1RM,
             relativeStrengthIndex: calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0)
@@ -231,10 +282,20 @@ export default function StrengthPage() {
         );
     };
 
-    const IsometricInputCard = ({ title, testKey, subtitle }: { title: string, testKey: string, subtitle: string }) => {
+    const IsometricInputCard = ({ title, testKey, subtitle, isCustom }: { title: string, testKey: string, subtitle: string, isCustom?: boolean }) => {
         const analysis = isometricAnalysis[testKey];
         return (
-            <Card className="shadow-lg border-primary/10 overflow-hidden group">
+            <Card className="shadow-lg border-primary/10 overflow-hidden group relative">
+                {isCustom && (
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleRemoveIsoTest(testKey)}
+                        className="absolute top-2 right-2 size-6 rounded-full text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                        <X className="size-3" />
+                    </Button>
+                )}
                 <div className="bg-primary/5 p-4 border-b border-muted/50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-background rounded-lg text-primary shadow-sm"><Zap className="size-4" /></div>
@@ -246,7 +307,7 @@ export default function StrengthPage() {
                 </div>
                 <CardContent className="p-4 space-y-4">
                     <div className="grid grid-cols-3 gap-3">
-                        {isometricData[testKey].attempts.map((val, idx) => (
+                        {isometricTests[testKey].attempts.map((val, idx) => (
                             <div key={idx} className="space-y-1">
                                 <Label className="text-[8px] font-black uppercase text-muted-foreground">T{idx+1}</Label>
                                 <div className="relative">
@@ -475,13 +536,49 @@ export default function StrengthPage() {
                         </TabsContent>
 
                         {/* TAB: TESTES ISOMÉTRICOS */}
-                        <TabsContent value="isometric" className="mt-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <IsometricInputCard title="Mid-Thigh Pull (IMTP)" testKey="imtp" subtitle="Força de Cadeia Posterior (Squat/Terra)" />
-                                <IsometricInputCard title="Agachamento Isométrico" testKey="squat" subtitle="Membros Inferiores Isolados" />
-                                <IsometricInputCard title="Supino Isométrico" testKey="bench" subtitle="Empurre Horizontal" />
-                                <IsometricInputCard title="Remada Isométrica" testKey="row" subtitle="Puxada Horizontal" />
+                        <TabsContent value="isometric" className="mt-6 space-y-6">
+                            <div className="flex justify-end px-2">
+                                <Dialog open={isAddIsoOpen} onOpenChange={setIsAddIsoOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button className="rounded-xl font-bold bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 border">
+                                            <PlusCircle className="mr-2 size-4" /> Adicionar Exercício
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Novo Teste Isométrico</DialogTitle>
+                                            <DialogDescription>Defina o nome do exercício isométrico que deseja testar.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="space-y-2">
+                                                <Label>Nome do Exercício</Label>
+                                                <Input value={newIsoName} onChange={(e) => setNewIsoName(e.target.value)} placeholder="Ex: Extensão de Joelho Isométrica" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Objetivo / Subtítulo</Label>
+                                                <Input value={newIsoSubtitle} onChange={(e) => setNewIsoSubtitle(e.target.value)} placeholder="Ex: Força de Quadríceps" />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setIsAddIsoOpen(false)}>Cancelar</Button>
+                                            <Button onClick={handleAddIsoTest}>Adicionar Teste</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {Object.entries(isometricTests).map(([key, test]) => (
+                                    <IsometricInputCard 
+                                        key={key} 
+                                        testKey={key} 
+                                        title={test.title} 
+                                        subtitle={test.subtitle} 
+                                        isCustom={test.isCustom}
+                                    />
+                                ))}
+                            </div>
+                            
                             <div className="mt-8 p-8 bg-muted/10 rounded-3xl border-2 border-dashed border-muted text-center max-w-2xl mx-auto">
                                 <div className="p-3 bg-background rounded-full border shadow-sm text-primary inline-block mb-4"><Info size={24} /></div>
                                 <h4 className="text-sm font-black uppercase tracking-widest mb-2">Orientações de Célula de Carga</h4>
@@ -503,8 +600,8 @@ export default function StrengthPage() {
                                             <CardDescription className="text-[10px] font-bold uppercase tracking-widest">Cálculo via Brzycki & Epley</CardDescription>
                                         </div>
                                     </div>
-                                    <Button onClick={() => setLifts([...lifts, { exercise: '', weight: '', reps: '' }])} variant="outline" size="sm" className="rounded-xl font-bold h-10 border-muted">
-                                        <Plus className="mr-1 h-3 w-3" /> Add Exercício
+                                    <Button onClick={() => setLifts([...lifts, { exercise: '', weight: '', reps: '' }])} variant="outline" size="sm" className="rounded-xl font-bold h-10 border-primary text-primary hover:bg-primary/5">
+                                        <Plus className="mr-1 h-3 w-3" /> Adicionar Exercício
                                     </Button>
                                 </CardHeader>
                                 <CardContent className="p-0">

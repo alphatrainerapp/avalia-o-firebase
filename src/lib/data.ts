@@ -20,6 +20,8 @@ export type IsometricTest = {
     peakForce: number;
     averageForce: number;
     relativeForce: number; // Força/Peso Corp
+    title?: string;
+    subtitle?: string;
 };
 
 export type DynamicTest = {
@@ -32,10 +34,7 @@ export type DynamicTest = {
 
 export type StrengthData = {
     isometric?: {
-        imtp?: IsometricTest;
-        squat?: IsometricTest;
-        benchPress?: IsometricTest;
-        row?: IsometricTest;
+        [key: string]: IsometricTest | string | undefined;
         evaluator?: string;
     };
     dynamic: DynamicTest[];
