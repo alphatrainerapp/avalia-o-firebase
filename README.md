@@ -9,7 +9,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ### 1. Gestão Centralizada de Alunos
 - **Listagem Profissional**: Painel dedicado para controle de alunos ativos com busca em tempo real.
-- **Contexto Global**: Seleção de aluno unificada. Ao selecionar um aluno, todo o ecossistema (Dashboard, Bio, Postural, VO2) sincroniza automaticamente.
+- **Contexto Global**: Seleção de aluno unificada. Ao selecionar um aluno, todo o ecossistema (Dashboard, Bio, Postural, VO2, Força) sincroniza automaticamente.
 
 ### 2. Dashboard de Avaliação Física (Protocolo ISAK & Rocha)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
@@ -18,35 +18,28 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
     - **RCE (Relação Cintura-Estatura)**: Classificação de risco cardiometabólico.
     - **RCQ (Relação Cintura-Quadril)**: Avaliação de gordura visceral por gênero.
     - **Densidade Óssea**: Classificação automática (Baixa, Normal, Robusta).
-    - **Simetria Corporal**: Mapeamento de assimetrias entre membros (Braços e Coxas).
 
-### 3. Aptidão Física e Testes Funcionais
-- **Galeria Técnica de Alta Fidelidade**: Registro com imagens de referência técnica para:
-    - **Flexão de Braço**: Resistência de membros superiores.
-    - **Abdominal em 1 Minuto**: Resistência do core.
-    - **Handgrip (Dinamometria)**: Força de preensão manual (kgf).
-    - **Banco de Wells**: Flexibilidade de cadeia posterior (cm).
+### 3. Avaliação de Força & Potência (Alpha Force Engine)
+- **Módulo Isométrico de Precisão**: Suporte para Mid-Thigh Pull (IMTP), Supino, Agachamento e Remada via célula de carga (kgf).
+- **Predição de Performance**: Algoritmo que estima o 1RM dinâmico a partir de picos isométricos.
+- **Alpha Force Score**: Índice exclusivo de 0 a 100 que resume o perfil de força do atleta.
+- **Zonas de Carga Instantâneas**: Geração automática de faixas de intensidade (100% a 60%) para prescrição imediata de treinamento.
+- **Evolução Comparativa**: Matriz evolutiva que compara picos de força e recordes pessoais (PRs) entre diferentes datas.
+
+### 4. Aptidão Física e Testes Funcionais
+- **Galeria Técnica de Alta Fidelidade**: Registro com imagens de referência técnica para Flexão de Braço, Abdominal, Handgrip e Banco de Wells.
 - **Motor de Classificação**: Enquadramento automático em tabelas normativas com cálculo de percentil e descrição técnica.
 
-### 4. Fisiologia do Exercício e VO2max (Elite)
-- **Motor Cardiovascular Avançado**:
-    - **FC Máxima**: Cálculo via fórmula de Tanaka (2001): `208 - (0.7 x idade)`.
-    - **Zonas de Karvonen**: Prescrição de treinamento baseada na Frequência Cardíaca de Reserva (Z1 a Z5).
-    - **Zonas de Pace**: Tradução automática de intensidade para ritmo de corrida (min/km).
-- **Múltiplos Protocolos**: Cooper (12 min), Balke, 3km, 5km, Step Test e Ciclismo (Watts).
+### 5. Fisiologia do Exercício e VO2max (Elite)
+- **Motor Cardiovascular Avançado**: FC Máxima via Tanaka (2001) e Zonas de Karvonen baseadas na Frequência Cardíaca de Reserva.
 - **Teste de Conconi**: Detecção automática do Limiar Anaeróbico via ponto de deflexão da FC com gráfico interativo.
-
-### 5. Bioimpedância Sincronizada
-- **Análise Segmentar**: Suporte para balanças Omron e InBody com mapeamento de tecidos por segmento corporal e análise de evolução histórica.
 
 ### 6. Avaliação Postural de Alta Fidelidade
 - **Análise Visual Inteligente**: Ferramentas de Zoom, Pan e Grade (Grid) para identificação precisa de desvios.
 - **Laudo Muscular Automático**: Identificação instantânea de músculos encurtados/superativos e alongados/inibidos baseada nos desvios marcados.
-- **Interface Otimizada**: Fluxo de preenchimento com seções expandidas por padrão e visual simétrico.
-- **Elite Dark Mode**: Interface totalmente otimizada para o tema escuro, garantindo contraste e sofisticação visual.
 
 ### 7. Relatórios PDF Profissionais
-- **Geração de Documentos de Alta Fidelidade**: Inclui análise de composição corporal, evolução gráfica, dados brutos de perimetria/dobras e um resumo executivo de indicadores de saúde e simetria corporal.
+- **Geração de Documentos de Alta Fidelidade**: Relatórios detalhados para Bioimpedância, Avaliação Física, Postural e agora um laudo técnico completo de **Força & Potência**.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
