@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
     Dumbbell, 
@@ -28,7 +27,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Equal,
-    Gauge
+    Gauge,
+    Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -53,6 +53,9 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import StrengthReport from '@/components/StrengthReport';
 
 interface LocalLift {
     exercise: string;
@@ -70,6 +73,7 @@ interface IsometricEntry {
 export default function StrengthPage() {
     const { clients, selectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
     const { toast } = useToast();
+    const reportRef = useRef<HTMLDivElement>(null);
 
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
     const [isCompareMode, setCompareMode] = useState(false);
@@ -316,6 +320,25 @@ export default function StrengthPage() {
         });
     }
 
+    const handleExportPdf = async () => {
+        const reportElement = reportRef.current;
+        if (!reportElement || !client) return;
+
+        toast({ title: 'Gerando Relatório PDF...', description: 'Aguarde um momento.' });
+
+        const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+        pdf.save(`relatorio_forca_${client.name.replace(/\s+/g, '_')}.pdf`);
+        
+        toast({ title: 'Relatório Exportado!' });
+    };
+
     const TrainingZoneTable = ({ oneRM, exercise, isPredicted }: { oneRM: number, exercise: string, isPredicted?: boolean }) => {
         const zones = calculateTrainingZones(oneRM);
         return (
@@ -436,6 +459,9 @@ export default function StrengthPage() {
                 <div className="flex items-center gap-2">
                     <Button onClick={handleSave} className="bg-primary text-primary-foreground shadow-xl h-11 px-8 rounded-2xl font-black uppercase tracking-wider hover:bg-primary/90">
                         <Save className="mr-2 h-4 w-4" /> Salvar Avaliação
+                    </Button>
+                    <Button onClick={handleExportPdf} variant="outline" className="h-11 px-6 rounded-2xl font-black uppercase shadow-sm">
+                        <Download className="mr-2 h-4 w-4" /> Gerar PDF
                     </Button>
                 </div>
             </header>
@@ -638,7 +664,7 @@ export default function StrengthPage() {
                                                 <div>
                                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Carga Total Dinâmica (1RM)</span>
                                                     <div className="flex items-baseline gap-2 mt-2">
-                                                        <span className="text-7xl font-black tracking-tighter">{total1RM.toFixed(0)}</span>
+                                                        <span className="text-7xl font-black tracking-tighter leading-none">{total1RM.toFixed(0)}</span>
                                                         <span className="text-2xl font-bold opacity-50">kg</span>
                                                     </div>
                                                 </div>
@@ -871,6 +897,18 @@ export default function StrengthPage() {
                         </TabsContent>
                     </Tabs>
                 </div>
+            </div>
+            
+            {/* Hidden Report for PDF Capture */}
+            <div className="fixed -left-[9999px] -top-[9999px] bg-white">
+                {client && (
+                    <StrengthReport 
+                        ref={reportRef}
+                        client={client}
+                        evaluations={isCompareMode ? comparedEvaluations : (evaluation ? [evaluation] : [])}
+                        isCompareMode={isCompareMode}
+                    />
+                )}
             </div>
         </div>
     );
