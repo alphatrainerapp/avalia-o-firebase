@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -23,7 +24,10 @@ import {
     Settings2,
     RefreshCw,
     X,
-    PlusCircle
+    PlusCircle,
+    ArrowUpRight,
+    ArrowDownRight,
+    Equal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -47,6 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 
 interface LocalLift {
     exercise: string;
@@ -66,6 +71,8 @@ export default function StrengthPage() {
     const { toast } = useToast();
 
     const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
+    const [isCompareMode, setCompareMode] = useState(false);
+    const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState('profile');
 
     // Dynamic Lifts
@@ -102,6 +109,12 @@ export default function StrengthPage() {
         return clientEvaluations[clientEvaluations.length - 1];
     }, [clientEvaluations, selectedEvaluationId]);
 
+    const comparedEvaluations = useMemo(() => {
+        return clientEvaluations
+            .filter(e => selectedEvalIdsForCompare.includes(e.id))
+            .sort((a,b) => new Date(a.date.replace(/-/g, '/')).getTime() - new Date(b.date.replace(/-/g, '/')).getTime());
+    }, [selectedEvalIdsForCompare, clientEvaluations]);
+
     useEffect(() => {
         if (evaluation?.strengthData) {
             if (evaluation.strengthData.dynamic) {
@@ -118,12 +131,14 @@ export default function StrengthPage() {
                 Object.entries(iso).forEach(([key, data]) => {
                     if (key === 'evaluator') return;
                     const testData = data as any;
-                    loadedTests[key] = {
-                        title: testData.title || isometricTests[key]?.title || key.toUpperCase(),
-                        subtitle: testData.subtitle || isometricTests[key]?.subtitle || '',
-                        attempts: testData.attempts?.map(String) || ['', '', ''],
-                        isCustom: testData.isCustom || !isometricTests[key]
-                    };
+                    if (testData && typeof testData === 'object') {
+                        loadedTests[key] = {
+                            title: testData.title || isometricTests[key]?.title || key.toUpperCase(),
+                            subtitle: testData.subtitle || isometricTests[key]?.subtitle || '',
+                            attempts: testData.attempts?.map(String) || ['', '', ''],
+                            isCustom: testData.isCustom || !isometricTests[key]
+                        };
+                    }
                 });
                 setIsometricTests(loadedTests);
             }
@@ -161,6 +176,26 @@ export default function StrengthPage() {
     const alphaForce = useMemo(() => {
         return calculateAlphaForceScore(calculatedLifts, isometricAnalysis, client?.bodyMeasurements?.weight || 0);
     }, [calculatedLifts, isometricAnalysis, client]);
+
+    const evolutionStats = useMemo(() => {
+        if (comparedEvaluations.length < 2) return null;
+        const first = comparedEvaluations[0];
+        const last = comparedEvaluations[comparedEvaluations.length - 1];
+
+        const firstTotal = first.strengthData?.totalTonnage || 0;
+        const lastTotal = last.strengthData?.totalTonnage || 0;
+        const totalDiff = firstTotal > 0 ? ((lastTotal - firstTotal) / firstTotal) * 100 : 0;
+
+        const firstScore = first.strengthData?.alphaForceScore || 0;
+        const lastScore = last.strengthData?.alphaForceScore || 0;
+        const scoreDiff = lastScore - firstScore;
+
+        return {
+            totalDiff: totalDiff.toFixed(1),
+            scoreDiff,
+            periodDays: Math.round((new Date(last.date).getTime() - new Date(first.date).getTime()) / (1000 * 60 * 60 * 24))
+        };
+    }, [comparedEvaluations]);
 
     const handleUpdateLift = (index: number, field: keyof LocalLift, value: string) => {
         const newLifts = [...lifts];
@@ -208,6 +243,8 @@ export default function StrengthPage() {
         if (client) {
             const newEval = addEvaluation(client.id);
             setSelectedEvaluationId(newEval.id);
+            setCompareMode(false);
+            setSelectedEvalIdsForCompare([]);
             toast({ title: "Nova Avaliação de Força", description: "Iniciando registro de testes de potência para hoje." });
         }
     };
@@ -254,13 +291,20 @@ export default function StrengthPage() {
         toast({ title: 'Salvo!', description: 'Dados de força sincronizados com sucesso.' });
     };
 
-    const handleSyncPeriodization = () => {
-        toast({
-            title: "Periodização Atualizada",
-            description: `A força máxima do aluno aumentou ${((total1RM / 200) * 10).toFixed(1)}%. Cargas recalculadas.`,
-            action: <Button variant="outline" size="sm">Ver Ciclo</Button>
+    const handleCompareToggle = (checked: boolean) => {
+        setCompareMode(checked);
+        if (!checked) setSelectedEvalIdsForCompare([]);
+        else if (evaluation && !selectedEvalIdsForCompare.includes(evaluation.id)) setSelectedEvalIdsForCompare([evaluation.id]);
+    }
+
+    const handleCompareSelection = (evalId: string) => {
+        setSelectedEvalIdsForCompare(prev => {
+            if (prev.includes(evalId)) return prev.filter(id => id !== evalId);
+            if (prev.length < 4) return [...prev, evalId].sort((a,b) => new Date(a.replace(/-/g, '/')).getTime() - new Date(b.replace(/-/g, '/')).getTime());
+            toast({variant: 'destructive', title: 'Aviso', description: 'Máximo 4 avaliações.'})
+            return prev;
         });
-    };
+    }
 
     const TrainingZoneTable = ({ oneRM, exercise }: { oneRM: number, exercise: string }) => {
         const zones = calculateTrainingZones(oneRM);
@@ -343,6 +387,24 @@ export default function StrengthPage() {
         );
     };
 
+    const EvolutionCard = ({ title, value, unit, diff, isScore }: { title: string, value: string | number, unit: string, diff?: string | number, isScore?: boolean }) => {
+        const diffNum = typeof diff === 'string' ? parseFloat(diff) : (diff || 0);
+        return (
+            <div className="p-4 rounded-2xl bg-muted/10 border border-muted/50 flex flex-col justify-between">
+                <div>
+                    <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{title}</p>
+                    <p className="text-2xl font-black mt-1">{value}<span className="text-[10px] font-bold ml-1 opacity-40">{unit}</span></p>
+                </div>
+                {diff !== undefined && (
+                    <div className={cn("flex items-center gap-1 text-[10px] font-black mt-3", diffNum > 0 ? "text-green-500" : diffNum < 0 ? "text-red-500" : "text-muted-foreground")}>
+                        {diffNum > 0 ? <ArrowUpRight size={14} /> : diffNum < 0 ? <ArrowDownRight size={14} /> : <Equal size={14} />}
+                        {diffNum > 0 ? '+' : ''}{diff}{isScore ? ' pts' : '%'}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
             <header className="flex flex-wrap items-center justify-between mb-8 gap-4 px-4 sm:px-0">
@@ -364,7 +426,7 @@ export default function StrengthPage() {
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                {/* Lateral: Perfil do Atleta e Score */}
+                {/* Lateral: Perfil do Atleta e Histórico */}
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="border-none shadow-xl bg-card overflow-hidden rounded-3xl">
                         <CardHeader className="bg-muted/10 p-6 flex items-center gap-4 border-b border-muted/50">
@@ -403,38 +465,52 @@ export default function StrengthPage() {
                                     <span className="font-black text-primary">{calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0).toFixed(2)}</span>
                                 </div>
                                 <Progress value={alphaForce.score} className="h-2 bg-muted border border-muted/50" />
-                                <p className="text-[8px] text-muted-foreground italic leading-tight text-center">"O Score Alpha combina potência isométrica e resistência dinâmica em um índice único de 0 a 100."</p>
                             </div>
                         </CardContent>
-                        <CardFooter className="bg-muted/5 p-4">
-                            <Button onClick={handleNewEvaluation} variant="outline" className="w-full rounded-xl border-dashed border-muted-foreground/30 font-bold h-10">
+                        <CardFooter className="bg-muted/5 p-4 flex flex-col gap-2">
+                            <div className="flex items-center justify-between w-full px-2">
+                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Modo Comparação</Label>
+                                <Switch checked={isCompareMode} onCheckedChange={handleCompareToggle} />
+                            </div>
+                            <Button onClick={handleNewEvaluation} variant="outline" className="w-full rounded-xl border-dashed border-muted-foreground/30 font-bold h-10 mt-2">
                                 <Plus className="mr-2 size-4" /> Nova Avaliação
                             </Button>
                         </CardFooter>
                     </Card>
 
-                    {/* Evolução Histórica */}
-                    <Card className="rounded-3xl border-none shadow-lg">
-                        <CardHeader className="p-6 pb-2">
-                            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                                <TrendingUp className="size-4 text-primary" /> Histórico PR
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 space-y-3">
-                            {clientEvaluations.length > 0 ? clientEvaluations.slice(-3).reverse().map(ev => (
-                                <div key={ev.id} className="p-3 rounded-2xl bg-muted/20 border border-muted flex items-center justify-between group hover:bg-muted/40 transition-colors">
-                                    <div>
-                                        <p className="text-[8px] font-black text-muted-foreground uppercase">{new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</p>
-                                        <p className="font-black text-sm">{ev.strengthData?.totalTonnage?.toFixed(0) || '--'} kg Total</p>
+                    {/* Histórico Selecionável */}
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase text-muted-foreground px-4">Histórico de Avaliações</Label>
+                        <div className="flex flex-col gap-3">
+                            {clientEvaluations.length > 0 ? clientEvaluations.slice().reverse().map((ev, idx) => {
+                                const isSelected = selectedEvaluationId === ev.id && !isCompareMode;
+                                const isSelectedForCompare = selectedEvalIdsForCompare.includes(ev.id);
+                                return (
+                                    <div 
+                                        key={ev.id} 
+                                        className={cn(
+                                            "p-3 rounded-2xl cursor-pointer transition-all border flex items-center justify-between group",
+                                            isCompareMode 
+                                                ? isSelectedForCompare ? 'bg-primary border-transparent text-white shadow-lg' : 'bg-muted/20 border-muted'
+                                                : isSelected ? 'bg-card border-primary ring-2 ring-primary/10' : 'bg-muted/20 border-muted hover:bg-muted/30'
+                                        )}
+                                        onClick={() => isCompareMode ? handleCompareSelection(ev.id) : setSelectedEvaluationId(ev.id)}
+                                    >
+                                        <div>
+                                            <p className={cn("text-[8px] font-black uppercase", isSelectedForCompare ? "text-white/60" : "text-muted-foreground")}>
+                                                {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                            </p>
+                                            <p className="font-black text-sm">{ev.strengthData?.totalTonnage?.toFixed(0) || '--'} kg Total</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={cn("text-[10px] font-black", isSelectedForCompare ? "text-white" : "text-primary")}>{ev.strengthData?.alphaForceScore || '--'}</p>
+                                            <p className={cn("text-[7px] font-bold uppercase", isSelectedForCompare ? "text-white/40" : "opacity-40")}>Alpha Force</p>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-primary">{ev.strengthData?.alphaForceScore || '--'}</p>
-                                        <p className="text-[7px] font-bold opacity-40 uppercase">Alpha Force</p>
-                                    </div>
-                                </div>
-                            )) : <p className="text-[10px] text-muted-foreground italic text-center py-4">Sem registros históricos.</p>}
-                        </CardContent>
-                    </Card>
+                                );
+                            }) : <p className="text-[10px] text-muted-foreground italic text-center py-4">Sem registros.</p>}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Área Central: Tabs de Avaliação */}
@@ -454,85 +530,160 @@ export default function StrengthPage() {
 
                         {/* TAB: PERFIL DE FORÇA */}
                         <TabsContent value="profile" className="mt-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card className="bg-slate-900 text-white border-none shadow-2xl rounded-3xl overflow-hidden relative group">
-                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                        <Trophy size={140} />
-                                    </div>
-                                    <CardContent className="p-8 relative z-10 space-y-8">
-                                        <div>
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Carga Total Dinâmica (1RM)</span>
-                                            <div className="flex items-baseline gap-2 mt-2">
-                                                <span className="text-7xl font-black tracking-tighter">{total1RM.toFixed(0)}</span>
-                                                <span className="text-2xl font-bold opacity-50">kg</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-6 border-t border-white/10 flex items-center justify-between">
-                                            <div>
-                                                <p className="text-[9px] font-black uppercase opacity-60">IFR Relativo</p>
-                                                <p className="text-3xl font-black">{calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0).toFixed(2)}x</p>
-                                            </div>
-                                            <Button onClick={handleSyncPeriodization} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-12 px-6 font-black uppercase text-[10px] shadow-lg shadow-primary/30">
-                                                <RefreshCw className="mr-2 size-4" /> Atualizar Cargas
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
-                                    <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
-                                        <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                                            <Target className="size-4 text-primary" /> Predição de Força Máxima
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6 space-y-6">
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
-                                            <div>
-                                                <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
-                                                <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_squat')} <span className="text-xs opacity-40">kg</span></p>
-                                            </div>
-                                            <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
-                                        </div>
-                                        <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
-                                            <div>
-                                                <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
-                                                <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
-                                            </div>
-                                            <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
-                                        </div>
-                                        <p className="text-[9px] text-muted-foreground italic leading-tight text-center bg-primary/5 p-3 rounded-xl border border-primary/10">
-                                            "Estimativa baseada na força de pico do Mid-Thigh Pull (IMTP)."
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-
-                            {/* Zonas de Treinamento */}
-                            <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
-                                <CardHeader className="bg-slate-900 p-6 text-white border-b border-white/5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-primary/20 rounded-lg text-primary"><Settings2 className="size-5" /></div>
-                                            <div>
-                                                <CardTitle className="text-lg font-black uppercase tracking-tight">Zonas de Intensidade de Periodização</CardTitle>
-                                                <CardDescription className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Baseado no 1RM Estimado</CardDescription>
-                                            </div>
+                            {isCompareMode && comparedEvaluations.length >= 2 ? (
+                                <div className="space-y-6">
+                                    {/* Resumo de Evolução Comparada */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <EvolutionCard 
+                                            title="Evolução Carga Total" 
+                                            value={comparedEvaluations[comparedEvaluations.length-1].strengthData?.totalTonnage?.toFixed(0) || 0} 
+                                            unit="kg" 
+                                            diff={evolutionStats?.totalDiff}
+                                        />
+                                        <EvolutionCard 
+                                            title="Evolução Alpha Score" 
+                                            value={comparedEvaluations[comparedEvaluations.length-1].strengthData?.alphaForceScore || 0} 
+                                            unit="pts" 
+                                            diff={evolutionStats?.scoreDiff}
+                                            isScore
+                                        />
+                                        <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col justify-center">
+                                            <p className="text-[8px] font-black uppercase text-primary tracking-widest">Período de Análise</p>
+                                            <p className="text-2xl font-black mt-1">{evolutionStats?.periodDays}<span className="text-[10px] font-bold ml-1 opacity-50">Dias</span></p>
                                         </div>
                                     </div>
-                                </CardHeader>
-                                <CardContent className="p-8 space-y-10">
-                                    {calculatedLifts.filter(l => l.estimated1RM > 0).map(lift => (
-                                        <TrainingZoneTable key={lift.exercise} exercise={lift.exercise} oneRM={lift.estimated1RM} />
-                                    ))}
-                                    {calculatedLifts.filter(l => l.estimated1RM > 0).length === 0 && (
-                                        <div className="py-10 text-center space-y-4 border-2 border-dashed rounded-3xl border-muted">
-                                            <div className="size-16 mx-auto bg-muted rounded-full flex items-center justify-center text-muted-foreground opacity-20"><Dumbbell size={32} /></div>
-                                            <p className="text-sm font-bold text-muted-foreground italic">Nenhum teste de 1RM dinâmico registrado.</p>
+
+                                    {/* Tabela Comparativa Detalhada */}
+                                    <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
+                                        <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
+                                            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                                <TrendingUp className="size-4 text-primary" /> Matriz Evolutiva de Força
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-0">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow className="bg-muted/20 h-14 border-none">
+                                                        <TableHead className="px-8 font-black text-[10px] uppercase text-muted-foreground">Parâmetro</TableHead>
+                                                        {comparedEvaluations.map(ev => (
+                                                            <TableHead key={ev.id} className="text-center font-black text-[10px] uppercase text-muted-foreground">
+                                                                {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                                                            </TableHead>
+                                                        ))}
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {/* Linhas de Força Isométrica */}
+                                                    <TableRow className="bg-muted/5">
+                                                        <TableCell colSpan={comparedEvaluations.length + 1} className="px-8 py-2 text-[9px] font-black text-primary uppercase">Isométricos (Pico KGF)</TableCell>
+                                                    </TableRow>
+                                                    {Object.keys(isometricTests).map(testKey => (
+                                                        <TableRow key={testKey} className="h-16 border-muted/10">
+                                                            <TableCell className="px-8 font-bold text-xs">{isometricTests[testKey].title}</TableCell>
+                                                            {comparedEvaluations.map(ev => {
+                                                                const iso = ev.strengthData?.isometric?.[testKey] as any;
+                                                                return (
+                                                                    <TableCell key={ev.id} className="text-center font-black text-sm">
+                                                                        {iso?.peakForce || '--'}
+                                                                    </TableCell>
+                                                                );
+                                                            })}
+                                                        </TableRow>
+                                                    ))}
+                                                    {/* Linhas de 1RM Dinâmico */}
+                                                    <TableRow className="bg-muted/5">
+                                                        <TableCell colSpan={comparedEvaluations.length + 1} className="px-8 py-2 text-[9px] font-black text-primary uppercase">Dinâmicos (1RM kg)</TableCell>
+                                                    </TableRow>
+                                                    {lifts.map((lift, liftIdx) => (
+                                                        <TableRow key={liftIdx} className="h-16 border-muted/10">
+                                                            <TableCell className="px-8 font-bold text-xs">{lift.exercise}</TableCell>
+                                                            {comparedEvaluations.map(ev => {
+                                                                const dynamic = ev.strengthData?.dynamic?.find(d => d.exercise === lift.exercise);
+                                                                return (
+                                                                    <TableCell key={ev.id} className="text-center font-black text-sm">
+                                                                        {dynamic?.estimated1RM?.toFixed(1) || '--'}
+                                                                    </TableCell>
+                                                                );
+                                                            })}
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Card className="bg-slate-900 text-white border-none shadow-2xl rounded-3xl overflow-hidden relative group">
+                                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                            <Trophy size={140} />
                                         </div>
-                                    )}
-                                </CardContent>
-                            </Card>
+                                        <CardContent className="p-8 relative z-10 space-y-8">
+                                            <div>
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Carga Total Dinâmica (1RM)</span>
+                                                <div className="flex items-baseline gap-2 mt-2">
+                                                    <span className="text-7xl font-black tracking-tighter">{total1RM.toFixed(0)}</span>
+                                                    <span className="text-2xl font-bold opacity-50">kg</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase opacity-60">IFR Relativo</p>
+                                                    <p className="text-3xl font-black">{calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0).toFixed(2)}x</p>
+                                                </div>
+                                                <Button onClick={() => toast({ title: "Periodização Atualizada", description: "Cargas sincronizadas." })} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-12 px-6 font-black uppercase text-[10px] shadow-lg shadow-primary/30">
+                                                    <RefreshCw className="mr-2 size-4" /> Atualizar Cargas
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
+                                        <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
+                                            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                                <Target className="size-4 text-primary" /> Predição de Força Máxima
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-6 space-y-6">
+                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
+                                                    <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_squat')} <span className="text-xs opacity-40">kg</span></p>
+                                                </div>
+                                                <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
+                                            </div>
+                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
+                                                <div>
+                                                    <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
+                                                    <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
+                                                </div>
+                                                <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Zonas de Treinamento */}
+                                    <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden md:col-span-2">
+                                        <CardHeader className="bg-slate-900 p-6 text-white border-b border-white/5">
+                                            <CardTitle className="text-lg font-black uppercase tracking-tight">Zonas de Intensidade de Periodização</CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-8 space-y-10">
+                                            {calculatedLifts.filter(l => l.estimated1RM > 0).map(lift => (
+                                                <TrainingZoneTable key={lift.exercise} exercise={lift.exercise} oneRM={lift.estimated1RM} />
+                                            ))}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                            
+                            {isCompareMode && comparedEvaluations.length < 2 && (
+                                <div className="py-20 text-center space-y-4 border-2 border-dashed rounded-3xl border-muted">
+                                    <div className="p-4 bg-muted/20 rounded-full inline-block text-muted-foreground opacity-30"><LineChart size={48} /></div>
+                                    <h3 className="text-lg font-bold text-muted-foreground">Modo Comparação Ativo</h3>
+                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">Selecione pelo menos duas avaliações no histórico lateral para ver a análise evolutiva.</p>
+                                </div>
+                            )}
                         </TabsContent>
 
                         {/* TAB: TESTES ISOMÉTRICOS */}
@@ -577,15 +728,6 @@ export default function StrengthPage() {
                                         isCustom={test.isCustom}
                                     />
                                 ))}
-                            </div>
-                            
-                            <div className="mt-8 p-8 bg-muted/10 rounded-3xl border-2 border-dashed border-muted text-center max-w-2xl mx-auto">
-                                <div className="p-3 bg-background rounded-full border shadow-sm text-primary inline-block mb-4"><Info size={24} /></div>
-                                <h4 className="text-sm font-black uppercase tracking-widest mb-2">Orientações de Célula de Carga</h4>
-                                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                    Realize 3 tentativas de força máxima explosiva por teste. O descanso entre tentativas deve ser de 60 segundos. 
-                                    O sistema capturará automaticamente o **Pico de Força (KGF)** para predição das cargas dinâmicas na periodização.
-                                </p>
                             </div>
                         </TabsContent>
 
