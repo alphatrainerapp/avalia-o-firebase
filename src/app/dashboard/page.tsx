@@ -18,7 +18,8 @@ import {
     AlertCircle, 
     TrendingUp, 
     Trophy, 
-    Bone 
+    Bone,
+    Dumbbell
 } from 'lucide-react';
 import {
   Select,
@@ -492,6 +493,7 @@ export default function DashboardPage() {
                     <Link href="/bioimpedance"><Button variant="outline" size="sm"><BarChart className="mr-2 h-4 w-4" /> Bioimpedância</Button></Link>
                     <Link href="/postural"><Button variant="outline" size="sm"><User className="mr-2 h-4 w-4" /> Postural</Button></Link>
                     <Link href="/vo2max"><Button variant="outline" size="sm"><Wind className="mr-2 h-4 w-4" /> VO2max</Button></Link>
+                    <Link href="/strength"><Button variant="outline" size="sm"><Dumbbell className="mr-2 h-4 w-4" /> Força</Button></Link>
                 </div>
                 <div className="lg:hidden">
                     <DropdownMenu>
@@ -500,6 +502,7 @@ export default function DashboardPage() {
                             <Link href="/bioimpedance"><DropdownMenuItem><BarChart className="mr-2 h-4 w-4" /> Bioimpedância</DropdownMenuItem></Link>
                             <Link href="/postural"><DropdownMenuItem><User className="mr-2 h-4 w-4" /> Postural</DropdownMenuItem></Link>
                             <Link href="/vo2max"><DropdownMenuItem><Wind className="mr-2 h-4 w-4" /> VO2max</DropdownMenuItem></Link>
+                            <Link href="/strength"><DropdownMenuItem><Dumbbell className="mr-2 h-4 w-4" /> Força</DropdownMenuItem></Link>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

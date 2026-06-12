@@ -11,7 +11,8 @@ import {
     Activity,
     Wind,
     User,
-    BarChart3
+    BarChart3,
+    Dumbbell
 } from 'lucide-react';
 import {
     Sidebar,
@@ -41,6 +42,7 @@ const AppSidebar = () => {
         { title: 'Bioimpedância', icon: BarChart3, href: '/bioimpedance' },
         { title: 'Postural', icon: User, href: '/postural' },
         { title: 'VO2max', icon: Wind, href: '/vo2max' },
+        { title: 'Força', icon: Dumbbell, href: '/strength' },
     ];
 
     return (
@@ -104,7 +106,7 @@ const AppSidebar = () => {
                         <div className="flex items-center gap-3 px-2 py-2 group-data-[collapsible=icon]:hidden">
                             <Avatar className="size-8">
                                 <AvatarImage src={trainerAvatar?.imageUrl} />
-                                <AvatarFallback>MP</AvatarFallback>
+                                <AvatarFallback>AT</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col overflow-hidden text-sm">
                                 <span className="font-medium truncate">Marcelo Prado</span>

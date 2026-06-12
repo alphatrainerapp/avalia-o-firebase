@@ -67,6 +67,19 @@ export type VO2MaxData = {
     zoneConfig?: any[];
 };
 
+export type StrengthLift = {
+    exercise: string;
+    weight: number;
+    reps: number;
+    estimated1RM: number;
+};
+
+export type StrengthData = {
+    lifts: StrengthLift[];
+    totalTonnage?: number;
+    relativeStrengthIndex?: number;
+};
+
 
 export type Evaluation = {
     id: string;
@@ -118,6 +131,7 @@ export type Evaluation = {
     posturalPhotos?: { [key: string]: string | undefined };
     posturalDeviations?: { [key: string]: string[] };
     vo2MaxData?: VO2MaxData;
+    strengthData?: StrengthData;
     functionalTests?: FunctionalTests;
 };
 
@@ -188,6 +202,14 @@ export const evaluations: Evaluation[] = [
             hrRest: 64,
             distance: 2400
         },
+        strengthData: {
+            lifts: [
+                { exercise: 'Supino Reto', weight: 80, reps: 5, estimated1RM: 92 },
+                { exercise: 'Agachamento', weight: 100, reps: 5, estimated1RM: 115 },
+                { exercise: 'Levantamento Terra', weight: 120, reps: 3, estimated1RM: 132 }
+            ],
+            relativeStrengthIndex: 1.45
+        },
         functionalTests: {
           pushUps: 20,
           sitUps: 32,
@@ -231,6 +253,13 @@ export const evaluations: Evaluation[] = [
             bloodPressureDiastolic: 80,
             distance: 2200
         },
+        strengthData: {
+            lifts: [
+                { exercise: 'Supino Reto', weight: 30, reps: 10, estimated1RM: 40 },
+                { exercise: 'Agachamento', weight: 45, reps: 8, estimated1RM: 58 }
+            ],
+            relativeStrengthIndex: 0.85
+        },
         functionalTests: {
           pushUps: 25,
           sitUps: 35,
@@ -238,92 +267,6 @@ export const evaluations: Evaluation[] = [
           wells: 12
         },
         observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
-    },
-    {
-        id: 'eval_maria_2',
-        clientId: 'cli_2',
-        clientName: 'Maria Oliveira',
-        date: '2024-01-15',
-        protocol: 'Pollock 3 dobras',
-        bodyMeasurements: { weight: 68.2, height: 165, waistCircumference: 79, hipCircumference: 101 },
-        bodyComposition: { bodyFatPercentage: 28.1 },
-        perimetria: { ombro: 100, torax: 92, cintura: 79, abdomen: 88, quadril: 101, bracoDRelaxado: 29.5, bracoERelaxado: 29.5, coxaMedialD: 56, coxaMedialE: 56 },
-        skinFolds: { tricipital: 15, supraIliaca: 18, coxa: 24 },
-        boneDiameters: { biestiloidal: 5.2, bicondilarUmero: 6.4, bicondilarFemur: 9.2 },
-        bioimpedance: { scaleType: null },
-        posturalPhotos: {
-            front: 'https://picsum.photos/seed/maria2front/600/800',
-            back: 'https://picsum.photos/seed/maria2back/600/800',
-            right: 'https://picsum.photos/seed/maria2right/600/800',
-            left: 'https://picsum.photos/seed/maria2left/600/800'
-        },
-        posturalDeviations: {
-            anterior: ['Ombro elevado'],
-            posterior: ['Escápula alada D'],
-            lateral_direita: ['Cabeça projetada'],
-            lateral_esquerda: ['Cabeça projetada']
-        },
-        vo2MaxData: {
-            protocol: 'cooper',
-            vo2: 42.1,
-            vAM: 12.5,
-            classification: 'Médio',
-            hrMax: 190,
-            hrRest: 60,
-            bloodPressureSystolic: 118,
-            bloodPressureDiastolic: 78,
-            distance: 2400
-        },
-        functionalTests: {
-          pushUps: 28,
-          sitUps: 40,
-          handgrip: 40,
-          wells: 15
-        },
-        observations: 'Ótima evolução. Redução significativa de medidas na cintura e melhora na inclinação da cabeça.'
-    },
-    {
-        id: 'eval_maria_3',
-        clientId: 'cli_2',
-        clientName: 'Maria Oliveira',
-        date: '2024-03-20',
-        protocol: 'Pollock 3 dobras',
-        bodyMeasurements: { weight: 65.0, height: 165, waistCircumference: 74, hipCircumference: 98 },
-        bodyComposition: { bodyFatPercentage: 24.2 },
-        perimetria: { ombro: 98, torax: 90, cintura: 74, abdomen: 82, quadril: 98, bracoDRelaxado: 28, bracoERelaxado: 28, coxaMedialD: 54, coxaMedialE: 54 },
-        skinFolds: { tricipital: 12, supraIliaca: 14, coxa: 20 },
-        boneDiameters: { biestiloidal: 5.2, bicondilarUmero: 6.4, bicondilarFemur: 9.2 },
-        bioimpedance: { scaleType: null },
-        posturalPhotos: {
-            front: 'https://picsum.photos/seed/maria3front/600/800',
-            back: 'https://picsum.photos/seed/maria3back/600/800',
-            right: 'https://picsum.photos/seed/maria3right/600/800',
-            left: 'https://picsum.photos/seed/maria3left/600/800'
-        },
-        posturalDeviations: {
-            anterior: [],
-            posterior: [],
-            lateral_direita: ['Cabeça projetada'],
-            lateral_esquerda: []
-        },
-        vo2MaxData: {
-            protocol: 'cooper',
-            vo2: 46.8,
-            vAM: 13.8,
-            classification: 'Bom',
-            hrMax: 192,
-            hrRest: 58,
-            bloodPressureSystolic: 115,
-            bloodPressureDiastolic: 75,
-            distance: 2650
-        },
-        functionalTests: {
-          pushUps: 32,
-          sitUps: 45,
-          handgrip: 48.5,
-          wells: 8
-        },
-        observations: 'Meta de peso atingida. Postura muito mais alinhada, restando apenas leve projeção cervical.'
     }
 ];
 
