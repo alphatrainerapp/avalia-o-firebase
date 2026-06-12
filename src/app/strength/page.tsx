@@ -27,7 +27,8 @@ import {
     PlusCircle,
     ArrowUpRight,
     ArrowDownRight,
-    Equal
+    Equal,
+    Gauge
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -169,6 +170,15 @@ export default function StrengthPage() {
         return result;
     }, [isometricTests, client]);
 
+    const predictedLifts = useMemo(() => {
+        if (!isometricAnalysis.imtp) return [];
+        return [
+            { exercise: 'Agachamento (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_squat') },
+            { exercise: 'Levantamento Terra (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_deadlift') },
+            { exercise: 'Supino (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.bench?.peak || 0, 'bench') },
+        ].filter(p => p.estimated1RM > 0);
+    }, [isometricAnalysis]);
+
     const total1RM = useMemo(() => {
         return calculatedLifts.reduce((sum, l) => sum + l.estimated1RM, 0);
     }, [calculatedLifts]);
@@ -306,12 +316,17 @@ export default function StrengthPage() {
         });
     }
 
-    const TrainingZoneTable = ({ oneRM, exercise }: { oneRM: number, exercise: string }) => {
+    const TrainingZoneTable = ({ oneRM, exercise, isPredicted }: { oneRM: number, exercise: string, isPredicted?: boolean }) => {
         const zones = calculateTrainingZones(oneRM);
         return (
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="font-black bg-primary/10 text-primary border-primary/30 uppercase text-[9px] tracking-widest">{exercise}</Badge>
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn("font-black bg-primary/10 text-primary border-primary/30 uppercase text-[9px] tracking-widest", isPredicted && "bg-cyan-500/10 text-cyan-500 border-cyan-500/30")}>
+                            {exercise}
+                        </Badge>
+                        {isPredicted && <span className="text-[8px] font-bold text-cyan-500 uppercase">(Predito via Isometria)</span>}
+                    </div>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Zonas de Carga (kg)</span>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-9 gap-2">
@@ -529,7 +544,7 @@ export default function StrengthPage() {
                         </TabsList>
 
                         {/* TAB: PERFIL DE FORÇA */}
-                        <TabsContent value="profile" className="mt-6 space-y-6">
+                        <TabsContent value="profile" className="mt-6 space-y-8">
                             {isCompareMode && comparedEvaluations.length >= 2 ? (
                                 <div className="space-y-6">
                                     {/* Resumo de Evolução Comparada */}
@@ -613,67 +628,110 @@ export default function StrengthPage() {
                                     </Card>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Card className="bg-slate-900 text-white border-none shadow-2xl rounded-3xl overflow-hidden relative group">
-                                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                            <Trophy size={140} />
-                                        </div>
-                                        <CardContent className="p-8 relative z-10 space-y-8">
-                                            <div>
-                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Carga Total Dinâmica (1RM)</span>
-                                                <div className="flex items-baseline gap-2 mt-2">
-                                                    <span className="text-7xl font-black tracking-tighter">{total1RM.toFixed(0)}</span>
-                                                    <span className="text-2xl font-bold opacity-50">kg</span>
-                                                </div>
+                                <div className="space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <Card className="bg-slate-900 text-white border-none shadow-2xl rounded-3xl overflow-hidden relative group">
+                                            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                                <Trophy size={140} />
                                             </div>
-
-                                            <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+                                            <CardContent className="p-8 relative z-10 space-y-8">
                                                 <div>
-                                                    <p className="text-[9px] font-black uppercase opacity-60">IFR Relativo</p>
-                                                    <p className="text-3xl font-black">{calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0).toFixed(2)}x</p>
+                                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Carga Total Dinâmica (1RM)</span>
+                                                    <div className="flex items-baseline gap-2 mt-2">
+                                                        <span className="text-7xl font-black tracking-tighter">{total1RM.toFixed(0)}</span>
+                                                        <span className="text-2xl font-bold opacity-50">kg</span>
+                                                    </div>
                                                 </div>
-                                                <Button onClick={() => toast({ title: "Periodização Atualizada", description: "Cargas sincronizadas." })} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-12 px-6 font-black uppercase text-[10px] shadow-lg shadow-primary/30">
-                                                    <RefreshCw className="mr-2 size-4" /> Atualizar Cargas
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
 
-                                    <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
-                                        <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
-                                            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                                                <Target className="size-4 text-primary" /> Predição de Força Máxima
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6 space-y-6">
-                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
-                                                <div>
-                                                    <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
-                                                    <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_squat')} <span className="text-xs opacity-40">kg</span></p>
+                                                <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-[9px] font-black uppercase opacity-60">IFR Relativo</p>
+                                                        <p className="text-3xl font-black">{calculateRelativeStrength(total1RM, client?.bodyMeasurements?.weight || 0).toFixed(2)}x</p>
+                                                    </div>
+                                                    <Button onClick={() => toast({ title: "Periodização Atualizada", description: "Cargas sincronizadas." })} className="bg-primary hover:bg-primary/90 text-white rounded-2xl h-12 px-6 font-black uppercase text-[10px] shadow-lg shadow-primary/30">
+                                                        <RefreshCw className="mr-2 size-4" /> Atualizar Cargas
+                                                    </Button>
                                                 </div>
-                                                <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
-                                            </div>
-                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
-                                                <div>
-                                                    <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
-                                                    <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
-                                                </div>
-                                                <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
+                                            </CardContent>
+                                        </Card>
 
-                                    {/* Zonas de Treinamento */}
-                                    <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden md:col-span-2">
-                                        <CardHeader className="bg-slate-900 p-6 text-white border-b border-white/5">
-                                            <CardTitle className="text-lg font-black uppercase tracking-tight">Zonas de Intensidade de Periodização</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-8 space-y-10">
-                                            {calculatedLifts.filter(l => l.estimated1RM > 0).map(lift => (
-                                                <TrainingZoneTable key={lift.exercise} exercise={lift.exercise} oneRM={lift.estimated1RM} />
-                                            ))}
-                                        </CardContent>
-                                    </Card>
+                                        {/* Resumo Isométrico */}
+                                        <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
+                                            <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
+                                                <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                                    <Gauge className="size-4 text-primary" /> Performance Isométrica
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-6">
+                                                <div className="space-y-4">
+                                                    {Object.entries(isometricAnalysis).map(([key, data]: [string, any]) => (
+                                                        <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-muted/5 border border-muted/30">
+                                                            <div>
+                                                                <p className="text-[10px] font-bold text-muted-foreground uppercase">{isometricTests[key].title}</p>
+                                                                <p className="text-xl font-black">{data.peak} <span className="text-[10px] font-bold opacity-40">kgf</span></p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <p className="text-[9px] font-black text-primary uppercase">Relativo</p>
+                                                                <p className="font-black text-sm">{data.rel}x</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {Object.keys(isometricAnalysis).length === 0 && <p className="text-xs text-muted-foreground italic text-center py-4">Nenhum teste isométrico realizado.</p>}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+
+                                    {/* Predição e Zonas */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
+                                            <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
+                                                <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                                    <Target className="size-4 text-primary" /> Predição de Força Máxima
+                                                </CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-6 space-y-6">
+                                                <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
+                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp?.peak || 0, 'imtp_squat')} <span className="text-xs opacity-40">kg</span></p>
+                                                    </div>
+                                                    <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
+                                                </div>
+                                                <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
+                                                    <div>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
+                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp?.peak || 0, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
+                                                    </div>
+                                                    <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Zonas de Treinamento */}
+                                        <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
+                                            <CardHeader className="bg-slate-900 p-6 text-white border-b border-white/5">
+                                                <CardTitle className="text-lg font-black uppercase tracking-tight">Zonas de Intensidade (Cargas)</CardTitle>
+                                            </CardHeader>
+                                            <CardContent className="p-6 space-y-8">
+                                                {/* Zonas Reais */}
+                                                <div className="space-y-6">
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest border-b border-primary/20 pb-2">Baseado em Testes Reais (1RM)</p>
+                                                    {calculatedLifts.filter(l => l.estimated1RM > 0).map(lift => (
+                                                        <TrainingZoneTable key={lift.exercise} exercise={lift.exercise} oneRM={lift.estimated1RM} />
+                                                    ))}
+                                                </div>
+                                                
+                                                {/* Zonas Preditas */}
+                                                <div className="space-y-6 pt-4">
+                                                    <p className="text-[10px] font-black text-cyan-500 uppercase tracking-widest border-b border-cyan-500/20 pb-2">Baseado em Predição Isométrica</p>
+                                                    {predictedLifts.map(lift => (
+                                                        <TrainingZoneTable key={lift.exercise} exercise={lift.exercise} oneRM={lift.estimated1RM} isPredicted />
+                                                    ))}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
                                 </div>
                             )}
                             
