@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -28,7 +29,8 @@ import {
     ArrowDownRight,
     Equal,
     Gauge,
-    Download
+    Download,
+    HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -56,6 +58,7 @@ import { Switch } from '@/components/ui/switch';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import StrengthReport from '@/components/StrengthReport';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LocalLift {
     exercise: string;
@@ -486,7 +489,20 @@ export default function StrengthPage() {
                         <CardContent className="p-6 space-y-8">
                             {/* Alpha Force Score */}
                             <div className="text-center relative">
-                                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-4">Score Alpha Force</p>
+                                <div className="flex items-center justify-center gap-1 mb-4">
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Score Alpha Force</p>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <HelpCircle className="size-3 text-muted-foreground cursor-help hover:text-primary transition-colors" />
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[220px] text-[10px] leading-tight p-3 bg-slate-900 text-white border-none shadow-xl">
+                                                <p className="font-bold text-primary mb-1 uppercase tracking-widest">Como funciona o cálculo?</p>
+                                                <p className="opacity-80">O Score (0-100) quantifica a potência global. Ele é baseado na <strong>Soma das Forças Relativas (Carga/Peso)</strong> de todos os exercícios dinâmicos e isométricos. Um score de 100 representa o <strong>Padrão Ouro de Elite</strong> (IFR total ≥ 5.0).</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
                                 <div className="relative size-32 mx-auto flex items-center justify-center bg-primary/5 rounded-full border-2 border-primary/10 shadow-inner">
                                     <div className="text-center">
                                         <p className="text-5xl font-black text-primary leading-none">{alphaForce.score}</p>
