@@ -90,12 +90,12 @@ export default function StrengthPage() {
         { exercise: 'Levantamento Terra', weight: '', reps: '' }
     ]);
 
-    // Isometric Tests
+    // Isometric Tests (Updated with new defaults)
     const [isometricTests, setIsometricTests] = useState<Record<string, IsometricEntry>>({
-        imtp: { title: 'Mid-Thigh Pull (IMTP)', subtitle: 'Força de Cadeia Posterior', attempts: ['', '', ''] },
-        squat: { title: 'Agachamento Isométrico', subtitle: 'Membros Inferiores Isolados', attempts: ['', '', ''] },
-        bench: { title: 'Supino Isométrico', subtitle: 'Empurre Horizontal', attempts: ['', '', ''] },
-        row: { title: 'Remada Isométrica', subtitle: 'Puxada Horizontal', attempts: ['', '', ''] }
+        imtp: { title: 'Remada Curvada', subtitle: 'Puxada Isométrica', attempts: ['', '', ''] },
+        squat: { title: 'Extensão de Joelhos', subtitle: 'Isometria de Quadríceps', attempts: ['', '', ''] },
+        bench: { title: 'Rosca Direta', subtitle: 'Flexão de Cotovelo Isométrica', attempts: ['', '', ''] },
+        row: { title: 'Levantamento Terra', subtitle: 'Cadeia Posterior Isométrica', attempts: ['', '', ''] }
     });
 
     // Custom Exercise States
@@ -178,11 +178,11 @@ export default function StrengthPage() {
     }, [isometricTests, client]);
 
     const predictedLifts = useMemo(() => {
-        if (!isometricAnalysis.imtp) return [];
+        if (!isometricAnalysis.row) return [];
         return [
-            { exercise: 'Agachamento (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_squat') },
-            { exercise: 'Levantamento Terra (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.imtp.peak, 'imtp_deadlift') },
-            { exercise: 'Supino (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.bench?.peak || 0, 'bench') },
+            { exercise: 'Levantamento Terra (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.row.peak, 'imtp_deadlift') },
+            { exercise: 'Agachamento (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.squat?.peak || 0, 'squat') },
+            { exercise: 'Remada Curvada (Predito)', estimated1RM: predict1RMFromIsometric(isometricAnalysis.imtp?.peak || 0, 'row') },
         ].filter(p => p.estimated1RM > 0);
     }, [isometricAnalysis]);
 
@@ -735,15 +735,15 @@ export default function StrengthPage() {
                                             <CardContent className="p-6 space-y-6">
                                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
                                                     <div>
-                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
-                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp?.peak || 0, 'imtp_squat')} <span className="text-xs opacity-40">kg</span></p>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
+                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.row?.peak || 0, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
                                                     </div>
                                                     <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
                                                 </div>
                                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-muted/50">
                                                     <div>
-                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Terra Predito</p>
-                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.imtp?.peak || 0, 'imtp_deadlift')} <span className="text-xs opacity-40">kg</span></p>
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase">Agachamento Predito</p>
+                                                        <p className="text-2xl font-black text-foreground">{predict1RMFromIsometric(isometricAnalysis.squat?.peak || 0, 'squat')} <span className="text-xs opacity-40">kg</span></p>
                                                     </div>
                                                     <div className="p-3 bg-background rounded-xl border shadow-sm text-primary"><Activity size={20} /></div>
                                                 </div>
