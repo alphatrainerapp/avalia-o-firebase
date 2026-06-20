@@ -45,7 +45,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
     calculate1RM, 
     calculateRelativeStrength, 
-    getStrengthClassification, 
     predict1RMFromIsometric, 
     calculateTrainingZones,
     calculateAlphaForceScore
@@ -73,6 +72,130 @@ interface IsometricEntry {
     isCustom?: boolean;
 }
 
+// --- Sub-componentes movidos para fora para evitar perda de foco ---
+
+const TrainingZoneTable = ({ oneRM, exercise, isPredicted }: { oneRM: number, exercise: string, isPredicted?: boolean }) => {
+    const zones = calculateTrainingZones(oneRM);
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn("font-black bg-primary/10 text-primary border-primary/30 uppercase text-[9px] tracking-widest", isPredicted && "bg-cyan-500/10 text-cyan-500 border-cyan-500/30")}>
+                        {exercise}
+                    </Badge>
+                    {isPredicted && <span className="text-[8px] font-bold text-cyan-500 uppercase">(Predito via Isometria)</span>}
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">Zonas de Carga (kg)</span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-9 gap-2">
+                {zones.map(z => (
+                    <div key={z.percentage} className="bg-muted/30 border border-muted rounded-lg p-2 text-center group hover:border-primary/50 transition-colors">
+                        <p className="text-[8px] font-black text-muted-foreground opacity-50 mb-1">{z.percentage}%</p>
+                        <p className="text-sm font-black text-foreground">{z.load}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const IsometricInputCard = ({ 
+    title, 
+    testKey, 
+    subtitle, 
+    isCustom, 
+    attempts, 
+    analysis, 
+    onUpdate, 
+    onRemove 
+}: { 
+    title: string, 
+    testKey: string, 
+    subtitle: string, 
+    isCustom?: boolean, 
+    attempts: string[],
+    analysis: any,
+    onUpdate: (idx: number, val: string) => void,
+    onRemove: () => void
+}) => {
+    return (
+        <Card className="shadow-lg border-primary/10 overflow-hidden group relative">
+            {isCustom && (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={onRemove}
+                    className="absolute top-2 right-2 size-6 rounded-full text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                    <X className="size-3" />
+                </Button>
+            )}
+            <div className="bg-primary/5 p-4 border-b border-muted/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-background rounded-lg text-primary shadow-sm"><Zap className="size-4" /></div>
+                    <div>
+                        <CardTitle className="text-sm font-bold uppercase">{title}</CardTitle>
+                        <CardDescription className="text-[9px] font-bold">{subtitle}</CardDescription>
+                    </div>
+                </div>
+            </div>
+            <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                    {attempts.map((val, idx) => (
+                        <div key={idx} className="space-y-1">
+                            <Label className="text-[8px] font-black uppercase text-muted-foreground">T{idx+1}</Label>
+                            <div className="relative">
+                                <Input 
+                                    type="number" 
+                                    step="any"
+                                    value={val} 
+                                    onChange={(e) => onUpdate(idx, e.target.value)}
+                                    className="h-10 text-center font-black bg-muted/10 border-muted group-hover:border-primary/30"
+                                    placeholder="0"
+                                />
+                                <span className="absolute right-1 bottom-1 text-[7px] font-black text-muted-foreground/30">KGF</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <Separator className="bg-muted/50" />
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-2 rounded-xl bg-primary/5 border border-primary/10">
+                        <p className="text-[8px] font-black text-primary uppercase opacity-70">Pico</p>
+                        <p className="text-lg font-black text-primary">{analysis.peak}</p>
+                    </div>
+                    <div className="text-center p-2 rounded-xl bg-muted/20">
+                        <p className="text-[8px] font-black text-muted-foreground uppercase opacity-70">Média</p>
+                        <p className="text-lg font-black">{analysis.avg}</p>
+                    </div>
+                    <div className="text-center p-2 rounded-xl bg-muted/20">
+                        <p className="text-[8px] font-black text-muted-foreground uppercase opacity-70">Rel.</p>
+                        <p className="text-lg font-black">{analysis.rel}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+const EvolutionCard = ({ title, value, unit, diff, isScore }: { title: string, value: string | number, unit: string, diff?: string | number, isScore?: boolean }) => {
+    const diffNum = typeof diff === 'string' ? parseFloat(diff) : (diff || 0);
+    return (
+        <div className="p-4 rounded-2xl bg-muted/10 border border-muted/50 flex flex-col justify-between">
+            <div>
+                <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{title}</p>
+                <p className="text-2xl font-black mt-1">{value}<span className="text-[10px] font-bold ml-1 opacity-40">{unit}</span></p>
+            </div>
+            {diff !== undefined && (
+                <div className={cn("flex items-center gap-1 text-[10px] font-black mt-3", diffNum > 0 ? "text-green-500" : diffNum < 0 ? "text-red-500" : "text-muted-foreground")}>
+                    {diffNum > 0 ? <ArrowUpRight size={14} /> : diffNum < 0 ? <ArrowDownRight size={14} /> : <Equal size={14} />}
+                    {diffNum > 0 ? '+' : ''}{diff}{isScore ? ' pts' : '%'}
+                </div>
+            )}
+        </div>
+    );
+};
+
 export default function StrengthPage() {
     const { clients, selectedClientId, allEvaluations, setAllEvaluations, addEvaluation } = useEvaluationContext();
     const { toast } = useToast();
@@ -83,14 +206,12 @@ export default function StrengthPage() {
     const [selectedEvalIdsForCompare, setSelectedEvalIdsForCompare] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState('profile');
 
-    // Dynamic Lifts
     const [lifts, setLifts] = useState<LocalLift[]>([
         { exercise: 'Supino Reto', weight: '', reps: '' },
         { exercise: 'Agachamento', weight: '', reps: '' },
         { exercise: 'Levantamento Terra', weight: '', reps: '' }
     ]);
 
-    // Isometric Tests (Updated with new defaults)
     const [isometricTests, setIsometricTests] = useState<Record<string, IsometricEntry>>({
         imtp: { title: 'Remada Curvada', subtitle: 'Puxada Isométrica', attempts: ['', '', ''] },
         squat: { title: 'Extensão de Joelhos', subtitle: 'Isometria de Quadríceps', attempts: ['', '', ''] },
@@ -98,7 +219,6 @@ export default function StrengthPage() {
         row: { title: 'Levantamento Terra', subtitle: 'Cadeia Posterior Isométrica', attempts: ['', '', ''] }
     });
 
-    // Custom Exercise States
     const [newIsoName, setNewIsoName] = useState('');
     const [newIsoSubtitle, setNewIsoSubtitle] = useState('');
     const [isAddIsoOpen, setIsAddIsoOpen] = useState(false);
@@ -342,110 +462,6 @@ export default function StrengthPage() {
         toast({ title: 'Relatório Exportado!' });
     };
 
-    const TrainingZoneTable = ({ oneRM, exercise, isPredicted }: { oneRM: number, exercise: string, isPredicted?: boolean }) => {
-        const zones = calculateTrainingZones(oneRM);
-        return (
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={cn("font-black bg-primary/10 text-primary border-primary/30 uppercase text-[9px] tracking-widest", isPredicted && "bg-cyan-500/10 text-cyan-500 border-cyan-500/30")}>
-                            {exercise}
-                        </Badge>
-                        {isPredicted && <span className="text-[8px] font-bold text-cyan-500 uppercase">(Predito via Isometria)</span>}
-                    </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Zonas de Carga (kg)</span>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-9 gap-2">
-                    {zones.map(z => (
-                        <div key={z.percentage} className="bg-muted/30 border border-muted rounded-lg p-2 text-center group hover:border-primary/50 transition-colors">
-                            <p className="text-[8px] font-black text-muted-foreground opacity-50 mb-1">{z.percentage}%</p>
-                            <p className="text-sm font-black text-foreground">{z.load}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
-    const IsometricInputCard = ({ title, testKey, subtitle, isCustom }: { title: string, testKey: string, subtitle: string, isCustom?: boolean }) => {
-        const analysis = isometricAnalysis[testKey];
-        return (
-            <Card className="shadow-lg border-primary/10 overflow-hidden group relative">
-                {isCustom && (
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleRemoveIsoTest(testKey)}
-                        className="absolute top-2 right-2 size-6 rounded-full text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <X className="size-3" />
-                    </Button>
-                )}
-                <div className="bg-primary/5 p-4 border-b border-muted/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-background rounded-lg text-primary shadow-sm"><Zap className="size-4" /></div>
-                        <div>
-                            <CardTitle className="text-sm font-bold uppercase">{title}</CardTitle>
-                            <CardDescription className="text-[9px] font-bold">{subtitle}</CardDescription>
-                        </div>
-                    </div>
-                </div>
-                <CardContent className="p-4 space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                        {isometricTests[testKey].attempts.map((val, idx) => (
-                            <div key={idx} className="space-y-1">
-                                <Label className="text-[8px] font-black uppercase text-muted-foreground">T{idx+1}</Label>
-                                <div className="relative">
-                                    <Input 
-                                        type="number" 
-                                        value={val} 
-                                        onChange={(e) => handleUpdateIsometric(testKey, idx, e.target.value)}
-                                        className="h-10 text-center font-black bg-muted/10 border-muted group-hover:border-primary/30"
-                                        placeholder="0"
-                                    />
-                                    <span className="absolute right-1 bottom-1 text-[7px] font-black text-muted-foreground/30">KGF</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <Separator className="bg-muted/50" />
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="text-center p-2 rounded-xl bg-primary/5 border border-primary/10">
-                            <p className="text-[8px] font-black text-primary uppercase opacity-70">Pico</p>
-                            <p className="text-lg font-black text-primary">{analysis.peak}</p>
-                        </div>
-                        <div className="text-center p-2 rounded-xl bg-muted/20">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase opacity-70">Média</p>
-                            <p className="text-lg font-black">{analysis.avg}</p>
-                        </div>
-                        <div className="text-center p-2 rounded-xl bg-muted/20">
-                            <p className="text-[8px] font-black text-muted-foreground uppercase opacity-70">Rel.</p>
-                            <p className="text-lg font-black">{analysis.rel}</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        );
-    };
-
-    const EvolutionCard = ({ title, value, unit, diff, isScore }: { title: string, value: string | number, unit: string, diff?: string | number, isScore?: boolean }) => {
-        const diffNum = typeof diff === 'string' ? parseFloat(diff) : (diff || 0);
-        return (
-            <div className="p-4 rounded-2xl bg-muted/10 border border-muted/50 flex flex-col justify-between">
-                <div>
-                    <p className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">{title}</p>
-                    <p className="text-2xl font-black mt-1">{value}<span className="text-[10px] font-bold ml-1 opacity-40">{unit}</span></p>
-                </div>
-                {diff !== undefined && (
-                    <div className={cn("flex items-center gap-1 text-[10px] font-black mt-3", diffNum > 0 ? "text-green-500" : diffNum < 0 ? "text-red-500" : "text-muted-foreground")}>
-                        {diffNum > 0 ? <ArrowUpRight size={14} /> : diffNum < 0 ? <ArrowDownRight size={14} /> : <Equal size={14} />}
-                        {diffNum > 0 ? '+' : ''}{diff}{isScore ? ' pts' : '%'}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
     return (
         <div className="min-h-screen bg-background text-foreground pb-20">
             <header className="flex flex-wrap items-center justify-between mb-8 gap-4 px-4 sm:px-0">
@@ -487,7 +503,6 @@ export default function StrengthPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="p-6 space-y-8">
-                            {/* Alpha Force Score */}
                             <div className="text-center relative">
                                 <div className="flex items-center justify-center gap-1 mb-4">
                                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">Score Alpha Force</p>
@@ -589,7 +604,6 @@ export default function StrengthPage() {
                         <TabsContent value="profile" className="mt-6 space-y-8">
                             {isCompareMode && comparedEvaluations.length >= 2 ? (
                                 <div className="space-y-6">
-                                    {/* Resumo de Evolução Comparada */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <EvolutionCard 
                                             title="Evolução Carga Total" 
@@ -610,7 +624,6 @@ export default function StrengthPage() {
                                         </div>
                                     </div>
 
-                                    {/* Tabela Comparativa Detalhada */}
                                     <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
                                         <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
                                             <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -630,7 +643,6 @@ export default function StrengthPage() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {/* Linhas de Força Isométrica */}
                                                     <TableRow className="bg-muted/5">
                                                         <TableCell colSpan={comparedEvaluations.length + 1} className="px-8 py-2 text-[9px] font-black text-primary uppercase">Isométricos (Pico KGF)</TableCell>
                                                     </TableRow>
@@ -647,7 +659,6 @@ export default function StrengthPage() {
                                                             })}
                                                         </TableRow>
                                                     ))}
-                                                    {/* Linhas de 1RM Dinâmico */}
                                                     <TableRow className="bg-muted/5">
                                                         <TableCell colSpan={comparedEvaluations.length + 1} className="px-8 py-2 text-[9px] font-black text-primary uppercase">Dinâmicos (1RM kg)</TableCell>
                                                     </TableRow>
@@ -697,7 +708,6 @@ export default function StrengthPage() {
                                             </CardContent>
                                         </Card>
 
-                                        {/* Resumo Isométrico */}
                                         <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
                                             <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
                                                 <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -724,7 +734,6 @@ export default function StrengthPage() {
                                         </Card>
                                     </div>
 
-                                    {/* Predição e Zonas */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
                                             <CardHeader className="bg-muted/10 p-6 border-b border-muted/50">
@@ -750,13 +759,11 @@ export default function StrengthPage() {
                                             </CardContent>
                                         </Card>
 
-                                        {/* Zonas de Treinamento */}
                                         <Card className="rounded-3xl border-none shadow-xl bg-card overflow-hidden">
                                             <CardHeader className="bg-slate-900 p-6 text-white border-b border-white/5">
                                                 <CardTitle className="text-lg font-black uppercase tracking-tight">Zonas de Intensidade (Cargas)</CardTitle>
                                             </CardHeader>
                                             <CardContent className="p-6 space-y-8">
-                                                {/* Zonas Reais */}
                                                 <div className="space-y-6">
                                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest border-b border-primary/20 pb-2">Baseado em Testes Reais (1RM)</p>
                                                     {calculatedLifts.filter(l => l.estimated1RM > 0).map(lift => (
@@ -764,7 +771,6 @@ export default function StrengthPage() {
                                                     ))}
                                                 </div>
                                                 
-                                                {/* Zonas Preditas */}
                                                 <div className="space-y-6 pt-4">
                                                     <p className="text-[10px] font-black text-cyan-500 uppercase tracking-widest border-b border-cyan-500/20 pb-2">Baseado em Predição Isométrica</p>
                                                     {predictedLifts.map(lift => (
@@ -826,6 +832,10 @@ export default function StrengthPage() {
                                         title={test.title} 
                                         subtitle={test.subtitle} 
                                         isCustom={test.isCustom}
+                                        attempts={test.attempts}
+                                        analysis={isometricAnalysis[key]}
+                                        onUpdate={(idx, val) => handleUpdateIsometric(key, idx, val)}
+                                        onRemove={() => handleRemoveIsoTest(key)}
                                     />
                                 ))}
                             </div>
@@ -871,6 +881,7 @@ export default function StrengthPage() {
                                                     <TableCell className="w-32">
                                                         <Input 
                                                             type="number"
+                                                            step="any"
                                                             value={lift.weight} 
                                                             onChange={(e) => handleUpdateLift(index, 'weight', e.target.value)}
                                                             className="h-11 text-center font-black bg-muted/10 border-muted"
@@ -880,6 +891,7 @@ export default function StrengthPage() {
                                                     <TableCell className="w-24">
                                                         <Input 
                                                             type="number"
+                                                            step="any"
                                                             value={lift.reps} 
                                                             onChange={(e) => handleUpdateLift(index, 'reps', e.target.value)}
                                                             className="h-11 text-center font-black bg-muted/10 border-muted"
@@ -915,7 +927,6 @@ export default function StrengthPage() {
                 </div>
             </div>
             
-            {/* Hidden Report for PDF Capture */}
             <div className="fixed -left-[9999px] -top-[9999px] bg-white">
                 {client && (
                     <StrengthReport 
@@ -929,3 +940,4 @@ export default function StrengthPage() {
         </div>
     );
 }
+
