@@ -20,11 +20,12 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
     - **Densidade Óssea**: Classificação automática (Baixa, Normal, Robusta).
 
 ### 3. Avaliação de Força & Potência (Alpha Force Engine)
-- **Módulo Isométrico de Precisão**: Suporte para Mid-Thigh Pull (IMTP), Supino, Agachamento e Remada via célula de carga (kgf).
+- **Módulo Isométrico de Precisão**: Suporte para Remada Curvada, Rosca Direta, Extensão de Joelhos e Levantamento Terra via célula de carga (kgf).
 - **Predição de Performance**: Algoritmo que estima o 1RM dinâmico a partir de picos isométricos.
-- **Alpha Force Score**: Índice exclusivo de 0 a 100 que resume o perfil de força do atleta.
+- **Alpha Force Score**: Índice exclusivo de 0 a 100 que resume o perfil de força do atleta com fundamentação em Força Relativa (IFR).
 - **Zonas de Carga Instantâneas**: Geração automática de faixas de intensidade (100% a 60%) para prescrição imediata de treinamento.
 - **Evolução Comparativa**: Matriz evolutiva que compara picos de força e recordes pessoais (PRs) entre diferentes datas.
+- **Usabilidade Avançada**: Suporte a valores decimais e interface otimizada para alta produtividade.
 
 ### 4. Aptidão Física e Testes Funcionais
 - **Galeria Técnica de Alta Fidelidade**: Registro com imagens de referência técnica para Flexão de Braço, Abdominal, Handgrip e Banco de Wells.
