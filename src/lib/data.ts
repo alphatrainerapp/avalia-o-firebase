@@ -72,6 +72,12 @@ export type Evaluation = {
         waistCircumference: number;
         hipCircumference: number;
     };
+    vitalSigns?: {
+        saturation?: number;
+        heartRate?: number;
+        systolicBP?: number;
+        diastolicBP?: number;
+    };
     bodyComposition: {
         bodyFatPercentage: number;
     };

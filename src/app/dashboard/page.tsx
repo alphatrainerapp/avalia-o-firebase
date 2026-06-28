@@ -19,7 +19,10 @@ import {
     TrendingUp, 
     Trophy, 
     Bone,
-    Dumbbell
+    Dumbbell,
+    Heart,
+    Droplets,
+    Gauge
 } from 'lucide-react';
 import {
   Select,
@@ -50,7 +53,8 @@ import {
     calculateRCQ,
     getRcqClassification,
     calculateRCE,
-    getRceClassification
+    getRceClassification,
+    getBPClassification
 } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -74,6 +78,7 @@ import {
 import Image from 'next/image';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const functionalTestsConfig = [
     { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
@@ -141,6 +146,7 @@ export default function DashboardPage() {
                 date: `${year}-${month}-${day}`,
                 protocol: availableProtocols[0],
                 bodyMeasurements: { height: client.height, weight: 0 },
+                vitalSigns: { saturation: undefined, heartRate: undefined, systolicBP: undefined, diastolicBP: undefined },
                 perimetria: {},
                 skinFolds: {},
                 functionalTests: {},
@@ -543,6 +549,74 @@ export default function DashboardPage() {
                             <div><Label>Altura (cm)</Label><Input name="bodyMeasurements.height" type="number" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} /></div>
                             <div><Label>Peso (kg)</Label><Input name="bodyMeasurements.weight" type="number" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} /></div>
                         </div>
+
+                        {/* Nova seção de Sinais Vitais Opcionais */}
+                        <div className="pt-4 space-y-4 border-t border-dashed">
+                             <div className="flex items-center gap-2">
+                                <Activity className="size-4 text-primary" />
+                                <h3 className="text-sm font-bold uppercase tracking-wider">Sinais Vitais (Opcional)</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1">
+                                        <Droplets className="size-3 text-cyan-500" /> Saturação (%)
+                                    </Label>
+                                    <Input 
+                                        type="number" 
+                                        name="vitalSigns.saturation" 
+                                        value={formState.vitalSigns?.saturation || ''} 
+                                        onChange={handleInputChange} 
+                                        placeholder="Oxímetro"
+                                        className="h-10 font-bold bg-muted/20"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1">
+                                        <Heart className="size-3 text-red-500" /> Freq. Cardíaca (BPM)
+                                    </Label>
+                                    <Input 
+                                        type="number" 
+                                        name="vitalSigns.heartRate" 
+                                        value={formState.vitalSigns?.heartRate || ''} 
+                                        onChange={handleInputChange} 
+                                        placeholder="Repouso"
+                                        className="h-10 font-bold bg-muted/20"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1">
+                                        <Gauge className="size-3 text-primary" /> Pressão Arterial
+                                    </Label>
+                                    <div className="flex items-center gap-1">
+                                        <Input 
+                                            type="number" 
+                                            name="vitalSigns.systolicBP" 
+                                            value={formState.vitalSigns?.systolicBP || ''} 
+                                            onChange={handleInputChange} 
+                                            placeholder="Sist."
+                                            className="h-10 font-bold bg-muted/20 text-center"
+                                        />
+                                        <span className="text-muted-foreground font-black">/</span>
+                                        <Input 
+                                            type="number" 
+                                            name="vitalSigns.diastolicBP" 
+                                            value={formState.vitalSigns?.diastolicBP || ''} 
+                                            onChange={handleInputChange} 
+                                            placeholder="Diast."
+                                            className="h-10 font-bold bg-muted/20 text-center"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            {formState.vitalSigns?.systolicBP && formState.vitalSigns?.diastolicBP && (
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[8px] font-black uppercase bg-primary/5 border-primary/20 text-primary">
+                                        Classe: {getBPClassification(formState.vitalSigns.systolicBP, formState.vitalSigns.diastolicBP)}
+                                    </Badge>
+                                </div>
+                            )}
+                        </div>
+
                         {hasEvaluations && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4">
                               <div><Label className="text-xs opacity-70">IMC</Label><div className="font-bold text-lg">{bmi}</div></div>

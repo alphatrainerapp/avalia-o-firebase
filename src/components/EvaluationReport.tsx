@@ -11,11 +11,12 @@ import {
     calculateRCQ,
     getRcqClassification,
     calculateRCE,
-    getRceClassification
+    getRceClassification,
+    getBPClassification
 } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { User, BarChart, PieChart as PieChartIcon, Target, TrendingDown, TrendingUp, Activity, Bone } from 'lucide-react';
+import { User, BarChart, PieChart as PieChartIcon, Target, TrendingDown, TrendingUp, Activity, Bone, Heart, Droplets, Gauge } from 'lucide-react';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Bar, XAxis, YAxis, Tooltip, BarChart as RechartsBarChart, Legend } from 'recharts';
 
@@ -240,9 +241,9 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                 </Section>
             </div>
 
-            {/* Página 3: Resumo de Indicadores e Simetria (Igual à Dash) */}
-            <Section title="Resumo de Indicadores e Simetria" icon={<Target size={14} className="text-gray-600"/>}>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
+            {/* Página 3: Resumo de Indicadores e Sinais Vitais */}
+            <Section title="Indicadores de Saúde e Sinais Vitais" icon={<Target size={14} className="text-gray-600"/>}>
+                <div className="grid grid-cols-1 gap-6 mt-2">
                     {evaluationsToDisplay.map(ev => {
                         const masses = calculateBodyComposition(ev, client);
                         const skinfoldsSum = ev.skinFolds ? Object.values(ev.skinFolds).reduce((s, v) => s + (v || 0), 0) : 0;
@@ -252,14 +253,18 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                         const armAsym = getAsymmetryClassification(ev.perimetria?.bracoDRelaxado, ev.perimetria?.bracoERelaxado);
                         const thighAsym = getAsymmetryClassification(ev.perimetria?.coxaMedialD, ev.perimetria?.coxaMedialE);
                         const fatClass = getFatClassification(masses.fatMassPercentage, client.gender);
+                        
+                        const vitals = ev.vitalSigns;
+                        const bpClass = vitals?.systolicBP && vitals?.diastolicBP ? getBPClassification(vitals.systolicBP, vitals.diastolicBP) : null;
 
                         return (
-                            <div key={ev.id} className="col-span-full border border-gray-200 rounded-lg p-3 bg-gray-50 mb-4">
-                                <h4 className="font-bold text-primary mb-3 text-[11px] flex items-center gap-2">
-                                    <TrendingUp size={12} /> Indicadores - Avaliação de {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
+                            <div key={ev.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4">
+                                <h4 className="font-bold text-primary mb-4 text-[11px] flex items-center gap-2 border-b pb-2">
+                                    <TrendingUp size={12} /> Avaliação de {new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}
                                 </h4>
-                                <div className="grid grid-cols-4 gap-3">
-                                    <div className="bg-white p-2 rounded border border-gray-100">
+                                
+                                <div className="grid grid-cols-4 gap-4 mb-4">
+                                     <div className="bg-white p-2 rounded border border-gray-100">
                                         <p className="text-[7px] font-bold text-gray-400 uppercase">Soma Dobras</p>
                                         <p className="text-sm font-black text-gray-800">{skinfoldsSum.toFixed(1)} <span className="text-[8px] font-normal">mm</span></p>
                                     </div>
@@ -278,6 +283,47 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
                                         <p className="text-sm font-black text-gray-800">{masses.boneMassKg.toFixed(1)} <span className="text-[8px] font-normal">kg</span></p>
                                         <p className="text-[7px] font-bold text-gray-500 uppercase">{boneClass}</p>
                                     </div>
+                                </div>
+
+                                {vitals && (vitals.saturation || vitals.heartRate || vitals.systolicBP) && (
+                                    <div className="bg-slate-100/50 p-3 rounded-lg border border-slate-200 mt-2">
+                                        <h5 className="text-[8px] font-black text-slate-500 uppercase mb-2 tracking-widest flex items-center gap-1">
+                                            <Activity size={10} /> Sinais Vitais Registrados
+                                        </h5>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {vitals.saturation && (
+                                                <div className="flex items-center gap-2">
+                                                    <Droplets size={12} className="text-cyan-500" />
+                                                    <div>
+                                                        <p className="text-[7px] font-bold text-gray-400 uppercase">Saturação</p>
+                                                        <p className="text-xs font-black text-slate-700">{vitals.saturation}%</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {vitals.heartRate && (
+                                                <div className="flex items-center gap-2">
+                                                    <Heart size={12} className="text-red-500" />
+                                                    <div>
+                                                        <p className="text-[7px] font-bold text-gray-400 uppercase">FC Repouso</p>
+                                                        <p className="text-xs font-black text-slate-700">{vitals.heartRate} bpm</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {vitals.systolicBP && (
+                                                <div className="flex items-center gap-2">
+                                                    <Gauge size={12} className="text-primary" />
+                                                    <div>
+                                                        <p className="text-[7px] font-bold text-gray-400 uppercase">Pressão Art.</p>
+                                                        <p className="text-xs font-black text-slate-700">{vitals.systolicBP}/{vitals.diastolicBP} <span className="text-[8px] font-normal">mmHg</span></p>
+                                                        {bpClass && <p className="text-[6px] font-black uppercase text-primary">{bpClass}</p>}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-4 gap-4 mt-4">
                                     <div className="bg-white p-2 rounded border border-gray-100">
                                         <p className="text-[7px] font-bold text-gray-400 uppercase">Assimetria Braços</p>
                                         <p className="text-[9px] font-black text-gray-800 uppercase">{armAsym}</p>
