@@ -13,6 +13,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 
 ### 2. Dashboard de Avaliação Física (Protocolo ISAK & Rocha)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
+- **Monitoramento de Sinais Vitais (Opcional)**: Registro de Saturação de Oxigênio (Oximetria), Frequência Cardíaca de Repouso e Pressão Arterial (PAS/PAD) com classificação automática de risco hemodinâmico.
 - **Indicadores de Saúde em Tempo Real**: 
     - **Soma de Dobras**: Total acumulado conforme o protocolo selecionado.
     - **RCE (Relação Cintura-Estatura)**: Classificação de risco cardiometabólico.
@@ -40,7 +41,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Laudo Muscular Automático**: Identificação instantânea de músculos encurtados/superativos e alongados/inibidos baseada nos desvios marcados.
 
 ### 7. Relatórios PDF Profissionais
-- **Geração de Documentos de Alta Fidelidade**: Relatórios detalhados para Bioimpedância, Avaliação Física, Postural e agora um laudo técnico completo de **Força & Potência**.
+- **Geração de Documentos de Alta Fidelidade**: Relatórios detalhados para Bioimpedância, Avaliação Física, Postural e Força & Potência.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router & Turbopack)**
