@@ -587,34 +587,36 @@ export default function DashboardPage() {
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-1">
                                         <Gauge className="size-3 text-primary" /> Pressão Arterial
                                     </Label>
-                                    <div className="flex items-center gap-1">
-                                        <Input 
-                                            type="number" 
-                                            name="vitalSigns.systolicBP" 
-                                            value={formState.vitalSigns?.systolicBP || ''} 
-                                            onChange={handleInputChange} 
-                                            placeholder="Sist."
-                                            className="h-10 font-bold bg-muted/20 text-center"
-                                        />
-                                        <span className="text-muted-foreground font-black">/</span>
-                                        <Input 
-                                            type="number" 
-                                            name="vitalSigns.diastolicBP" 
-                                            value={formState.vitalSigns?.diastolicBP || ''} 
-                                            onChange={handleInputChange} 
-                                            placeholder="Diast."
-                                            className="h-10 font-bold bg-muted/20 text-center"
-                                        />
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-1">
+                                            <Input 
+                                                type="number" 
+                                                name="vitalSigns.systolicBP" 
+                                                value={formState.vitalSigns?.systolicBP || ''} 
+                                                onChange={handleInputChange} 
+                                                placeholder="Sist."
+                                                className="h-10 font-bold bg-muted/20 text-center"
+                                            />
+                                            <span className="text-muted-foreground font-black">/</span>
+                                            <Input 
+                                                type="number" 
+                                                name="vitalSigns.diastolicBP" 
+                                                value={formState.vitalSigns?.diastolicBP || ''} 
+                                                onChange={handleInputChange} 
+                                                placeholder="Diast."
+                                                className="h-10 font-bold bg-muted/20 text-center"
+                                            />
+                                        </div>
+                                        {formState.vitalSigns?.systolicBP && formState.vitalSigns?.diastolicBP && (
+                                            <div className="flex justify-center">
+                                                <Badge variant="outline" className="text-[8px] font-black uppercase bg-primary/5 border-primary/20 text-primary">
+                                                    Classe: {getBPClassification(formState.vitalSigns.systolicBP, formState.vitalSigns.diastolicBP)}
+                                                </Badge>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                            {formState.vitalSigns?.systolicBP && formState.vitalSigns?.diastolicBP && (
-                                <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-[8px] font-black uppercase bg-primary/5 border-primary/20 text-primary">
-                                        Classe: {getBPClassification(formState.vitalSigns.systolicBP, formState.vitalSigns.diastolicBP)}
-                                    </Badge>
-                                </div>
-                            )}
                         </div>
 
                         {hasEvaluations && (
