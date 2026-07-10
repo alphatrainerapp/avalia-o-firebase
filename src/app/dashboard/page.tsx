@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -22,7 +23,8 @@ import {
     Dumbbell,
     Heart,
     Droplets,
-    Gauge
+    Gauge,
+    Calendar as CalendarIcon
 } from 'lucide-react';
 import {
   Select,
@@ -374,6 +376,7 @@ export default function DashboardPage() {
 
         return (
             <Card 
+                key={ev.id} 
                 className={cn(
                     "shrink-0 w-44 text-center cursor-pointer transition-colors shadow-xl rounded-2xl",
                     isCompareMode 
@@ -538,7 +541,17 @@ export default function DashboardPage() {
                                     <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">{client?.name || 'Nenhum selecionado'}</div>
                                 </div>
                             </div>
-                            <div className="md:col-span-2"><Label>Email</Label><Input name="email" value={formState.email || ''} onChange={handleInputChange} /></div>
+                            <div className="md:col-span-1">
+                                <Label className="flex items-center gap-2"><CalendarIcon className="size-3" /> Data da Avaliação</Label>
+                                <Input 
+                                    type="date" 
+                                    name="date" 
+                                    value={formState.date || ''} 
+                                    onChange={handleInputChange} 
+                                    className="h-10 font-bold bg-muted/20"
+                                />
+                            </div>
+                            <div className="md:col-span-1"><Label>Email</Label><Input name="email" value={formState.email || ''} onChange={handleInputChange} /></div>
                             <div><Label>Idade</Label><Input name="age" type="number" value={formState.age || ''} onChange={handleInputChange} /></div>
                             <div><Label>Sexo</Label>
                                 <Select value={formState.gender || ''} onValueChange={(v) => handleSelectChange('gender', v)}>

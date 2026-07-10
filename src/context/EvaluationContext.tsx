@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
@@ -24,24 +25,14 @@ export const EvaluationProvider = ({ children }: { children: ReactNode }) => {
     if (!client) throw new Error("Client not found");
 
     const agora = new Date();
-    const dataSemHora = new Date(
-      agora.getFullYear(),
-      agora.getMonth(),
-      agora.getDate()
-    );
-
-    const year = dataSemHora.getFullYear();
-    const month = String(dataSemHora.getMonth() + 1).padStart(2, '0');
-    const day = String(dataSemHora.getDate()).padStart(2, '0');
+    const year = agora.getFullYear();
+    const month = String(agora.getMonth() + 1).padStart(2, '0');
+    const day = String(agora.getDate()).padStart(2, '0');
     const localDateString = `${year}-${month}-${day}`;
 
-    // Check if an evaluation for this client on this day already exists.
-    const existingEval = allEvaluations.find(e => e.clientId === clientId && e.date === localDateString);
-    if (existingEval) {
-      console.log("Evaluation for today already exists.");
-      return existingEval;
-    }
-
+    // Note: Removed the strict "one per day" blocking to allow manual date editing for historical records.
+    // However, if an evaluation with the exact ID/Date somehow collided, we handle it by creating a unique ID.
+    
     const newEvalId = `eval_${allEvaluations.length + 1}_${Date.now()}`;
     const newEvaluation: Evaluation = {
       id: newEvalId,
