@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Client, Evaluation } from '@/lib/data';
 import { Deviations } from '@/app/postural/context';
@@ -27,8 +27,12 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
 );
 
 const PosturalReport = forwardRef<HTMLDivElement, PosturalReportProps>(({ client, photos, deviations, muscleAnalysis, viewTitles }, ref) => {
-    
+    const [reportDate, setReportDate] = useState('');
     const logo = getPlaceholderImage('alpha-trainer-logo');
+
+    useEffect(() => {
+        setReportDate(new Date().toLocaleDateString('pt-BR'));
+    }, []);
     
     return (
         <div ref={ref} className="p-6 font-sans bg-white text-gray-900 text-xs w-[800px]">
@@ -52,7 +56,7 @@ const PosturalReport = forwardRef<HTMLDivElement, PosturalReportProps>(({ client
                         <div><strong className="block text-gray-500 text-xs">Nome:</strong> {client.name}</div>
                         <div><strong className="block text-gray-500 text-xs">Idade:</strong> {client.age}</div>
                         <div><strong className="block text-gray-500 text-xs">Sexo:</strong> {client.gender}</div>
-                         <div><strong className="block text-gray-500 text-xs">Data:</strong> {new Date().toLocaleDateString('pt-BR')}</div>
+                         <div><strong className="block text-gray-500 text-xs">Data:</strong> {reportDate}</div>
                     </div>
                 </div>
             </Section>
@@ -121,7 +125,7 @@ const PosturalReport = forwardRef<HTMLDivElement, PosturalReportProps>(({ client
 
             <footer className="mt-6 pt-3 border-t border-gray-300 text-center text-[10px] text-gray-500">
                 <p>Este é um relatório gerado automaticamente. Os resultados devem ser interpretados por um profissional qualificado.</p>
-                <p>Relatório gerado por Alpha Trainer &copy; {new Date().getFullYear()}</p>
+                <p>Relatório gerado por Alpha Trainer &copy; {reportDate.split('/')[2] || new Date().getFullYear()}</p>
             </footer>
         </div>
     );

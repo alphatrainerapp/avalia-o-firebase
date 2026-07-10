@@ -170,7 +170,7 @@ export default function VO2MaxPage() {
 
         const data = {
             protocol,
-            date: new Date().toISOString(),
+            date: new Date().toISOString().split('T')[0], // Static date part for memoization stability
             weight: client.bodyMeasurements?.weight || 70, 
             age: client.age,
             gender: client.gender,

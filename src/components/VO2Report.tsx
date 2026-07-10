@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Client } from '@/lib/data';
 import { type VO2Protocol, type VO2Stage, type TrainingZone, velocityToPace } from '@/lib/vo2-logic';
@@ -36,6 +36,7 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
 );
 
 const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol, results, hrMax, hrRest, bloodPressure, bpClassification, stages, powerWatts }, ref) => {
+    const [reportDate, setReportDate] = useState('');
     const logo = getPlaceholderImage('alpha-trainer-logo');
     const protocolNames: Record<VO2Protocol, string> = {
         cooper: 'Teste de Cooper (12 min)',
@@ -46,6 +47,10 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
         step_test: 'Step Test (Banco)',
         cycling_power: 'Teste de Potência (Ciclismo)'
     };
+
+    useEffect(() => {
+        setReportDate(new Date().toLocaleDateString('pt-BR'));
+    }, []);
 
     const hrReserve = hrMax - hrRest;
 
@@ -72,7 +77,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Atleta:</strong> <span className="font-bold text-sm">{client.name}</span></div>
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Idade:</strong> <span className="font-bold text-sm">{client.age} anos</span></div>
                     <div><strong className="block text-gray-400 text-[10px] uppercase">Sexo:</strong> <span className="font-bold text-sm">{client.gender}</span></div>
-                    <div><strong className="block text-gray-400 text-[10px] uppercase">Data:</strong> <span className="font-bold text-sm">{new Date().toLocaleDateString('pt-BR')}</span></div>
+                    <div><strong className="block text-gray-400 text-[10px] uppercase">Data:</strong> <span className="font-bold text-sm">{reportDate}</span></div>
                 </div>
             </div>
 
@@ -191,7 +196,7 @@ const VO2Report = forwardRef<HTMLDivElement, VO2ReportProps>(({ client, protocol
             </Section>
 
             <footer className="mt-12 pt-4 border-t border-gray-200 text-center">
-                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico Alpha Trainer Engine &copy; {new Date().getFullYear()}</p>
+                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico Alpha Trainer Engine &copy; {reportDate.split('/')[2] || new Date().getFullYear()}</p>
                 <p className="text-[8px] text-gray-300 mt-1">Estimativa fisiológica calculada via Tanaka (2001) e Karvonen. Consulte um médico antes de iniciar atividades intensas.</p>
             </footer>
         </div>

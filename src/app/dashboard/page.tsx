@@ -231,12 +231,13 @@ export default function DashboardPage() {
                 }
             }
 
-            // Sync with global state after updating local state to avoid warning
-            setTimeout(() => {
-              if (selectedEvaluationId) {
-                  setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-              }
-            }, 0);
+            // Sync with global state deferred to avoid "update while rendering" warning
+            const currentEvalId = selectedEvaluationId || evaluation?.id;
+            if (currentEvalId) {
+                setTimeout(() => {
+                    setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === currentEvalId ? { ...ev, ...newState } : ev));
+                }, 0);
+            }
 
             return newState;
         });
@@ -253,11 +254,12 @@ export default function DashboardPage() {
                 }
             }
 
-            setTimeout(() => {
-                if (selectedEvaluationId) {
-                    setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-                }
-            }, 0);
+            const currentEvalId = selectedEvaluationId || evaluation?.id;
+            if (currentEvalId) {
+                setTimeout(() => {
+                    setAllEvaluations(current => current.map(ev => ev.id === currentEvalId ? { ...ev, ...newState } : ev));
+                }, 0);
+            }
 
             return newState;
         });

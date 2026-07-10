@@ -1,5 +1,5 @@
 'use client';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import type { Client, Evaluation } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -24,9 +24,16 @@ const Section = ({ title, icon, children }: { title: string, icon: React.ReactNo
 );
 
 const StrengthReport = forwardRef<HTMLDivElement, StrengthReportProps>(({ client, evaluations, isCompareMode }, ref) => {
+    const [reportDate, setReportDate] = useState('');
     const logo = getPlaceholderImage('alpha-trainer-logo');
     const mainEval = evaluations[evaluations.length - 1];
     
+    useEffect(() => {
+        if (mainEval?.date) {
+            setReportDate(new Date(mainEval.date.replace(/-/g, '/')).toLocaleDateString('pt-BR'));
+        }
+    }, [mainEval]);
+
     const chartData = evaluations.map(ev => ({
         date: new Date(ev.date.replace(/-/g, '/')).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
         'Carga Total': ev.strengthData?.totalTonnage || 0,
@@ -61,7 +68,7 @@ const StrengthReport = forwardRef<HTMLDivElement, StrengthReportProps>(({ client
                     <div><strong className="block text-gray-400 text-[9px] uppercase">Atleta:</strong> <span className="font-bold text-sm">{client.name}</span></div>
                     <div><strong className="block text-gray-400 text-[9px] uppercase">Peso Atual:</strong> <span className="font-bold text-sm">{client.bodyMeasurements?.weight || '--'} kg</span></div>
                     <div><strong className="block text-gray-400 text-[9px] uppercase">ID:</strong> <span className="font-bold text-sm">#STR-{mainEval.id.slice(-4).toUpperCase()}</span></div>
-                    <div><strong className="block text-gray-400 text-[9px] uppercase">Data:</strong> <span className="font-bold text-sm">{new Date(mainEval.date.replace(/-/g, '/')).toLocaleDateString('pt-BR')}</span></div>
+                    <div><strong className="block text-gray-400 text-[9px] uppercase">Data:</strong> <span className="font-bold text-sm">{reportDate}</span></div>
                 </div>
             </div>
 
@@ -164,7 +171,7 @@ const StrengthReport = forwardRef<HTMLDivElement, StrengthReportProps>(({ client
             </Section>
 
             <footer className="mt-12 pt-4 border-t border-gray-200 text-center">
-                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico Alpha Force Engine &copy; {new Date().getFullYear()}</p>
+                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Relatório Técnico Alpha Force Engine &copy; {reportDate.split('/')[2] || new Date().getFullYear()}</p>
                 <p className="text-[8px] text-gray-300 mt-1">Dados processados com base em protocolos de Brzycki e Epley. Resultados devem ser validados pelo treinador responsável.</p>
             </footer>
         </div>
