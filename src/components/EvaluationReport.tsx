@@ -85,7 +85,8 @@ const EvaluationReport = forwardRef<HTMLDivElement, EvaluationReportProps>(({ cl
     const functionalTests = [
         { id: 'pushUps', label: 'Flexão de Braço (reps)' },
         { id: 'sitUps', label: 'Abdominal 1 min (reps)' },
-        { id: 'handgrip', label: 'Handgrip (kgf)' },
+        { id: 'handgripRight', label: 'Handgrip Direito (kgf)' },
+        { id: 'handgripLeft', label: 'Handgrip Esquerdo (kgf)' },
         { id: 'wells', label: 'Banco de Wells (cm)' },
     ];
 

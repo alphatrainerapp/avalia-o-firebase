@@ -10,7 +10,8 @@ export type BioimpedanceScale = 'omron' | 'inbody' | null;
 export type FunctionalTests = {
   pushUps?: number;
   sitUps?: number;
-  handgrip?: number;
+  handgripRight?: number;
+  handgripLeft?: number;
   wells?: number;
 };
 
@@ -198,7 +199,8 @@ export const evaluations: Evaluation[] = [
         functionalTests: {
           pushUps: 20,
           sitUps: 32,
-          handgrip: 48,
+          handgripRight: 48,
+          handgripLeft: 46,
           wells: 5
         },
         observations: 'Avaliação inicial João. Foco em hipertrofia e melhora da postura cervical.'
@@ -249,7 +251,8 @@ export const evaluations: Evaluation[] = [
         functionalTests: {
           pushUps: 25,
           sitUps: 35,
-          handgrip: 38.5,
+          handgripRight: 38.5,
+          handgripLeft: 36,
           wells: 12
         },
         observations: 'Avaliação inicial. Foco em redução de gordura corporal e correção de postura cervical.'
@@ -345,7 +348,7 @@ export function calculateBodyComposition(evaluation: Evaluation, client: Client)
 
 export type ClassificationType = 'EXCELENTE' | 'BOM' | 'REGULAR' | 'FRACO' | 'MUITO FRACO';
 
-export function getFunctionalClassification(test: keyof FunctionalTests, value: number, age: number, gender: string): { classification: ClassificationType, percentile: string, description: string } {
+export function getFunctionalClassification(test: keyof FunctionalTests | 'handgrip', value: number, age: number, gender: string): { classification: ClassificationType, percentile: string, description: string } {
   if (value === 0) return { classification: 'FRACO', percentile: 'N/A', description: 'Abaixo do esperado para a faixa etária.' };
 
   if (test === 'pushUps') {
@@ -362,7 +365,7 @@ export function getFunctionalClassification(test: keyof FunctionalTests, value: 
     return { classification: 'FRACO', percentile: 'Abaixo de 25%', description: 'Abaixo do esperado para a faixa etária.' };
   }
 
-  if (test === 'handgrip') {
+  if (test === 'handgrip' || test === 'handgripRight' || test === 'handgripLeft') {
     const threshold = gender === 'Masculino' ? 45 : 25;
     if (value > threshold + 10) return { classification: 'EXCELENTE', percentile: 'Acima de 85%', description: 'Força de preensão superior.' };
     if (value > threshold) return { classification: 'BOM', percentile: 'Entre 60% e 75%', description: 'Força de preensão dentro da média.' };

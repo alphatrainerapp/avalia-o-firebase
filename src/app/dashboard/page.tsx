@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -85,7 +84,7 @@ import { Separator } from '@/components/ui/separator';
 const functionalTestsConfig = [
     { id: 'pushUps', title: '1. FLEXÃO DE BRAÇO', subtitle: 'Resistência de membros superiores', unit: 'reps', icon: 'push-ups-test', instruction: 'Execute o máximo de repetições contínuas mantendo a técnica correta.', detail: 'REPETIÇÕES' },
     { id: 'sitUps', title: '2. ABDOMINAL EM 1 MINUTO', subtitle: 'Resistência do core', unit: 'reps', icon: 'abdominal-test', instruction: 'Realize o máximo de abdominais completos em 1 minuto.', detail: 'REPETIÇÕES' },
-    { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima. Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
+    { id: 'handgrip', title: '3. HANDGRIP', subtitle: 'Força de preensão manual', unit: 'kgf', icon: 'handgrip-test', instruction: 'Aperte o dinamômetro com força máxima (D/E). Registre o melhor resultado.', detail: 'FORÇA MÁXIMA' },
     { id: 'wells', title: '4. BANCO DE WELLS', subtitle: 'Flexibilidade de cadeia posterior', unit: 'cm', icon: 'wells-test', instruction: 'Deslize as mãos sobre a régua o mais longe possível. Não force a dor.', detail: 'FLEXIBILIDADE' },
 ];
 
@@ -189,7 +188,7 @@ export default function DashboardPage() {
             }
         } else if (protocol.includes('Pollock 3 dobras')) {
             const skinfoldKeys = gender === 'Masculino' ? protocolSkinfolds['Pollock 3 dobras (M)'] : protocolSkinfolds['Pollock 3 dobras (F)'];
-            const sum3 = getSkinfoldSum(skfoldKeys);
+            const sum3 = getSkinfoldSum(skinfoldKeys);
             if (sum3 > 0) {
                 bodyDensity = gender === 'Masculino'
                     ? 1.10938 - 0.0008267 * sum3 + 0.0000016 * sum3 * sum3 - 0.0002574 * age
@@ -410,7 +409,12 @@ export default function DashboardPage() {
     };
 
     const FunctionalTestCard = ({ config }: { config: typeof functionalTestsConfig[0] }) => {
-        const value = formState.functionalTests?.[config.id] || 0;
+        const isHandgrip = config.id === 'handgrip';
+        const bestHandgrip = isHandgrip 
+            ? Math.max(formState.functionalTests?.handgripRight || 0, formState.functionalTests?.handgripLeft || 0)
+            : 0;
+            
+        const value = isHandgrip ? bestHandgrip : (formState.functionalTests?.[config.id] || 0);
         const { classification, percentile, description } = getFunctionalClassification(config.id as any, value, client?.age || 30, client?.gender || 'Masculino');
         const img = getPlaceholderImage(config.icon);
 
@@ -461,16 +465,41 @@ export default function DashboardPage() {
                         <div className="space-y-4">
                             <div className="space-y-1">
                                 <Label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Resultado ({config.detail})</Label>
-                                <div className="relative">
-                                    <Input 
-                                        type="number" 
-                                        name={`functionalTests.${config.id}`}
-                                        value={formState.functionalTests?.[config.id] || ''}
-                                        onChange={handleInputChange}
-                                        className="h-12 text-2xl font-black bg-background border-muted text-center pr-10"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">{config.unit}</span>
-                                </div>
+                                {isHandgrip ? (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="relative">
+                                            <Input 
+                                                type="number" 
+                                                name="functionalTests.handgripRight"
+                                                value={formState.functionalTests?.handgripRight || ''}
+                                                onChange={handleInputChange}
+                                                className="h-10 text-xl font-black bg-background border-muted text-center pr-6"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-primary uppercase">D</span>
+                                        </div>
+                                        <div className="relative">
+                                            <Input 
+                                                type="number" 
+                                                name="functionalTests.handgripLeft"
+                                                value={formState.functionalTests?.handgripLeft || ''}
+                                                onChange={handleInputChange}
+                                                className="h-10 text-xl font-black bg-background border-muted text-center pr-6"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-primary uppercase">E</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <Input 
+                                            type="number" 
+                                            name={`functionalTests.${config.id}`}
+                                            value={formState.functionalTests?.[config.id] || ''}
+                                            onChange={handleInputChange}
+                                            className="h-12 text-2xl font-black bg-background border-muted text-center pr-10"
+                                        />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">{config.unit}</span>
+                                    </div>
+                                )}
                             </div>
 
                             <div className={cn("rounded-xl border p-3 transition-all", getStatusBg(classification))}>
