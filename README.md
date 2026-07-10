@@ -10,7 +10,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 ### 1. Gestão Centralizada de Alunos
 - **Listagem Profissional**: Painel dedicado para controle de alunos ativos com busca em tempo real.
 - **Contexto Global**: Seleção de aluno unificada. Ao selecionar um aluno, todo o ecossistema (Dashboard, Bio, Postural, VO2, Força) sincroniza automaticamente.
-- **Gestão de Datas**: Possibilidade de editar a data de qualquer avaliação, permitindo o cadastro de históricos retroativos.
+- **Gestão de Datas Retroativas**: Possibilidade de editar a data de qualquer avaliação, permitindo o cadastro de históricos completos e organização cronológica precisa.
 
 ### 2. Dashboard de Avaliação Física (Protocolo ISAK & Rocha)
 - **Fracionamento de 4 Componentes**: Cálculos científicos de Massa Gorda, Massa Muscular, Massa Óssea (Rocha, 1975) e Massa Residual (Würch, 1974).
@@ -26,10 +26,9 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Predição de Performance**: Algoritmo que estima o 1RM dinâmico a partir de picos isométricos.
 - **Alpha Force Score**: Índice exclusivo de 0 a 100 que resume o perfil de força do atleta com fundamentação em Força Relativa (IFR).
 - **Zonas de Carga Instantâneas**: Geração automática de faixas de intensidade (100% a 60%) para prescrição imediata de treinamento.
-- **Evolução Comparativa**: Matriz evolutiva que compara picos de força e recordes pessoais (PRs) entre diferentes datas.
 
 ### 4. Aptidão Física e Testes Funcionais
-- **Handgrip Bilateral**: Registro de força de preensão manual para os lados Direito e Esquerdo com classificação pelo melhor resultado.
+- **Handgrip Bilateral**: Registro de força de preensão manual para os lados Direito e Esquerdo com classificação automática baseada no melhor resultado (maior pico de força).
 - **Galeria Técnica de Alta Fidelidade**: Registro com imagens de referência técnica para Flexão de Braço, Abdominal e Banco de Wells.
 - **Motor de Classificação**: Enquadramento automático em tabelas normativas com cálculo de percentil e descrição técnica.
 
@@ -42,7 +41,7 @@ Este projeto está hospedado no GitHub: [alphatrainerapp/avalia-o-firebase](http
 - **Laudo Muscular Automático**: Identificação instantânea de músculos encurtados/superativos e alongados/inibidos baseada nos desvios marcados.
 
 ### 7. Relatórios PDF Profissionais
-- **Geração de Documentos de Alta Fidelidade**: Relatórios detalhados para Bioimpedância, Avaliação Física, Postural e Força & Potência (incluindo gráficos evolutivos).
+- **Geração de Documentos de Alta Fidelidade**: Relatórios detalhados e personalizados para Bioimpedância, Avaliação Física, Postural e Força & Potência.
 
 ## 🛠️ Tecnologias Utilizadas
 - **Next.js 15 (App Router)**
