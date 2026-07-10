@@ -216,43 +216,46 @@ export default function DashboardPage() {
         const keys = name.split('.');
         const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
 
-        setFormState(prev => {
-            let newState = JSON.parse(JSON.stringify(prev));
-            let current: any = newState;
-            for (let i = 0; i < keys.length - 1; i++) {
-                if (!current[keys[i]]) current[keys[i]] = {};
-                current = current[keys[i]];
-            }
-            current[keys[keys.length - 1]] = parsedValue;
+        // Clone current state to avoid direct mutation
+        let newState = JSON.parse(JSON.stringify(formState));
+        let current: any = newState;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (!current[keys[i]]) current[keys[i]] = {};
+            current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = parsedValue;
 
-            if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
-                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
-                if (newFat > 0) {
-                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
-                }
+        // Auto recalculate fat if relevant fields change
+        if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
+            const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+            if (newFat > 0) {
+                newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
             }
+        }
 
-            if (selectedEvaluationId) {
-                setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-            }
-            return newState;
-        });
+        setFormState(newState);
+
+        // Update context state outside of the functional updater to avoid React warning
+        if (selectedEvaluationId) {
+            setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
+        }
     };
 
     const handleSelectChange = (name: string, value: string) => {
-        setFormState(prev => {
-            let newState = { ...prev, [name]: value };
-            if (name === 'gender' || name === 'protocol') {
-                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
-                if (newFat > 0) {
-                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
-                }
+        let newState = { ...formState, [name]: value };
+        
+        if (name === 'gender' || name === 'protocol') {
+            const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+            if (newFat > 0) {
+                newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
             }
-            if (selectedEvaluationId) {
-                setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-            }
-            return newState;
-        });
+        }
+
+        setFormState(newState);
+        
+        if (selectedEvaluationId) {
+            setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
+        }
     }
 
     const handleAudienceChange = (audience: string) => {
