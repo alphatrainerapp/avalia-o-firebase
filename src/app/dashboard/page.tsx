@@ -216,46 +216,52 @@ export default function DashboardPage() {
         const keys = name.split('.');
         const parsedValue = type === 'number' ? (value === '' ? undefined : parseFloat(value)) : value;
 
-        // Clone current state to avoid direct mutation
-        let newState = JSON.parse(JSON.stringify(formState));
-        let current: any = newState;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) current[keys[i]] = {};
-            current = current[keys[i]];
-        }
-        current[keys[keys.length - 1]] = parsedValue;
-
-        // Auto recalculate fat if relevant fields change
-        if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
-            const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
-            if (newFat > 0) {
-                newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
+        setFormState(prev => {
+            let newState = JSON.parse(JSON.stringify(prev));
+            let current: any = newState;
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (!current[keys[i]]) current[keys[i]] = {};
+                current = current[keys[i]];
             }
-        }
+            current[keys[keys.length - 1]] = parsedValue;
 
-        setFormState(newState);
+            if (name.startsWith('skinFolds') || name === 'age' || name === 'gender' || name === 'protocol') {
+                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+                if (newFat > 0) {
+                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
+                }
+            }
 
-        // Update context state outside of the functional updater to avoid React warning
-        if (selectedEvaluationId) {
-            setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-        }
+            // Sync with global state after updating local state to avoid warning
+            setTimeout(() => {
+              if (selectedEvaluationId) {
+                  setAllEvaluations(prevEvals => prevEvals.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
+              }
+            }, 0);
+
+            return newState;
+        });
     };
 
     const handleSelectChange = (name: string, value: string) => {
-        let newState = { ...formState, [name]: value };
-        
-        if (name === 'gender' || name === 'protocol') {
-            const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
-            if (newFat > 0) {
-                newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
+        setFormState(prev => {
+            let newState = { ...prev, [name]: value };
+            
+            if (name === 'gender' || name === 'protocol') {
+                const newFat = calculateFatFromInput(newState.skinFolds, newState.age, newState.gender, newState.protocol);
+                if (newFat > 0) {
+                    newState.bodyComposition = { ...(newState.bodyComposition || {}), bodyFatPercentage: newFat };
+                }
             }
-        }
 
-        setFormState(newState);
-        
-        if (selectedEvaluationId) {
-            setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
-        }
+            setTimeout(() => {
+                if (selectedEvaluationId) {
+                    setAllEvaluations(current => current.map(ev => ev.id === selectedEvaluationId ? { ...ev, ...newState } : ev));
+                }
+            }, 0);
+
+            return newState;
+        });
     }
 
     const handleAudienceChange = (audience: string) => {
@@ -544,8 +550,9 @@ export default function DashboardPage() {
                                     <div className="flex-1 h-10 flex items-center px-3 rounded-md border bg-muted/50 font-bold text-sm">{client?.name || 'Nenhum selecionado'}</div>
                                 </div>
                             </div>
-                            <div className="md:col-span-1">
-                                <Label className="flex items-center gap-2"><CalendarIcon className="size-3" /> Data da Avaliação</Label>
+                            
+                            <div className="space-y-1">
+                                <Label>Data da Avaliação</Label>
                                 <Input 
                                     type="date" 
                                     name="date" 
@@ -554,19 +561,38 @@ export default function DashboardPage() {
                                     className="h-10 font-bold bg-muted/20"
                                 />
                             </div>
-                            <div className="md:col-span-1"><Label>Email</Label><Input name="email" value={formState.email || ''} onChange={handleInputChange} /></div>
-                            <div><Label>Idade</Label><Input name="age" type="number" value={formState.age || ''} onChange={handleInputChange} /></div>
-                            <div><Label>Sexo</Label>
+                            <div className="space-y-1">
+                                <Label>Email</Label>
+                                <Input 
+                                    name="email" 
+                                    value={formState.email || ''} 
+                                    onChange={handleInputChange} 
+                                    className="h-10"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>Idade</Label>
+                                <Input name="age" type="number" value={formState.age || ''} onChange={handleInputChange} className="h-10" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Sexo</Label>
                                 <Select value={formState.gender || ''} onValueChange={(v) => handleSelectChange('gender', v)}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                                     <SelectContent><SelectItem value="Masculino">Masculino</SelectItem><SelectItem value="Feminino">Feminino</SelectItem></SelectContent>
                                 </Select>
                             </div>
-                            <div><Label>Altura (cm)</Label><Input name="bodyMeasurements.height" type="number" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} /></div>
-                            <div><Label>Peso (kg)</Label><Input name="bodyMeasurements.weight" type="number" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} /></div>
+
+                            <div className="space-y-1">
+                                <Label>Altura (cm)</Label>
+                                <Input name="bodyMeasurements.height" type="number" value={formState.bodyMeasurements?.height || ''} onChange={handleInputChange} className="h-10" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Peso (kg)</Label>
+                                <Input name="bodyMeasurements.weight" type="number" value={formState.bodyMeasurements?.weight || ''} onChange={handleInputChange} className="h-10" />
+                            </div>
                         </div>
 
-                        {/* Nova seção de Sinais Vitais Opcionais */}
                         <div className="pt-4 space-y-4 border-t border-dashed">
                              <div className="flex items-center gap-2">
                                 <Activity className="size-4 text-primary" />
